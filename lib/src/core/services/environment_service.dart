@@ -138,4 +138,76 @@ class EnvironmentService {
 
     return env?.values[key];
   }
+
+  /// Import environment variables from a file
+  Future<Environment> importEnvironment({
+    required String filePath,
+    required String envName,
+    required String projectName,
+    String? description,
+  }) async {
+    final file = File(filePath);
+    if (!await file.exists()) {
+      throw 'File not found: $filePath';
+    }
+
+    final content = await file.readAsString();
+    final values = <String, String>{};
+
+    if (filePath.endsWith('.env')) {
+      // Parse .env file
+      final lines = content.split('\n');
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
+        final parts = trimmed.split('=');
+        if (parts.length >= 2) {
+          final key = parts[0].trim();
+          final value = parts.sublist(1).join('=').trim();
+          // Remove quotes (both single and double) from the start and end
+          String unquoted = value;
+          if ((value.startsWith('"') && value.endsWith('"')) ||
+              (value.startsWith("'") && value.endsWith("'"))) {
+            unquoted = value.substring(1, value.length - 1);
+          }
+          values[key] = unquoted;
+        }
+      }
+    } else if (filePath.endsWith('.xcconfig')) {
+      // Parse .xcconfig file
+      final lines = content.split('\n');
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty || trimmed.startsWith('//')) continue;
+        final parts = trimmed.split('=');
+        if (parts.length >= 2) {
+          final key = parts[0].trim();
+          final value = parts.sublist(1).join('=').trim();
+          values[key] = value;
+        }
+      }
+    } else if (filePath.endsWith('.properties')) {
+      // Parse .properties file
+      final lines = content.split('\n');
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
+        final parts = trimmed.split('=');
+        if (parts.length >= 2) {
+          final key = parts[0].trim();
+          final value = parts.sublist(1).join('=').trim();
+          values[key] = value;
+        }
+      }
+    } else {
+      throw 'Unsupported file format. Supported formats: .env, .xcconfig, .properties';
+    }
+
+    return createEnvironment(
+      name: envName,
+      projectName: projectName,
+      description: description,
+      initialValues: values,
+    );
+  }
 }
