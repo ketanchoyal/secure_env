@@ -1,0 +1,29 @@
+name: env_manager
+description: A robust environment manager for handling xcconfig, .env, and properties files
+version: 0.1.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  args: ^2.4.9
+  mason_logger: ^0.2.11
+  path: ^1.8.3
+  yaml: ^3.1.2
+  meta: ^1.11.0
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+  riverpod_annotation: ^2.3.3
+  encrypt: ^5.0.3
+
+dev_dependencies:
+  test: ^1.24.9
+  mocktail: ^1.0.1
+  build_runner: ^2.4.7
+  freezed: ^2.4.6
+  json_serializable: ^6.7.1
+  riverpod_generator: ^2.3.9
+  very_good_analysis: ^5.1.0
+
+executables:
+  secure_env: secure_env

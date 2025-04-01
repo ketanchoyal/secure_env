@@ -1,0 +1,43 @@
+# Dart/Flutter specific
+.dart_tool/
+.packages
+build/
+pubspec.lock
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE specific
+.idea/
+.vscode/
+*.iml
+*.iws
+.DS_Store
+
+# Project specific
+.secure_env/
+*.env
+*.properties
+*.xcconfig
+coverage/
+.test_coverage.dart
+.test_runner.dart
+
+# Temporary files
+*.log
+*.swp
+.*.swp
+*~
+
+# Documentation
+doc/api/
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Local development
+.env.local
+.env.development
+.env.test
+.env.production
