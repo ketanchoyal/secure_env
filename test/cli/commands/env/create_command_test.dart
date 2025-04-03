@@ -1,6 +1,6 @@
 import 'package:args/command_runner.dart';
-import 'package:env_manager/src/cli/commands/env/env_command.dart';
-import 'package:env_manager/src/core/services/environment_service.dart';
+import 'package:secure_env/src/cli/commands/env/env_command.dart';
+import 'package:secure_env/src/core/services/environment_service.dart';
 import 'package:test/test.dart';
 
 import '../../../utils/test_logger.dart';

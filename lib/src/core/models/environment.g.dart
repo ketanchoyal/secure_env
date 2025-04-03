@@ -11,7 +11,10 @@ _$EnvironmentImpl _$$EnvironmentImplFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       projectName: json['projectName'] as String,
       values: Map<String, String>.from(json['values'] as Map),
-      isEncrypted: json['isEncrypted'] as bool? ?? false,
+      sensitiveKeys: (json['sensitiveKeys'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, e as bool),
+          ) ??
+          const {},
       description: json['description'] as String?,
       lastModified: json['lastModified'] == null
           ? null
@@ -23,7 +26,7 @@ Map<String, dynamic> _$$EnvironmentImplToJson(_$EnvironmentImpl instance) =>
       'name': instance.name,
       'projectName': instance.projectName,
       'values': instance.values,
-      'isEncrypted': instance.isEncrypted,
+      'sensitiveKeys': instance.sensitiveKeys,
       'description': instance.description,
       'lastModified': instance.lastModified?.toIso8601String(),
     };

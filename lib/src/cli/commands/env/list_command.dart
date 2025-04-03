@@ -1,4 +1,4 @@
-import 'package:env_manager/src/core/services/environment_service.dart';
+import 'package:secure_env/src/core/services/environment_service.dart';
 import '../base_command.dart';
 
 /// Command to list all environments
@@ -27,7 +27,8 @@ class ListCommand extends BaseCommand {
   Future<int> run() => handleErrors(() async {
         final projectName = argResults!['project'] as String;
 
-        final environments = await _environmentService.listEnvironments(projectName);
+        final environments =
+            await _environmentService.listEnvironments(projectName);
 
         if (environments.isEmpty) {
           logger.info('No environments found for project: $projectName');

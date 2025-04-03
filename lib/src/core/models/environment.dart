@@ -9,7 +9,7 @@ class Environment with _$Environment {
     required String name,
     required String projectName,
     required Map<String, String> values,
-    @Default(false) bool isEncrypted,
+    @Default({}) Map<String, bool> sensitiveKeys,
     String? description,
     DateTime? lastModified,
   }) = _Environment;

@@ -1,4 +1,4 @@
-import 'package:env_manager/src/core/services/environment_service.dart';
+import 'package:secure_env/src/core/services/environment_service.dart';
 import '../base_command.dart';
 
 /// Command to delete an environment

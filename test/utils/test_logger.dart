@@ -1,4 +1,4 @@
-import 'package:env_manager/src/core/logger.dart';
+import 'package:secure_env/src/core/logger.dart';
 
 /// A logger that captures logs for testing
 class TestLogger implements Logger {

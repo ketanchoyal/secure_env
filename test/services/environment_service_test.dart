@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'package:test/test.dart';
-import 'package:env_manager/src/core/models/environment.dart';
-import 'package:env_manager/src/core/services/environment_service.dart';
+import 'package:secure_env/src/core/models/environment.dart';
+import 'package:secure_env/src/core/services/environment_service.dart';
 
 void main() {
   late EnvironmentService environmentService;
   late Directory tempDir;
 
   setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('env_manager_test_');
+    tempDir = await Directory.systemTemp.createTemp('secure_env_test_');
     environmentService = EnvironmentService();
   });
 

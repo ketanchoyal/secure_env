@@ -1,11 +1,11 @@
 import 'package:args/command_runner.dart';
-import 'package:env_manager/src/cli/commands/base_command.dart';
-import 'package:env_manager/src/cli/commands/env/env_command.dart';
-import 'package:env_manager/src/cli/commands/import/import_command.dart';
-import 'package:env_manager/src/cli/commands/version_command.dart';
-import 'package:env_manager/src/cli/commands/xcconfig_command.dart';
-import 'package:env_manager/src/core/logger.dart';
-import 'package:env_manager/src/core/mason_logger_adapter.dart';
+import 'package:secure_env/src/cli/commands/base_command.dart';
+import 'package:secure_env/src/cli/commands/env/env_command.dart';
+import 'package:secure_env/src/cli/commands/import/import_command.dart';
+import 'package:secure_env/src/cli/commands/version_command.dart';
+import 'package:secure_env/src/cli/commands/xcconfig_command.dart';
+import 'package:secure_env/src/core/logger.dart';
+import 'package:secure_env/src/core/mason_logger_adapter.dart';
 
 /// Command runner for the secure_env CLI
 class SecureEnvRunner extends CommandRunner<int> {

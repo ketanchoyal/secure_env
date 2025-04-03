@@ -2,12 +2,32 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 
-import 'package:env_manager/src/core/models/environment.dart';
+import 'package:secure_env/src/core/models/environment.dart';
+import 'package:secure_env/src/core/services/secure_storage_service.dart';
+import 'package:secure_env/src/core/services/encryption_service.dart';
+import 'package:secure_env/src/core/mason_logger_adapter.dart';
+import 'package:secure_env/src/core/logger.dart';
 
 /// Service for managing environments
 class EnvironmentService {
   /// Base directory for storing environment data
   static const _baseDir = '.secure_env';
+
+  final SecureStorageService _secureStorage;
+  final Logger _logger;
+
+  EnvironmentService({
+    Logger? logger,
+    SecureStorageService? secureStorage,
+    EncryptionService? encryptionService,
+  })  : _logger = logger ?? MasonLoggerAdapter(),
+        _secureStorage = secureStorage ??
+            SecureStorageService(
+              encryptionService: encryptionService ?? EncryptionService()
+                ..initialize('env-manager'),
+              logger: logger ?? MasonLoggerAdapter(),
+              storageDirectory: path.join(_baseDir, 'secrets'),
+            );
 
   /// Get the path to the environments directory for a project
   String getProjectEnvDir(String projectName) {
@@ -34,18 +54,51 @@ class EnvironmentService {
   }
 
   /// Save an environment to disk
+  ///
+  /// This method:
+  /// 1. Saves sensitive values using SecureStorageService
+  /// 2. Saves non-sensitive values and metadata to JSON
   Future<void> saveEnvironment(Environment env) async {
     final envDir = getProjectEnvDir(env.projectName);
     await Directory(envDir).create(recursive: true);
 
+    // Store sensitive values securely
+    for (final key in env.sensitiveKeys.keys) {
+      if (env.sensitiveKeys[key] == true && env.values.containsKey(key)) {
+        final value = env.values[key]!;
+        final stored = await _secureStorage.store(
+          '${env.projectName}/${env.name}/$key',
+          value,
+        );
+        if (!stored) {
+          _logger.error('Failed to store sensitive value for key: $key');
+          throw 'Failed to store sensitive value';
+        }
+      }
+    }
+
+    // Create a copy of values without sensitive data
+    final safeValues = Map<String, String>.from(env.values);
+    for (final key in env.sensitiveKeys.keys) {
+      if (env.sensitiveKeys[key] == true) {
+        safeValues[key] = '********';
+      }
+    }
+
+    // Save environment metadata and non-sensitive values
     final envFile = File(path.join(envDir, '${env.name}.json'));
+    final safeEnv = env.copyWith(values: safeValues);
     await envFile.writeAsString(
-      jsonEncode(env.toJson()),
+      jsonEncode(safeEnv.toJson()),
       flush: true,
     );
   }
 
   /// Load an environment from disk
+  ///
+  /// This method:
+  /// 1. Loads environment metadata from JSON
+  /// 2. Retrieves sensitive values from SecureStorageService
   Future<Environment?> loadEnvironment({
     required String name,
     required String projectName,
@@ -58,7 +111,24 @@ class EnvironmentService {
     }
 
     final json = jsonDecode(await envFile.readAsString());
-    return Environment.fromJson(json as Map<String, dynamic>);
+    final env = Environment.fromJson(json as Map<String, dynamic>);
+
+    // Load sensitive values
+    final values = Map<String, String>.from(env.values);
+    for (final key in env.sensitiveKeys.keys) {
+      if (env.sensitiveKeys[key] == true) {
+        final value = await _secureStorage.retrieve(
+          '$projectName/$name/$key',
+        );
+        if (value != null) {
+          values[key] = value;
+        } else {
+          _logger.error('Failed to retrieve sensitive value for key: $key');
+        }
+      }
+    }
+
+    return env.copyWith(values: values);
   }
 
   /// List all environments for a project
@@ -84,18 +154,41 @@ class EnvironmentService {
   }
 
   /// Delete an environment
+  ///
+  /// This method:
+  /// 1. Deletes the environment metadata file
+  /// 2. Securely deletes any sensitive values
   Future<void> deleteEnvironment({
     required String name,
     required String projectName,
   }) async {
-    final envDir = getProjectEnvDir(projectName);
-    final envFile = File(path.join(envDir, '$name.json'));
+    final env = await loadEnvironment(
+      name: name,
+      projectName: projectName,
+    );
 
-    if (!envFile.existsSync()) {
+    if (env == null) {
       throw 'Environment not found: $name';
     }
 
-    await envFile.delete();
+    // Delete sensitive values
+    for (final key in env.sensitiveKeys.keys) {
+      if (env.sensitiveKeys[key] == true) {
+        final deleted = await _secureStorage.delete(
+          '$projectName/$name/$key',
+        );
+        if (!deleted) {
+          _logger.error('Failed to delete sensitive value for key: $key');
+        }
+      }
+    }
+
+    // Delete environment file
+    final envDir = getProjectEnvDir(projectName);
+    final envFile = File(path.join(envDir, '$name.json'));
+    if (envFile.existsSync()) {
+      await envFile.delete();
+    }
   }
 
   /// Set a value in an environment
@@ -120,8 +213,12 @@ class EnvironmentService {
     final updatedValues = Map<String, String>.from(env.values);
     updatedValues[key] = value;
 
+    final updatedSensitiveKeys = Map<String, bool>.from(env.sensitiveKeys);
+    updatedSensitiveKeys[key] = isSecret;
+
     final updatedEnv = env.copyWith(
       values: updatedValues,
+      sensitiveKeys: updatedSensitiveKeys,
       lastModified: DateTime.now(),
     );
 

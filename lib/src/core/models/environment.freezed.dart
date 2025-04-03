@@ -23,7 +23,7 @@ mixin _$Environment {
   String get name => throw _privateConstructorUsedError;
   String get projectName => throw _privateConstructorUsedError;
   Map<String, String> get values => throw _privateConstructorUsedError;
-  bool get isEncrypted => throw _privateConstructorUsedError;
+  Map<String, bool> get sensitiveKeys => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   DateTime? get lastModified => throw _privateConstructorUsedError;
 
@@ -47,7 +47,7 @@ abstract class $EnvironmentCopyWith<$Res> {
       {String name,
       String projectName,
       Map<String, String> values,
-      bool isEncrypted,
+      Map<String, bool> sensitiveKeys,
       String? description,
       DateTime? lastModified});
 }
@@ -70,7 +70,7 @@ class _$EnvironmentCopyWithImpl<$Res, $Val extends Environment>
     Object? name = null,
     Object? projectName = null,
     Object? values = null,
-    Object? isEncrypted = null,
+    Object? sensitiveKeys = null,
     Object? description = freezed,
     Object? lastModified = freezed,
   }) {
@@ -87,10 +87,10 @@ class _$EnvironmentCopyWithImpl<$Res, $Val extends Environment>
           ? _value.values
           : values // ignore: cast_nullable_to_non_nullable
               as Map<String, String>,
-      isEncrypted: null == isEncrypted
-          ? _value.isEncrypted
-          : isEncrypted // ignore: cast_nullable_to_non_nullable
-              as bool,
+      sensitiveKeys: null == sensitiveKeys
+          ? _value.sensitiveKeys
+          : sensitiveKeys // ignore: cast_nullable_to_non_nullable
+              as Map<String, bool>,
       description: freezed == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
@@ -115,7 +115,7 @@ abstract class _$$EnvironmentImplCopyWith<$Res>
       {String name,
       String projectName,
       Map<String, String> values,
-      bool isEncrypted,
+      Map<String, bool> sensitiveKeys,
       String? description,
       DateTime? lastModified});
 }
@@ -136,7 +136,7 @@ class __$$EnvironmentImplCopyWithImpl<$Res>
     Object? name = null,
     Object? projectName = null,
     Object? values = null,
-    Object? isEncrypted = null,
+    Object? sensitiveKeys = null,
     Object? description = freezed,
     Object? lastModified = freezed,
   }) {
@@ -153,10 +153,10 @@ class __$$EnvironmentImplCopyWithImpl<$Res>
           ? _value._values
           : values // ignore: cast_nullable_to_non_nullable
               as Map<String, String>,
-      isEncrypted: null == isEncrypted
-          ? _value.isEncrypted
-          : isEncrypted // ignore: cast_nullable_to_non_nullable
-              as bool,
+      sensitiveKeys: null == sensitiveKeys
+          ? _value._sensitiveKeys
+          : sensitiveKeys // ignore: cast_nullable_to_non_nullable
+              as Map<String, bool>,
       description: freezed == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
@@ -176,10 +176,11 @@ class _$EnvironmentImpl implements _Environment {
       {required this.name,
       required this.projectName,
       required final Map<String, String> values,
-      this.isEncrypted = false,
+      final Map<String, bool> sensitiveKeys = const {},
       this.description,
       this.lastModified})
-      : _values = values;
+      : _values = values,
+        _sensitiveKeys = sensitiveKeys;
 
   factory _$EnvironmentImpl.fromJson(Map<String, dynamic> json) =>
       _$$EnvironmentImplFromJson(json);
@@ -196,9 +197,15 @@ class _$EnvironmentImpl implements _Environment {
     return EqualUnmodifiableMapView(_values);
   }
 
+  final Map<String, bool> _sensitiveKeys;
   @override
   @JsonKey()
-  final bool isEncrypted;
+  Map<String, bool> get sensitiveKeys {
+    if (_sensitiveKeys is EqualUnmodifiableMapView) return _sensitiveKeys;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_sensitiveKeys);
+  }
+
   @override
   final String? description;
   @override
@@ -206,7 +213,7 @@ class _$EnvironmentImpl implements _Environment {
 
   @override
   String toString() {
-    return 'Environment(name: $name, projectName: $projectName, values: $values, isEncrypted: $isEncrypted, description: $description, lastModified: $lastModified)';
+    return 'Environment(name: $name, projectName: $projectName, values: $values, sensitiveKeys: $sensitiveKeys, description: $description, lastModified: $lastModified)';
   }
 
   @override
@@ -218,8 +225,8 @@ class _$EnvironmentImpl implements _Environment {
             (identical(other.projectName, projectName) ||
                 other.projectName == projectName) &&
             const DeepCollectionEquality().equals(other._values, _values) &&
-            (identical(other.isEncrypted, isEncrypted) ||
-                other.isEncrypted == isEncrypted) &&
+            const DeepCollectionEquality()
+                .equals(other._sensitiveKeys, _sensitiveKeys) &&
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.lastModified, lastModified) ||
@@ -233,7 +240,7 @@ class _$EnvironmentImpl implements _Environment {
       name,
       projectName,
       const DeepCollectionEquality().hash(_values),
-      isEncrypted,
+      const DeepCollectionEquality().hash(_sensitiveKeys),
       description,
       lastModified);
 
@@ -258,7 +265,7 @@ abstract class _Environment implements Environment {
       {required final String name,
       required final String projectName,
       required final Map<String, String> values,
-      final bool isEncrypted,
+      final Map<String, bool> sensitiveKeys,
       final String? description,
       final DateTime? lastModified}) = _$EnvironmentImpl;
 
@@ -272,7 +279,7 @@ abstract class _Environment implements Environment {
   @override
   Map<String, String> get values;
   @override
-  bool get isEncrypted;
+  Map<String, bool> get sensitiveKeys;
   @override
   String? get description;
   @override

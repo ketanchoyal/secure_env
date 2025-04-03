@@ -1,5 +1,5 @@
 import 'package:args/command_runner.dart';
-import 'package:env_manager/src/core/logger.dart';
+import 'package:secure_env/src/core/logger.dart';
 
 /// Base command class for all commands
 abstract class BaseCommand extends Command<int> {

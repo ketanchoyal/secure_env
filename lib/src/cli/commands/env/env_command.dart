@@ -1,10 +1,10 @@
-import 'package:env_manager/src/core/services/environment_service.dart';
-import 'package:env_manager/src/cli/commands/base_command.dart';
-import 'package:env_manager/src/cli/commands/env/create_command.dart';
-import 'package:env_manager/src/cli/commands/env/delete_command.dart';
-import 'package:env_manager/src/cli/commands/env/edit_command.dart';
-import 'package:env_manager/src/cli/commands/env/info_command.dart';
-import 'package:env_manager/src/cli/commands/env/list_command.dart';
+import 'package:secure_env/src/core/services/environment_service.dart';
+import 'package:secure_env/src/cli/commands/base_command.dart';
+import 'package:secure_env/src/cli/commands/env/create_command.dart';
+import 'package:secure_env/src/cli/commands/env/delete_command.dart';
+import 'package:secure_env/src/cli/commands/env/edit_command.dart';
+import 'package:secure_env/src/cli/commands/env/info_command.dart';
+import 'package:secure_env/src/cli/commands/env/list_command.dart';
 
 /// Group command for environment management
 class EnvCommand extends BaseCommand {
