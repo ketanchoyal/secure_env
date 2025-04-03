@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 
-import '../models/environment.dart';
+import 'package:env_manager/src/core/models/environment.dart';
 
 /// Service for managing environments
 class EnvironmentService {
@@ -91,12 +91,16 @@ class EnvironmentService {
     final envDir = getProjectEnvDir(projectName);
     final envFile = File(path.join(envDir, '$name.json'));
 
-    if (await envFile.exists()) {
-      await envFile.delete();
+    if (!envFile.existsSync()) {
+      throw 'Environment not found: $name';
     }
+
+    await envFile.delete();
   }
 
   /// Set a value in an environment
+  ///
+  /// Returns the updated environment
   Future<Environment> setValue({
     required String key,
     required String value,
@@ -165,7 +169,7 @@ class EnvironmentService {
           final key = parts[0].trim();
           final value = parts.sublist(1).join('=').trim();
           // Remove quotes (both single and double) from the start and end
-          String unquoted = value;
+          var unquoted = value;
           if ((value.startsWith('"') && value.endsWith('"')) ||
               (value.startsWith("'") && value.endsWith("'"))) {
             unquoted = value.substring(1, value.length - 1);

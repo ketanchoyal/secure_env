@@ -1,13 +1,12 @@
 import 'package:args/command_runner.dart';
-import 'package:mason_logger/mason_logger.dart';
+import 'package:env_manager/src/core/logger.dart';
 
-/// Base command class for all secure_env commands
+/// Base command class for all commands
 abstract class BaseCommand extends Command<int> {
-  BaseCommand({
-    required this.logger,
-  });
+  /// Create a new base command
+  BaseCommand({required this.logger});
 
-  /// Logger instance for CLI output
+  /// Logger instance
   final Logger logger;
 
   /// Exit code for successful execution
@@ -22,7 +21,7 @@ abstract class BaseCommand extends Command<int> {
       return await run();
     } catch (error) {
       logger
-        ..err('Error: $error')
+        ..error('Error: $error')
         ..info('')
         ..info(usage);
       return failureExitCode;

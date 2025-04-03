@@ -1,12 +1,12 @@
-import '../../../core/services/environment_service.dart';
+import 'package:env_manager/src/core/services/environment_service.dart';
 import '../base_command.dart';
 
-/// Command to list environments
+/// Command to list all environments
 class ListCommand extends BaseCommand {
   ListCommand({
     required super.logger,
-    required this.environmentService,
-  }) {
+    EnvironmentService? environmentService,
+  }) : _environmentService = environmentService ?? EnvironmentService() {
     argParser.addOption(
       'project',
       abbr: 'p',
@@ -15,7 +15,7 @@ class ListCommand extends BaseCommand {
     );
   }
 
-  final EnvironmentService environmentService;
+  final EnvironmentService _environmentService;
 
   @override
   String get description => 'List all environments';
@@ -27,7 +27,7 @@ class ListCommand extends BaseCommand {
   Future<int> run() => handleErrors(() async {
         final projectName = argResults!['project'] as String;
 
-        final environments = await environmentService.listEnvironments(projectName);
+        final environments = await _environmentService.listEnvironments(projectName);
 
         if (environments.isEmpty) {
           logger.info('No environments found for project: $projectName');

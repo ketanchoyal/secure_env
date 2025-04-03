@@ -8,8 +8,8 @@ import '../base_command.dart';
 class InfoCommand extends BaseCommand {
   InfoCommand({
     required super.logger,
-    required this.environmentService,
-  }) {
+    EnvironmentService? environmentService,
+  }) : _environmentService = environmentService ?? EnvironmentService() {
     argParser
       ..addOption(
         'project',
@@ -25,7 +25,7 @@ class InfoCommand extends BaseCommand {
       );
   }
 
-  final EnvironmentService environmentService;
+  final EnvironmentService _environmentService;
 
   @override
   String get description => 'Show environment information';
@@ -38,7 +38,7 @@ class InfoCommand extends BaseCommand {
         final projectName = argResults!['project'] as String;
         final envName = argResults!['name'] as String;
 
-        final env = await environmentService.loadEnvironment(
+        final env = await _environmentService.loadEnvironment(
           name: envName,
           projectName: projectName,
         );
@@ -47,7 +47,7 @@ class InfoCommand extends BaseCommand {
           throw 'Environment not found: $envName';
         }
 
-        final envDir = environmentService.getProjectEnvDir(projectName);
+        final envDir = _environmentService.getProjectEnvDir(projectName);
         final envFile = File(path.join(envDir, '$envName.json'));
         final envFileStats = await envFile.stat();
 

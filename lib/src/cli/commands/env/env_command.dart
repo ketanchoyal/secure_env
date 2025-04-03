@@ -1,8 +1,10 @@
-import '../../../core/services/environment_service.dart';
-import '../base_command.dart';
-import 'create_command.dart';
-import 'list_command.dart';
-import 'info_command.dart';
+import 'package:env_manager/src/core/services/environment_service.dart';
+import 'package:env_manager/src/cli/commands/base_command.dart';
+import 'package:env_manager/src/cli/commands/env/create_command.dart';
+import 'package:env_manager/src/cli/commands/env/delete_command.dart';
+import 'package:env_manager/src/cli/commands/env/edit_command.dart';
+import 'package:env_manager/src/cli/commands/env/info_command.dart';
+import 'package:env_manager/src/cli/commands/env/list_command.dart';
 
 /// Group command for environment management
 class EnvCommand extends BaseCommand {
@@ -11,18 +13,36 @@ class EnvCommand extends BaseCommand {
   }) {
     final environmentService = EnvironmentService();
 
-    addSubcommand(CreateCommand(
-      logger: logger,
-      environmentService: environmentService,
-    ));
-    addSubcommand(ListCommand(
-      logger: logger,
-      environmentService: environmentService,
-    ));
-    addSubcommand(InfoCommand(
-      logger: logger,
-      environmentService: environmentService,
-    ));
+    addSubcommand(
+      CreateCommand(
+        logger: logger,
+        environmentService: environmentService,
+      ),
+    );
+    addSubcommand(
+      ListCommand(
+        logger: logger,
+        environmentService: environmentService,
+      ),
+    );
+    addSubcommand(
+      InfoCommand(
+        logger: logger,
+        environmentService: environmentService,
+      ),
+    );
+    addSubcommand(
+      EditCommand(
+        logger: logger,
+        environmentService: environmentService,
+      ),
+    );
+    addSubcommand(
+      DeleteCommand(
+        logger: logger,
+        environmentService: environmentService,
+      ),
+    );
   }
 
   @override

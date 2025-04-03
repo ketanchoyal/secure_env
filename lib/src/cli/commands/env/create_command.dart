@@ -1,12 +1,12 @@
-import '../../../core/services/environment_service.dart';
-import '../base_command.dart';
+import 'package:env_manager/src/core/services/environment_service.dart';
+import 'package:env_manager/src/cli/commands/base_command.dart';
 
 /// Command to create a new environment
 class CreateCommand extends BaseCommand {
   CreateCommand({
     required super.logger,
-    required this.environmentService,
-  }) {
+    EnvironmentService? environmentService,
+  }) : _environmentService = environmentService ?? EnvironmentService() {
     argParser
       ..addOption(
         'project',
@@ -23,10 +23,20 @@ class CreateCommand extends BaseCommand {
         'template',
         abbr: 't',
         help: 'Template to use for initial values',
+      )
+      ..addMultiOption(
+        'key',
+        abbr: 'k',
+        help: 'Key to add to the environment',
+      )
+      ..addMultiOption(
+        'value',
+        abbr: 'v',
+        help: 'Value to add to the environment',
       );
   }
 
-  final EnvironmentService environmentService;
+  final EnvironmentService _environmentService;
 
   @override
   String get description => 'Create a new environment';
@@ -39,6 +49,8 @@ class CreateCommand extends BaseCommand {
         final projectName = argResults!['project'] as String;
         final description = argResults!['description'] as String?;
         final template = argResults!['template'] as String?;
+        final keys = argResults!['key'] as List<String>;
+        final values = argResults!['value'] as List<String>;
 
         if (argResults!.rest.isEmpty) {
           throw const FormatException('Environment name is required');
@@ -47,7 +59,7 @@ class CreateCommand extends BaseCommand {
         final envName = argResults!.rest.first;
 
         // Check if environment already exists
-        final existingEnv = await environmentService.loadEnvironment(
+        final existingEnv = await _environmentService.loadEnvironment(
           name: envName,
           projectName: projectName,
         );
@@ -59,7 +71,7 @@ class CreateCommand extends BaseCommand {
         Map<String, String>? initialValues;
         if (template != null) {
           // Load values from template
-          final templateEnv = await environmentService.loadEnvironment(
+          final templateEnv = await _environmentService.loadEnvironment(
             name: template,
             projectName: projectName,
           );
@@ -71,7 +83,19 @@ class CreateCommand extends BaseCommand {
           initialValues = Map.from(templateEnv.values);
         }
 
-        final env = await environmentService.createEnvironment(
+        // Add key-value pairs if provided
+        if (keys.isNotEmpty) {
+          if (keys.length != values.length) {
+            throw 'Number of keys and values must match';
+          }
+
+          initialValues ??= {};
+          for (var i = 0; i < keys.length; i++) {
+            initialValues[keys[i]] = values[i];
+          }
+        }
+
+        final env = await _environmentService.createEnvironment(
           name: envName,
           projectName: projectName,
           description: description,

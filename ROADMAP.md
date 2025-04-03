@@ -26,7 +26,9 @@ lib/
 │       │   │   ├── env_command.dart
 │       │   │   ├── create_command.dart
 │       │   │   ├── list_command.dart
-│       │   │   └── info_command.dart
+│       │   │   ├── info_command.dart
+│       │   │   ├── edit_command.dart
+│       │   │   └── delete_command.dart
 │       │   └── import/
 │       │       ├── import_command.dart
 │       │       ├── env_import_command.dart
@@ -50,20 +52,22 @@ bin/
 - [x] CLI Commands
   - [x] Version command
   - [x] XConfig conversion
-  - [x] Environment management (create, list, info)
+  - [x] Environment management
+    - [x] Create command
+    - [x] List command
+    - [x] Info command
+    - [x] Edit command
+    - [x] Delete command
   - [x] Import commands (env, properties, xcconfig)
+- [x] Error handling
+  - [x] Base command error handling wrapper
+  - [x] Consistent error messages
+  - [x] Command validation
 
 ### Week 3: Environment Management (In Progress)
 
 #### Remaining Environment Commands
 ```dart
-// Edit environment
-secure_env env edit [name]
-  --project     # Project name
-  --key         # Key to edit
-  --value       # New value
-  --delete      # Delete key
-
 // Export environment
 secure_env env export [name]
   --project     # Project name
@@ -93,17 +97,18 @@ secure_env value get [key]
 - [ ] Input validation
 
 #### Testing & Documentation
-- [ ] Unit tests for all services
-- [ ] Integration tests for commands
+- [x] Unit tests for core services
+- [x] Integration tests for base commands
+- [ ] Integration tests for remaining commands
 - [ ] CLI documentation
 - [ ] Usage examples
 
 ### Week 5: Polish & Release
 
 #### Final Features
-- [ ] Add configuration validation
-- [ ] Implement logging
-- [ ] Add error handling
+- [x] Add configuration validation
+- [x] Implement logging
+- [x] Add error handling
 - [ ] Performance optimizations
 
 #### Release Preparation
@@ -160,7 +165,7 @@ secure_env value get [key]
 
 ## Next Steps
 
-1. Implement environment editing commands
+1. ~~Implement environment editing commands~~ 
 2. Add value management commands
 3. Implement encryption service
 4. Add comprehensive testing

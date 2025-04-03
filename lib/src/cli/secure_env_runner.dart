@@ -1,17 +1,17 @@
 import 'package:args/command_runner.dart';
-import 'package:mason_logger/mason_logger.dart';
-
-import 'commands/base_command.dart';
-import 'commands/version_command.dart';
-import 'commands/xcconfig_command.dart';
-import 'commands/env/env_command.dart';
-import 'commands/import/import_command.dart';
+import 'package:env_manager/src/cli/commands/base_command.dart';
+import 'package:env_manager/src/cli/commands/env/env_command.dart';
+import 'package:env_manager/src/cli/commands/import/import_command.dart';
+import 'package:env_manager/src/cli/commands/version_command.dart';
+import 'package:env_manager/src/cli/commands/xcconfig_command.dart';
+import 'package:env_manager/src/core/logger.dart';
+import 'package:env_manager/src/core/mason_logger_adapter.dart';
 
 /// Command runner for the secure_env CLI
 class SecureEnvRunner extends CommandRunner<int> {
   SecureEnvRunner({
     Logger? logger,
-  })  : _logger = logger ?? Logger(),
+  })  : _logger = logger ?? MasonLoggerAdapter(),
         super(
           'secure_env',
           'A robust CLI tool for managing environment variables across different formats.',
@@ -46,18 +46,18 @@ class SecureEnvRunner extends CommandRunner<int> {
       return result ?? BaseCommand.successExitCode;
     } on FormatException catch (e) {
       _logger
-        ..err(e.message)
+        ..error(e.message)
         ..info('')
         ..info(usage);
       return BaseCommand.failureExitCode;
     } on UsageException catch (e) {
       _logger
-        ..err(e.message)
+        ..error(e.message)
         ..info('')
         ..info(e.usage);
       return BaseCommand.failureExitCode;
     } catch (error) {
-      _logger.err('Error: $error');
+      _logger.error('Error: $error');
       return BaseCommand.failureExitCode;
     }
   }
