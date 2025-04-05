@@ -7,19 +7,25 @@
 lib/
 ├── src/
 │   ├── core/
-│   │   ├── models/              # Core data models
+│   │   ├── exceptions/         # Custom exceptions
+│   │   │   └── validation_exception.dart
+│   │   ├── models/            # Core data models
 │   │   │   ├── project.dart
 │   │   │   ├── environment.dart
 │   │   │   └── config.dart
-│   │   └── services/           # Business logic
-│   │       ├── format/         # Format converters
-│   │       │   ├── xcconfig.dart
-│   │       │   ├── env.dart
-│   │       │   └── properties.dart
-│   │       ├── encryption_service.dart
-│   │       ├── secure_storage_service.dart
-│   │       └── environment_service.dart
-│   └── cli/                    # CLI implementation
+│   │   ├── services/         # Business logic
+│   │   │   ├── format/       # Format converters
+│   │   │   │   ├── xcconfig.dart
+│   │   │   │   ├── env.dart
+│   │   │   │   └── properties.dart
+│   │   │   ├── encryption_service.dart
+│   │   │   ├── secure_storage_service.dart
+│   │   │   └── environment_service.dart
+│   │   ├── utils/           # Utility functions
+│   │   │   └── validation_utils.dart
+│   │   ├── logger.dart      # Logger interface
+│   │   └── mason_logger_adapter.dart
+│   └── cli/                  # CLI implementation
 │       ├── commands/
 │       │   ├── base_command.dart
 │       │   ├── version_command.dart
@@ -30,6 +36,7 @@ lib/
 │       │   │   ├── list_command.dart
 │       │   │   ├── info_command.dart
 │       │   │   ├── edit_command.dart
+│       │   │   ├── export_command.dart
 │       │   │   └── delete_command.dart
 │       │   └── import/
 │       │       ├── import_command.dart
@@ -68,27 +75,17 @@ bin/
 
 ### Week 3: Environment Management (Completed)
 
-#### Remaining Environment Commands
-```dart
-// Export environment
-secure_env env export [name]
-  --project     # Project name
-  --format      # Output format (env,properties,xcconfig)
-  --output      # Output path
-```
-
-#### Value Management
-```dart
-// Set/get values
-secure_env value set [key] [value]
-  --env         # Environment name
-  --project     # Project name
-  --secret      # Mark as secret
-
-secure_env value get [key]
-  --env         # Environment name
-  --project     # Project name
-```
+#### Environment Commands
+- [x] Create environment
+- [x] List environments
+- [x] Show environment info
+- [x] Edit environment
+- [x] Delete environment
+- [x] Export environment
+- [x] Import environment
+  - [x] .env format
+  - [x] .properties format
+  - [x] .xcconfig format with variable substitution
 
 ### Week 4: Security & Testing (In Progress)
 
@@ -105,13 +102,18 @@ secure_env value get [key]
   - [x] Secure deletion
   - [x] Path traversal prevention
 - [x] Input validation
+  - [x] Empty key validation for imports
+  - [x] Consistent error handling
+  - [x] Proper exit codes
 
 #### Testing & Documentation
 - [x] Unit tests for core services
   - [x] Environment service tests
   - [x] Encryption service tests
   - [x] Secure storage service tests
+  - [x] Validation utils tests
 - [x] Integration tests for base commands
+- [x] Integration tests for import commands
 - [ ] Integration tests for remaining commands
 - [ ] CLI documentation
 - [ ] Usage examples
