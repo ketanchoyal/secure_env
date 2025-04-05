@@ -1,3 +1,5 @@
+import 'package:secure_env/src/core/utils/validation_utils.dart';
+
 import '../../../core/services/environment_service.dart';
 import '../../../core/services/format/properties.dart';
 import '../base_command.dart';
@@ -76,6 +78,9 @@ class PropertiesImportCommand extends BaseCommand {
           );
           mergedValues.addAll(values);
         }
+
+        // Validate secrets
+        validateSecrets(mergedValues);
 
         // Create or update environment
         final existingEnv = await environmentService.loadEnvironment(

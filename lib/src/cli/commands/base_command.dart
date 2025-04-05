@@ -1,4 +1,5 @@
 import 'package:args/command_runner.dart';
+import 'package:mason_logger/mason_logger.dart' hide Logger;
 import 'package:secure_env/src/core/logger.dart';
 
 /// Base command class for all commands
@@ -10,9 +11,11 @@ abstract class BaseCommand extends Command<int> {
   final Logger logger;
 
   /// Exit code for successful execution
+  @Deprecated('Use ExitCode.success.code instead')
   static const successExitCode = 0;
 
   /// Exit code for command failure
+  @Deprecated('Use ExitCode.software.code instead')
   static const failureExitCode = 1;
 
   /// Helper method to handle errors consistently
@@ -24,7 +27,10 @@ abstract class BaseCommand extends Command<int> {
         ..error('Error: $error')
         ..info('')
         ..info(usage);
-      return failureExitCode;
+      if (error is UsageException || error is ArgumentError) {
+        return ExitCode.usage.code;
+      }
+      return ExitCode.software.code;
     }
   }
 }

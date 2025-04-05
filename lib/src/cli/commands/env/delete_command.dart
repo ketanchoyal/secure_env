@@ -1,3 +1,4 @@
+import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env/src/core/services/environment_service.dart';
 import '../base_command.dart';
 
@@ -41,6 +42,6 @@ class DeleteCommand extends BaseCommand {
         );
 
         logger.success('Deleted environment: $envName');
-        return BaseCommand.successExitCode;
+        return ExitCode.success.code;
       });
 }

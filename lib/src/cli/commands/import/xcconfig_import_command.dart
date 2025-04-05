@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:secure_env/src/core/utils/validation_utils.dart';
+
 import '../../../core/models/config.dart';
 import '../../../core/services/environment_service.dart';
 import '../../../core/services/format/xcconfig.dart';
@@ -84,7 +86,7 @@ class XConfigImportCommand extends BaseCommand {
         for (final file in allFiles) {
           logger.info('Reading $file...');
           final values = await xconfigService.readXConfig(file);
-          
+
           // Apply config transformations if available
           if (config != null) {
             final transformedValues = <String, String>{};
@@ -99,6 +101,9 @@ class XConfigImportCommand extends BaseCommand {
             mergedValues.addAll(values);
           }
         }
+
+        // Validate secrets
+        validateSecrets(mergedValues);
 
         // Create or update environment
         final existingEnv = await environmentService.loadEnvironment(

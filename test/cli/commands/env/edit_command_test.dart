@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:args/command_runner.dart';
+import 'package:mason_logger/mason_logger.dart';
 import 'package:test/test.dart';
 import 'package:secure_env/src/cli/commands/env/env_command.dart';
 import 'package:secure_env/src/core/services/environment_service.dart';
@@ -14,7 +15,10 @@ void main() {
     logger = TestLogger();
     environmentService = EnvironmentService();
     runner = CommandRunner<int>('test', 'Test runner')
-      ..addCommand(EnvCommand(logger: logger));
+      ..addCommand(EnvCommand(
+        logger: logger,
+        environmentService: environmentService,
+      ));
   });
 
   tearDown(() async {
@@ -117,13 +121,13 @@ void main() {
         'new_value',
       ]);
 
-      expect(result, equals(1));
+      expect(result, equals(ExitCode.software.code));
       expect(logger.errorLogs, contains(contains('Environment not found')));
     });
 
     test('requires project, name, key, and value arguments', () async {
       final result = await runner.run(['env', 'edit']);
-      expect(result, equals(1));
+      expect(result, equals(ExitCode.usage.code));
       expect(
         logger.errorLogs,
         contains(contains('Option project is mandatory')),

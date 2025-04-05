@@ -37,7 +37,7 @@ class EnvService {
     final config = <String, String>{};
 
     if (!await File(filePath).exists()) {
-      return config;
+      throw Exception('File not found: $filePath');
     }
 
     final lines = await File(filePath).readAsLines();

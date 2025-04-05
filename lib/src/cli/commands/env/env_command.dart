@@ -1,48 +1,45 @@
-import 'package:secure_env/src/core/services/environment_service.dart';
-import 'package:secure_env/src/cli/commands/base_command.dart';
-import 'package:secure_env/src/cli/commands/env/create_command.dart';
-import 'package:secure_env/src/cli/commands/env/delete_command.dart';
-import 'package:secure_env/src/cli/commands/env/edit_command.dart';
-import 'package:secure_env/src/cli/commands/env/info_command.dart';
-import 'package:secure_env/src/cli/commands/env/list_command.dart';
+import 'package:args/command_runner.dart';
 
-/// Group command for environment management
-class EnvCommand extends BaseCommand {
+import '../../../core/logger.dart';
+import '../../../core/services/environment_service.dart';
+import 'create_command.dart';
+import 'delete_command.dart';
+import 'edit_command.dart';
+import 'export_command.dart';
+import 'info_command.dart';
+import 'list_command.dart';
+
+/// Environment management commands
+class EnvCommand extends Command<int> {
+  /// Creates a new environment command
   EnvCommand({
-    required super.logger,
+    required Logger logger,
+    EnvironmentService? environmentService,
   }) {
-    final environmentService = EnvironmentService();
-
-    addSubcommand(
-      CreateCommand(
-        logger: logger,
-        environmentService: environmentService,
-      ),
-    );
-    addSubcommand(
-      ListCommand(
-        logger: logger,
-        environmentService: environmentService,
-      ),
-    );
-    addSubcommand(
-      InfoCommand(
-        logger: logger,
-        environmentService: environmentService,
-      ),
-    );
-    addSubcommand(
-      EditCommand(
-        logger: logger,
-        environmentService: environmentService,
-      ),
-    );
-    addSubcommand(
-      DeleteCommand(
-        logger: logger,
-        environmentService: environmentService,
-      ),
-    );
+    addSubcommand(CreateCommand(
+      logger: logger,
+      environmentService: environmentService,
+    ));
+    addSubcommand(ListCommand(
+      logger: logger,
+      environmentService: environmentService,
+    ));
+    addSubcommand(InfoCommand(
+      logger: logger,
+      environmentService: environmentService,
+    ));
+    addSubcommand(EditCommand(
+      logger: logger,
+      environmentService: environmentService,
+    ));
+    addSubcommand(DeleteCommand(
+      logger: logger,
+      environmentService: environmentService,
+    ));
+    addSubcommand(ExportCommand(
+      logger: logger,
+      environmentService: environmentService,
+    ));
   }
 
   @override

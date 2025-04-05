@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:args/command_runner.dart';
+import 'package:mason_logger/mason_logger.dart';
 import 'package:test/test.dart';
 import 'package:secure_env/src/cli/commands/env/env_command.dart';
 import 'package:secure_env/src/core/services/environment_service.dart';
@@ -13,7 +15,18 @@ void main() {
     logger = TestLogger();
     environmentService = EnvironmentService();
     runner = CommandRunner<int>('test', 'Test runner')
-      ..addCommand(EnvCommand(logger: logger));
+      ..addCommand(EnvCommand(
+        logger: logger,
+        environmentService: environmentService,
+      ));
+  });
+
+  tearDown(() async {
+    final envDir = environmentService.getProjectEnvDir('test_project');
+    final dir = Directory(envDir);
+    if (await dir.exists()) {
+      await dir.delete(recursive: true);
+    }
   });
 
   group('DeleteCommand', () {
@@ -21,7 +34,6 @@ void main() {
       await environmentService.createEnvironment(
         name: 'test',
         projectName: 'test_project',
-        initialValues: {'API_KEY': 'value'},
       );
 
       final result = await runner.run([
@@ -33,11 +45,9 @@ void main() {
         'test',
       ]);
 
-      expect(result, equals(0));
+      expect(result, equals(ExitCode.success.code));
       expect(
-        logger.successLogs,
-        contains(contains('Deleted environment: test')),
-      );
+          logger.successLogs, contains(contains('Deleted environment: test')));
 
       final env = await environmentService.loadEnvironment(
         name: 'test',
@@ -56,13 +66,13 @@ void main() {
         'non_existent',
       ]);
 
-      expect(result, equals(1));
+      expect(result, equals(ExitCode.software.code));
       expect(logger.errorLogs, contains(contains('Environment not found')));
     });
 
     test('requires project and name arguments', () async {
       final result = await runner.run(['env', 'delete']);
-      expect(result, equals(1));
+      expect(result, equals(ExitCode.usage.code));
       expect(
         logger.errorLogs,
         contains(contains('Option project is mandatory')),

@@ -6,30 +6,31 @@ class XConfigService {
   Future<Map<String, String>> readXConfig(
     String filePath, {
     Set<String>? processedFiles,
+    Map<String, String>? variables,
   }) async {
     processedFiles ??= {};
-    
+    variables ??= {};
+
     if (processedFiles.contains(filePath)) {
       return {};
     }
-    
+
     processedFiles.add(filePath);
     final config = <String, String>{};
-    
+
     if (!await File(filePath).exists()) {
-      print('Warning: File $filePath not found');
-      return config;
+      throw Exception('File not found: $filePath');
     }
-    
+
     final directory = path.dirname(filePath);
     final lines = await File(filePath).readAsLines();
-    
+
     for (final line in lines) {
       final trimmedLine = line.trim();
       if (trimmedLine.isEmpty || trimmedLine.startsWith('//')) {
         continue;
       }
-      
+
       if (trimmedLine.startsWith('#include')) {
         // Handle includes
         final includeFile = trimmedLine.split('"')[1];
@@ -37,19 +38,32 @@ class XConfigService {
         final includedConfig = await readXConfig(
           includePath,
           processedFiles: processedFiles,
+          variables: variables,
         );
         config.addAll(includedConfig);
+        variables.addAll(includedConfig); // Make included variables available
       } else if (trimmedLine.contains('=')) {
         // Handle key-value pairs
         final parts = trimmedLine.split('=');
         final key = parts[0].trim();
-        final value = parts[1].trim();
+        var value = parts[1].trim();
+
+        // Handle variable substitution
+        final varMatches = RegExp(r'\$\((\w+)\)').allMatches(value);
+        for (final match in varMatches) {
+          final varName = match.group(1)!;
+          if (variables.containsKey(varName)) {
+            value = value.replaceAll('\$(' + varName + ')', variables[varName]!);
+          }
+        }
+
         // Remove any ${PROJECT_DIR} or similar variables
         final cleanValue = value.replaceAll(RegExp(r'\${.*?}'), '').trim();
         config[key] = cleanValue;
+        variables[key] = cleanValue; // Make this variable available for substitution
       }
     }
-    
+
     return config;
   }
 

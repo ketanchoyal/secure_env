@@ -12,6 +12,25 @@ class ImportCommand extends BaseCommand {
   ImportCommand({
     required super.logger,
   }) {
+    // argParser
+    //   ..addFlag(
+    //     'force',
+    //     abbr: 'f',
+    //     help: 'Force import even if environment already exists',
+    //     defaultsTo: false,
+    //   )
+    //   ..addFlag(
+    //     'merge',
+    //     abbr: 'm',
+    //     help: 'Merge with existing environment if it exists',
+    //     defaultsTo: false,
+    //   )
+    //   ..addOption(
+    //     'environment',
+    //     abbr: 'e',
+    //     help: 'Target environment name',
+    //     valueHelp: 'name',
+    //   );
     final environmentService = EnvironmentService();
     final envService = EnvService();
     final propertiesService = PropertiesService();
@@ -39,4 +58,15 @@ class ImportCommand extends BaseCommand {
 
   @override
   String get name => 'import';
+
+  // @override
+  // Future<int> run() => handleErrors(() async {
+  //       if (argResults?.command == null) {
+  //         // No subcommand provided, print help
+  //         logger.info(usage);
+  //         return ExitCode.success.code;
+  //       }
+  //       // Let the subcommand handle the command
+  //       return ExitCode.success.code;
+  //     });
 }

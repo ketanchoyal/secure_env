@@ -1,3 +1,6 @@
+import 'package:mason_logger/mason_logger.dart';
+import 'package:secure_env/src/core/utils/validation_utils.dart';
+
 import '../../../core/services/environment_service.dart';
 import '../../../core/services/format/env.dart';
 import '../base_command.dart';
@@ -52,7 +55,8 @@ class EnvImportCommand extends BaseCommand {
         final files = argResults!['files'] as List<String>;
 
         if (files.isEmpty && argResults!.rest.isEmpty) {
-          throw const FormatException('At least one .env file path is required');
+          throw const FormatException(
+              'At least one .env file path is required');
         }
 
         // Combine files from --files option and rest arguments
@@ -65,6 +69,9 @@ class EnvImportCommand extends BaseCommand {
           final values = await envService.readEnvFile(file);
           mergedValues.addAll(values);
         }
+
+        // Validate secrets
+        validateSecrets(mergedValues);
 
         // Create or update environment
         final existingEnv = await environmentService.loadEnvironment(
@@ -97,6 +104,6 @@ class EnvImportCommand extends BaseCommand {
         logger.success(
           'Successfully imported ${mergedValues.length} variables from ${allFiles.length} files',
         );
-        return BaseCommand.successExitCode;
+        return ExitCode.success.code;
       });
 }

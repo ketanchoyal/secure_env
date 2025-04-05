@@ -7,13 +7,13 @@ class PropertiesService {
     bool androidStyle = false,
   }) {
     final buffer = StringBuffer();
-    
+
     for (final entry in config.entries) {
       final key = _formatKey(entry.key, androidStyle: androidStyle);
       final value = _formatValue(entry.value);
       buffer.writeln('$key=$value');
     }
-    
+
     return buffer.toString();
   }
 
@@ -52,14 +52,14 @@ class PropertiesService {
     bool androidStyle = false,
   }) async {
     final config = <String, String>{};
-    
+
     if (!await File(filePath).exists()) {
-      return config;
+      throw Exception('File not found: $filePath');
     }
 
     final lines = await File(filePath).readAsLines();
     String? continuationLine;
-    
+
     for (final line in lines) {
       final trimmedLine = line.trim();
       if (trimmedLine.isEmpty || trimmedLine.startsWith('#')) {
@@ -91,13 +91,13 @@ class PropertiesService {
 
       final key = parts[0].trim();
       final value = parts.sublist(1).join('=').trim();
-      
+
       // Unescape special characters
       final cleanValue = _unescapeValue(value);
       config[androidStyle ? key.toLowerCase() : key] = cleanValue;
       continuationLine = null;
     }
-    
+
     return config;
   }
 

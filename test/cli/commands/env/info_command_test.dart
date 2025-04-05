@@ -1,3 +1,4 @@
+import 'package:mason_logger/mason_logger.dart';
 import 'package:test/test.dart';
 import 'package:args/command_runner.dart';
 import 'package:secure_env/src/cli/commands/env/env_command.dart';
@@ -13,14 +14,17 @@ void main() {
     logger = TestLogger();
     environmentService = EnvironmentService();
     runner = CommandRunner<int>('test', 'Test runner')
-      ..addCommand(EnvCommand(logger: logger));
+      ..addCommand(EnvCommand(
+        logger: logger,
+        environmentService: environmentService,
+      ));
   });
 
   group('InfoCommand', () {
     test('shows error when environment does not exist', () async {
       final result = await runner
           .run(['env', 'info', '--project', 'test', '--name', 'non_existent']);
-      expect(result, equals(1));
+      expect(result, equals(ExitCode.software.code));
       expect(logger.errorLogs, contains(contains('Environment not found')));
     });
 
@@ -34,7 +38,7 @@ void main() {
 
       final result = await runner
           .run(['env', 'info', '--project', 'test_project', '--name', 'test']);
-      expect(result, equals(0));
+      expect(result, equals(ExitCode.success.code));
       expect(
         logger.infoLogs,
         containsAll([
@@ -49,7 +53,7 @@ void main() {
 
     test('requires project and name arguments', () async {
       final result = await runner.run(['env', 'info']);
-      expect(result, equals(1));
+      expect(result, equals(ExitCode.usage.code));
       expect(
         logger.errorLogs,
         contains(contains('Option project is mandatory')),

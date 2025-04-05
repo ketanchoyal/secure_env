@@ -1,3 +1,4 @@
+import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env/src/core/services/environment_service.dart';
 import 'package:secure_env/src/cli/commands/base_command.dart';
 
@@ -107,6 +108,6 @@ class CreateCommand extends BaseCommand {
           logger.info('Description: ${env.description}');
         }
 
-        return BaseCommand.successExitCode;
+        return ExitCode.success.code;
       });
 }

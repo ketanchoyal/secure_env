@@ -168,7 +168,8 @@ class EnvironmentService {
     );
 
     if (env == null) {
-      throw 'Environment not found: $name';
+      _logger.error('Environment not found: $name');
+      return;
     }
 
     // Delete sensitive values
