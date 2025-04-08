@@ -32,7 +32,7 @@ coverage/
 *~
 
 # Documentation
-doc/api/
+# doc/api/
 
 # Generated files
 *.g.dart

@@ -204,8 +204,7 @@ packages/
 ### Advanced Features
 - CI/CD integration
 - Team collaboration
-- Audit logging
-- Analytics
+- Store environment variables on s3 bucket or other cloud storage or git 
 
 ## Development Guidelines
 
