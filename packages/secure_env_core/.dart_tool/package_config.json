@@ -254,6 +254,12 @@
       "languageVersion": "3.2"
     },
     {
+      "name": "mocktail",
+      "rootUri": "file:///Users/ketanchoyal/.pub-cache/hosted/pub.dev/mocktail-1.0.4",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "node_preamble",
       "rootUri": "file:///Users/ketanchoyal/.pub-cache/hosted/pub.dev/node_preamble-2.0.2",
       "packageUri": "lib/",
@@ -458,7 +464,7 @@
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2025-04-08T16:55:12.033218Z",
+  "generated": "2025-04-08T22:04:02.813440Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
   "flutterRoot": "file:///Users/ketanchoyal/fvm/versions/stable",

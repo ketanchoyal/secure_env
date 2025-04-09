@@ -196,10 +196,19 @@ packages/
 - State management architecture
 
 ### Core Features
-- Project management
-- Environment editing
-- Value management
-- Security features
+- Project Management
+  - Create project with dedicated directory
+  - Project configuration and settings
+  - Project deletion and archival
+- Environment Management
+  - Create environments within projects
+  - Environment configuration
+  - Environment variables management
+  - Import/Export support
+- Security Features
+  - Project-level encryption
+  - Environment-specific keys
+  - Access control and permissions
 
 ### Advanced Features
 - CI/CD integration
@@ -233,10 +242,74 @@ packages/
 3. Usage examples
 4. Troubleshooting guide
 
+## Core Package Refactoring
+
+### Project-First Architecture
+
+#### Project Model & Service Updates
+- [ ] Update Project model
+  - [ ] Add directory path handling
+  - [ ] Project configuration file management
+  - [ ] Project validation and error handling
+  - [ ] Add project status tracking (active/archived)
+  - [ ] Support for project metadata and tags
+
+#### Environment Service Refactoring
+- [ ] Refactor Environment service
+  - [ ] Move to project-based storage
+  - [ ] Update environment creation to require project
+  - [ ] Add project validation in environment operations
+  - [ ] Add environment inheritance support
+  - [ ] Implement environment variable overrides
+
+#### Storage Service Updates
+- [ ] Update Storage service
+  - [ ] Project directory structure
+  - [ ] Project-specific encryption keys
+  - [ ] Migration support for existing environments
+  - [ ] Backup and restore functionality
+  - [ ] Implement file watchers for changes
+
+#### CLI Command Updates
+- [ ] Add new project commands
+  - [ ] Create project command
+  - [ ] List projects command
+  - [ ] Show project info command
+  - [ ] Archive/unarchive project command
+  - [ ] Delete project command
+- [ ] Update environment commands
+  - [ ] Modify create environment to work with projects
+  - [ ] Update list to show project hierarchy
+  - [ ] Add project-based filtering options
+  - [ ] Update import/export for project context
+
+#### Security Enhancements
+- [ ] Project-level security
+  - [ ] Per-project encryption keys
+  - [ ] Key rotation support
+  - [ ] Access control lists
+- [ ] Environment-level security
+  - [ ] Environment-specific encryption
+  - [ ] Sensitive value masking
+  - [ ] Audit logging
+
+#### Testing & Documentation
+- [ ] Update test suite
+  - [ ] Project model tests
+  - [ ] Project service tests
+  - [ ] Updated environment service tests
+  - [ ] Migration tests
+- [ ] Documentation updates
+  - [ ] Project management guide
+  - [ ] Migration guide for existing users
+  - [ ] Updated API documentation
+  - [ ] New examples and tutorials
+
 ## Next Steps
 
 1. ~~Implement environment editing commands~~ 
 2. ~~Add value management commands~~
 3. ~~Implement encryption service~~
-4. Add comprehensive testing
-5. Prepare for initial release
+4. Implement project-first architecture
+5. Add comprehensive testing
+6. Prepare for initial release

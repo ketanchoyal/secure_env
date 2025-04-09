@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 
+import '../exceptions/exceptions.dart';
 import '../utils/logger.dart';
 import 'encryption_service.dart';
 
@@ -100,6 +102,62 @@ class SecureStorageService {
       return true;
     } catch (e) {
       _logger.error('Failed to store value: $e');
+      return false;
+    }
+  }
+
+  /// Store JSON data securely
+  ///
+  /// Parameters:
+  /// - [key]: Unique identifier for the JSON data
+  /// - [json]: The JSON object to store
+  ///
+  /// Returns true if the operation was successful
+  Future<bool> writeJson(String key, Map<String, dynamic> json) async {
+    try {
+      return await store(key, jsonEncode(json));
+    } catch (e) {
+      _logger.error('Failed to store JSON: $e');
+      return false;
+    }
+  }
+
+  /// Read JSON data securely
+  ///
+  /// Parameters:
+  /// - [key]: Unique identifier of the JSON data to retrieve
+  ///
+  /// Throws:
+  /// - [FileNotFoundException] if the file doesn't exist
+  /// - [ValidationException] if the content is not valid JSON
+  Future<Map<String, dynamic>> readJson(String key) async {
+    final value = await retrieve(key);
+    if (value == null) {
+      throw FileNotFoundException('File not found: $key');
+    }
+    try {
+      return jsonDecode(value) as Map<String, dynamic>;
+    } catch (e) {
+      _logger.error('Failed to parse JSON: $e');
+      throw ValidationException('Invalid JSON format');
+    }
+  }
+
+  /// Delete a file
+  ///
+  /// Parameters:
+  /// - [key]: Unique identifier of the file to delete
+  ///
+  /// Returns true if the operation was successful or if the file didn't exist
+  Future<bool> deleteFile(String key) async {
+    try {
+      final file = File(_getFilePath(key));
+      if (await file.exists()) {
+        await file.delete();
+      }
+      return true;
+    } catch (e) {
+      _logger.error('Failed to delete file: $e');
       return false;
     }
   }

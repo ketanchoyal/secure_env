@@ -2,20 +2,24 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 
+import '../exceptions/exceptions.dart';
 import '../models/models.dart';
 import 'services.dart';
 import '../utils/logger.dart';
 import '../utils/default_logger.dart';
+import 'format/format.dart';
+import 'project_service.dart';
 
 /// Service for managing environments
 class EnvironmentService {
-  /// Base directory for storing environment data
-  static const _baseDir = '.secure_env';
-
   final SecureStorageService _secureStorage;
   final Logger _logger;
+  final ProjectService projectService;
+  final Project project;
 
-  EnvironmentService({
+  EnvironmentService._(
+    this.project, {
+    required this.projectService,
     Logger? logger,
     SecureStorageService? secureStorage,
     EncryptionService? encryptionService,
@@ -25,31 +29,168 @@ class EnvironmentService {
               encryptionService: encryptionService ?? EncryptionService()
                 ..initialize('env-manager'),
               logger: logger ?? DefaultLogger(),
-              storageDirectory: path.join(_baseDir, 'secrets'),
+              storageDirectory: 'secrets',
             );
 
-  /// Get the path to the environments directory for a project
-  String getProjectEnvDir(String projectName) {
-    return path.join(_baseDir, projectName, 'environments');
+  /// Create an EnvironmentService for a specific project
+  static Future<EnvironmentService> forProject({
+    required Project project,
+    required ProjectService projectService,
+    Logger? logger,
+    SecureStorageService? secureStorage,
+    EncryptionService? encryptionService,
+  }) async {
+    if (project.status == ProjectStatus.markedForDeletion) {
+      throw ValidationException('Project is pending deletion');
+    }
+    if (project.status != ProjectStatus.active) {
+      throw ValidationException('Project is not in active state');
+    }
+
+    return EnvironmentService._(
+      project,
+      projectService: projectService,
+      logger: logger,
+      secureStorage: secureStorage,
+      encryptionService: encryptionService,
+    );
+  }
+
+  /// Get the path to the environments directory for this project
+  String getProjectEnvDir() {
+    return path.join(project.path, 'environments');
+  }
+
+  /// Get the path to the environment type directory
+  String _getEnvTypeDir(String envType) {
+    return path.join(getProjectEnvDir(), envType);
+  }
+
+  /// Sanitize a name for use in file paths
+  String _sanitizeName(String name) {
+    return name.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_').toLowerCase();
   }
 
   /// Create a new environment
   Future<Environment> createEnvironment({
     required String name,
-    required String projectName,
     String? description,
     Map<String, String>? initialValues,
+    Map<String, bool>? sensitiveKeys,
   }) async {
+    // Create environment
     final env = Environment(
       name: name,
-      projectName: projectName,
       description: description,
       values: initialValues ?? {},
+      sensitiveKeys: sensitiveKeys ?? {},
       lastModified: DateTime.now(),
     );
 
+    // Save environment
     await saveEnvironment(env);
+
+    // Update project's environment list
+    if (!project.environments.contains(name)) {
+      await projectService.updateProject(
+        project.copyWith(
+          environments: [...project.environments, name],
+        ),
+      );
+    }
+
     return env;
+  }
+
+  /// Import environment from a .env file
+  Future<Environment> importFromEnv({
+    required String filePath,
+    required String name,
+    String? description,
+    Map<String, bool>? sensitiveKeys,
+  }) async {
+    final envService = EnvService();
+    final values = await envService.readEnvFile(filePath);
+
+    return createEnvironment(
+      name: name,
+      description: description,
+      initialValues: values,
+      sensitiveKeys: sensitiveKeys,
+    );
+  }
+
+  /// Import environment from a .properties file
+  Future<Environment> importFromProperties({
+    required String filePath,
+    required String name,
+    String? description,
+    Map<String, bool>? sensitiveKeys,
+  }) async {
+    final propertiesService = PropertiesService();
+    final values = await propertiesService.readPropertiesFile(filePath);
+
+    return createEnvironment(
+      name: name,
+      description: description,
+      initialValues: values,
+      sensitiveKeys: sensitiveKeys,
+    );
+  }
+
+  /// Import environment from a .xcconfig file
+  Future<Environment> importFromXcconfig({
+    required String filePath,
+    required String name,
+    String? description,
+    Map<String, bool>? sensitiveKeys,
+  }) async {
+    final xcconfigService = XConfigService();
+    final values = await xcconfigService.readXConfig(filePath);
+
+    return createEnvironment(
+      name: name,
+      description: description,
+      initialValues: values,
+      sensitiveKeys: sensitiveKeys,
+    );
+  }
+
+  /// Import environment from a file, automatically detecting the format
+  /// Supported formats: .env, .properties, .xcconfig
+  Future<Environment> importEnvironment({
+    required String filePath,
+    required String envName,
+    String? description,
+  }) async {
+    final file = File(filePath);
+    if (!await file.exists()) {
+      throw ValidationException('File does not exist');
+    }
+
+    final extension = path.extension(filePath).toLowerCase();
+    switch (extension) {
+      case '.env':
+        return importFromEnv(
+          filePath: filePath,
+          name: envName,
+          description: description,
+        );
+      case '.properties':
+        return importFromProperties(
+          filePath: filePath,
+          name: envName,
+          description: description,
+        );
+      case '.xcconfig':
+        return importFromXcconfig(
+          filePath: filePath,
+          name: envName,
+          description: description,
+        );
+      default:
+        throw ValidationException('Invalid file format');
+    }
   }
 
   /// Save an environment to disk
@@ -58,7 +199,7 @@ class EnvironmentService {
   /// 1. Saves sensitive values using SecureStorageService
   /// 2. Saves non-sensitive values and metadata to JSON
   Future<void> saveEnvironment(Environment env) async {
-    final envDir = getProjectEnvDir(env.projectName);
+    final envDir = getProjectEnvDir();
     await Directory(envDir).create(recursive: true);
 
     // Store sensitive values securely
@@ -66,12 +207,12 @@ class EnvironmentService {
       if (env.sensitiveKeys[key] == true && env.values.containsKey(key)) {
         final value = env.values[key]!;
         final stored = await _secureStorage.store(
-          '${env.projectName}/${env.name}/$key',
+          '${project.name}/${env.name}/$key',
           value,
         );
         if (!stored) {
           _logger.error('Failed to store sensitive value for key: $key');
-          throw 'Failed to store sensitive value';
+          throw ValidationException('Failed to store sensitive value');
         }
       }
     }
@@ -84,9 +225,21 @@ class EnvironmentService {
       }
     }
 
+    // Create environment type directory
+    final sanitizedName = _sanitizeName(env.name);
+    final envTypeDir = _getEnvTypeDir(sanitizedName);
+    await Directory(envTypeDir).create(recursive: true);
+
     // Save environment metadata and non-sensitive values
-    final envFile = File(path.join(envDir, '${env.name}.json'));
-    final safeEnv = env.copyWith(values: safeValues);
+    final envFile =
+        File(path.join(envTypeDir, '${_sanitizeName(env.name)}.json'));
+    final safeEnv = env.copyWith(
+      values: safeValues,
+      metadata: {
+        ...env.metadata,
+        'originalName': env.name,
+      },
+    );
     await envFile.writeAsString(
       jsonEncode(safeEnv.toJson()),
       flush: true,
@@ -100,39 +253,50 @@ class EnvironmentService {
   /// 2. Retrieves sensitive values from SecureStorageService
   Future<Environment?> loadEnvironment({
     required String name,
-    required String projectName,
   }) async {
-    final envDir = getProjectEnvDir(projectName);
-    final envFile = File(path.join(envDir, '$name.json'));
+    final sanitizedName = _sanitizeName(name);
+    final envTypeDir = _getEnvTypeDir(sanitizedName);
+    final envFile = File(path.join(envTypeDir, '$sanitizedName.json'));
 
     if (!await envFile.exists()) {
       return null;
     }
 
-    final json = jsonDecode(await envFile.readAsString());
-    final env = Environment.fromJson(json as Map<String, dynamic>);
+    try {
+      final json = jsonDecode(await envFile.readAsString());
+      final env = Environment.fromJson(json as Map<String, dynamic>);
 
-    // Load sensitive values
-    final values = Map<String, String>.from(env.values);
-    for (final key in env.sensitiveKeys.keys) {
-      if (env.sensitiveKeys[key] == true) {
-        final value = await _secureStorage.retrieve(
-          '$projectName/$name/$key',
-        );
-        if (value != null) {
-          values[key] = value;
-        } else {
-          _logger.error('Failed to retrieve sensitive value for key: $key');
+      // Load sensitive values
+      final values = Map<String, String>.from(env.values);
+      for (final key in env.sensitiveKeys.keys) {
+        if (env.sensitiveKeys[key] == true) {
+          final value = await _secureStorage.retrieve(
+            '${project.name}/${env.name}/$key',
+          );
+          if (value != null) {
+            values[key] = value;
+          } else {
+            _logger.error('Failed to retrieve sensitive value for key: $key');
+          }
         }
       }
-    }
 
-    return env.copyWith(values: values);
+      return env.copyWith(
+        values: values,
+        metadata: {
+          ...env.metadata,
+          'sanitizedName': sanitizedName,
+        },
+      );
+    } catch (e) {
+      _logger.error('Failed to parse environment file: ${envFile.path}');
+      return null;
+    }
   }
 
   /// List all environments for a project
-  Future<List<Environment>> listEnvironments(String projectName) async {
-    final envDir = getProjectEnvDir(projectName);
+  Future<List<Environment>> listEnvironments() async {
+    final envDir = getProjectEnvDir();
     final dir = Directory(envDir);
 
     if (!await dir.exists()) {
@@ -140,12 +304,40 @@ class EnvironmentService {
     }
 
     final environments = <Environment>[];
-    await for (final file in dir.list()) {
-      if (file is File && file.path.endsWith('.json')) {
-        final json = jsonDecode(await file.readAsString());
-        environments.add(
-          Environment.fromJson(json as Map<String, dynamic>),
-        );
+    await for (final typeDir in dir.list()) {
+      if (typeDir is Directory) {
+        await for (final file in typeDir.list()) {
+          if (file is File && file.path.endsWith('.json')) {
+            try {
+              final json = jsonDecode(await file.readAsString());
+              final env = Environment.fromJson(json as Map<String, dynamic>);
+
+              // Load sensitive values
+              final values = Map<String, String>.from(env.values);
+              for (final key in env.sensitiveKeys.keys) {
+                if (env.sensitiveKeys[key] == true) {
+                  final value = await _secureStorage.retrieve(
+                    '${project.name}/${env.name}/$key',
+                  );
+                  if (value != null) {
+                    values[key] = value;
+                  }
+                }
+              }
+
+              environments.add(env.copyWith(
+                values: values,
+                metadata: {
+                  ...env.metadata,
+                  'sanitizedName': _sanitizeName(env.name),
+                },
+              ));
+            } catch (e) {
+              _logger.error('Failed to parse environment file: ${file.path}');
+              continue;
+            }
+          }
+        }
       }
     }
 
@@ -159,35 +351,48 @@ class EnvironmentService {
   /// 2. Securely deletes any sensitive values
   Future<void> deleteEnvironment({
     required String name,
-    required String projectName,
   }) async {
     final env = await loadEnvironment(
       name: name,
-      projectName: projectName,
     );
 
     if (env == null) {
-      _logger.error('Environment not found: $name');
-      return;
+      throw ValidationException('Environment "$name" not found');
     }
 
     // Delete sensitive values
     for (final key in env.sensitiveKeys.keys) {
       if (env.sensitiveKeys[key] == true) {
-        final deleted = await _secureStorage.delete(
-          '$projectName/$name/$key',
-        );
-        if (!deleted) {
-          _logger.error('Failed to delete sensitive value for key: $key');
-        }
+        await _secureStorage.delete('${project.name}/${env.name}/$key');
       }
     }
 
     // Delete environment file
-    final envDir = getProjectEnvDir(projectName);
-    final envFile = File(path.join(envDir, '$name.json'));
-    if (envFile.existsSync()) {
-      await envFile.delete();
+    final sanitizedName = _sanitizeName(name);
+    final typeDir = Directory(_getEnvTypeDir(sanitizedName));
+    if (typeDir.existsSync()) {
+      await for (final type in typeDir.list()) {
+        if (type is Directory) {
+          final envFile = File(path.join(type.path, '$name.json'));
+          if (envFile.existsSync()) {
+            await envFile.delete();
+            // Delete type directory if empty
+            if (await type.list().isEmpty) {
+              await type.delete();
+            }
+          }
+        }
+      }
+    }
+
+    // Update project's environment list
+    if (project.environments.contains(name)) {
+      await projectService.updateProject(
+        project.copyWith(
+          environments:
+              project.environments.where((envName) => envName != name).toList(),
+        ),
+      );
     }
   }
 
@@ -198,31 +403,30 @@ class EnvironmentService {
     required String key,
     required String value,
     required String envName,
-    required String projectName,
     bool isSecret = false,
   }) async {
     final env = await loadEnvironment(
       name: envName,
-      projectName: projectName,
     );
 
     if (env == null) {
-      throw 'Environment not found: $envName';
+      throw ValidationException('Environment "$envName" not found');
     }
 
-    final updatedValues = Map<String, String>.from(env.values);
-    updatedValues[key] = value;
+    final values = Map<String, String>.from(env.values);
+    values[key] = value;
 
-    final updatedSensitiveKeys = Map<String, bool>.from(env.sensitiveKeys);
-    updatedSensitiveKeys[key] = isSecret;
+    final sensitiveKeys = Map<String, bool>.from(env.sensitiveKeys);
+    sensitiveKeys[key] = isSecret;
 
     final updatedEnv = env.copyWith(
-      values: updatedValues,
-      sensitiveKeys: updatedSensitiveKeys,
+      values: values,
+      sensitiveKeys: sensitiveKeys,
       lastModified: DateTime.now(),
     );
 
     await saveEnvironment(updatedEnv);
+
     return updatedEnv;
   }
 
@@ -230,85 +434,11 @@ class EnvironmentService {
   Future<String?> getValue({
     required String key,
     required String envName,
-    required String projectName,
   }) async {
     final env = await loadEnvironment(
       name: envName,
-      projectName: projectName,
     );
 
     return env?.values[key];
-  }
-
-  /// Import environment variables from a file
-  Future<Environment> importEnvironment({
-    required String filePath,
-    required String envName,
-    required String projectName,
-    String? description,
-  }) async {
-    final file = File(filePath);
-    if (!await file.exists()) {
-      throw 'File not found: $filePath';
-    }
-
-    final content = await file.readAsString();
-    final values = <String, String>{};
-
-    if (filePath.endsWith('.env')) {
-      // Parse .env file
-      final lines = content.split('\n');
-      for (final line in lines) {
-        final trimmed = line.trim();
-        if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
-        final parts = trimmed.split('=');
-        if (parts.length >= 2) {
-          final key = parts[0].trim();
-          final value = parts.sublist(1).join('=').trim();
-          // Remove quotes (both single and double) from the start and end
-          var unquoted = value;
-          if ((value.startsWith('"') && value.endsWith('"')) ||
-              (value.startsWith("'") && value.endsWith("'"))) {
-            unquoted = value.substring(1, value.length - 1);
-          }
-          values[key] = unquoted;
-        }
-      }
-    } else if (filePath.endsWith('.xcconfig')) {
-      // Parse .xcconfig file
-      final lines = content.split('\n');
-      for (final line in lines) {
-        final trimmed = line.trim();
-        if (trimmed.isEmpty || trimmed.startsWith('//')) continue;
-        final parts = trimmed.split('=');
-        if (parts.length >= 2) {
-          final key = parts[0].trim();
-          final value = parts.sublist(1).join('=').trim();
-          values[key] = value;
-        }
-      }
-    } else if (filePath.endsWith('.properties')) {
-      // Parse .properties file
-      final lines = content.split('\n');
-      for (final line in lines) {
-        final trimmed = line.trim();
-        if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
-        final parts = trimmed.split('=');
-        if (parts.length >= 2) {
-          final key = parts[0].trim();
-          final value = parts.sublist(1).join('=').trim();
-          values[key] = value;
-        }
-      }
-    } else {
-      throw 'Unsupported file format. Supported formats: .env, .xcconfig, .properties';
-    }
-
-    return createEnvironment(
-      name: envName,
-      projectName: projectName,
-      description: description,
-      initialValues: values,
-    );
   }
 }

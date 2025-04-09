@@ -4,7 +4,7 @@ part 'config.freezed.dart';
 part 'config.g.dart';
 
 @freezed
-class Config with _$Config {
+abstract class Config with _$Config {
   const factory Config({
     @Default({}) Map<String, String> keyMapping,
     @Default([]) List<String> ignoreKeys,

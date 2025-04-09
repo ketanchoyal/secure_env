@@ -1,14 +1,61 @@
 import 'dart:io';
+import 'package:path/path.dart' as path;
 import 'package:secure_env_core/secure_env_core.dart';
+import 'package:secure_env_core/src/services/project_service.dart';
+import 'package:secure_env_core/src/services/project_registry_service.dart';
+import 'package:secure_env_core/src/services/secure_storage_service.dart';
 import 'package:test/test.dart';
+import '../utils/test_logger.dart';
 
 void main() {
+  late ProjectService projectService;
+  late ProjectRegistryService registryService;
   late EnvironmentService environmentService;
+  late TestLogger logger;
+  late Directory projectStorageDir;
   late Directory tempDir;
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('secure_env_test_');
-    environmentService = EnvironmentService();
+    logger = TestLogger();
+    final encryptionService = EncryptionService()..initialize('test-password');
+
+    // Create storage directories
+    projectStorageDir = Directory(path.join(tempDir.path, 'project_storage'));
+    final envStorageDir = Directory(path.join(tempDir.path, 'env_storage'));
+    await projectStorageDir.create();
+    await envStorageDir.create();
+
+    // Initialize storage services
+    final envStorageService = SecureStorageService(
+      encryptionService: encryptionService,
+      logger: logger,
+      storageDirectory: envStorageDir.path,
+    );
+
+    // Initialize services
+    registryService = ProjectRegistryService(
+      logger: logger,
+    );
+
+    projectService = ProjectService(
+      logger: logger,
+      registryService: registryService,
+    );
+    // Create test project
+    final project = await projectService.createProject(
+      name: 'test_project',
+      path: path.join(tempDir.path, 'test_project'),
+      description: 'Test project',
+    );
+
+    // Initialize environment service for project
+    environmentService = await EnvironmentService.forProject(
+      project: project,
+      projectService: projectService,
+      secureStorage: envStorageService,
+      logger: logger,
+    );
   });
 
   tearDown(() async {
@@ -20,13 +67,11 @@ void main() {
         () async {
       final env = await environmentService.createEnvironment(
         name: 'test',
-        projectName: 'test_project',
         description: 'Test environment',
         initialValues: {'KEY': 'value'},
       );
 
       expect(env.name, equals('test'));
-      expect(env.projectName, equals('test_project'));
       expect(env.description, equals('Test environment'));
       expect(env.values, equals({'KEY': 'value'}));
     });
@@ -34,7 +79,6 @@ void main() {
     test('loadEnvironment returns null for non-existent environment', () async {
       final env = await environmentService.loadEnvironment(
         name: 'non_existent',
-        projectName: 'test_project',
       );
 
       expect(env, isNull);
@@ -43,7 +87,6 @@ void main() {
     test('saveEnvironment persists environment to disk', () async {
       final env = Environment(
         name: 'test',
-        projectName: 'test_project',
         values: {'KEY': 'value'},
         lastModified: DateTime.now(),
       );
@@ -52,7 +95,6 @@ void main() {
 
       final loaded = await environmentService.loadEnvironment(
         name: 'test',
-        projectName: 'test_project',
       );
 
       expect(loaded, isNotNull);
@@ -62,22 +104,19 @@ void main() {
 
     test('listEnvironments returns all environments for project', () async {
       // Clean up any existing environments first
-      final dir =
-          Directory(environmentService.getProjectEnvDir('test_project'));
+      final dir = Directory(environmentService.getProjectEnvDir());
       if (dir.existsSync()) {
         await dir.delete(recursive: true);
       }
 
       await environmentService.createEnvironment(
         name: 'dev',
-        projectName: 'test_project',
       );
       await environmentService.createEnvironment(
         name: 'prod',
-        projectName: 'test_project',
       );
 
-      final envs = await environmentService.listEnvironments('test_project');
+      final envs = await environmentService.listEnvironments();
 
       expect(envs.length, equals(2));
       expect(
@@ -89,17 +128,14 @@ void main() {
     test('deleteEnvironment removes environment from disk', () async {
       await environmentService.createEnvironment(
         name: 'test',
-        projectName: 'test_project',
       );
 
       await environmentService.deleteEnvironment(
         name: 'test',
-        projectName: 'test_project',
       );
 
       final env = await environmentService.loadEnvironment(
         name: 'test',
-        projectName: 'test_project',
       );
 
       expect(env, isNull);
@@ -112,12 +148,10 @@ void main() {
         final env = await environmentService.importEnvironment(
           filePath: envFile.path,
           envName: 'test',
-          projectName: 'test_project',
           description: 'Imported from .env',
         );
 
         expect(env.name, equals('test'));
-        expect(env.projectName, equals('test_project'));
         expect(env.description, equals('Imported from .env'));
         expect(
           env.values,
@@ -136,12 +170,10 @@ void main() {
         final env = await environmentService.importEnvironment(
           filePath: debugXcconfigFile.path,
           envName: 'debug',
-          projectName: 'test_project',
           description: 'Debug configuration',
         );
 
         expect(env.name, equals('debug'));
-        expect(env.projectName, equals('test_project'));
         expect(env.description, equals('Debug configuration'));
         expect(
           env.values,
@@ -163,12 +195,10 @@ void main() {
         final env = await environmentService.importEnvironment(
           filePath: propertiesFile.path,
           envName: 'test',
-          projectName: 'test_project',
           description: 'Imported from properties',
         );
 
         expect(env.name, equals('test'));
-        expect(env.projectName, equals('test_project'));
         expect(env.description, equals('Imported from properties'));
         expect(
           env.values,
@@ -189,7 +219,6 @@ void main() {
           () => environmentService.importEnvironment(
             filePath: invalidFile.path,
             envName: 'test',
-            projectName: 'test_project',
           ),
           throwsA(
             equals(
@@ -204,7 +233,6 @@ void main() {
           () => environmentService.importEnvironment(
             filePath: '${tempDir.path}/non_existent.env',
             envName: 'test',
-            projectName: 'test_project',
           ),
           throwsA(equals('File not found: ${tempDir.path}/non_existent.env')),
         );
