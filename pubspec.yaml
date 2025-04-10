@@ -17,7 +17,7 @@ dependencies:
 
   # Core Logic
   secure_env_core:
-    path: ../secure_env_core
+    path: packages/secure_env_core
 
   # UI Components
   wolt_modal_sheet: ^0.11.0
