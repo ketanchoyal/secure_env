@@ -17,6 +17,9 @@ abstract class Logger {
 
   /// Log an alert message
   void alert(String message);
+
+  /// Log a debug message
+  void debug(String message);
 }
 
 /// Progress options for logger

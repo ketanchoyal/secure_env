@@ -6,12 +6,13 @@ class TestLogger implements Logger {
   final List<String> _errorLogs = [];
   final List<String> _successLogs = [];
   final List<String> _warningLogs = [];
+  final List<String> _debugLogs = [];
 
   List<String> get infoLogs => _infoLogs;
   List<String> get errorLogs => _errorLogs;
   List<String> get successLogs => _successLogs;
   List<String> get warningLogs => _warningLogs;
-
+  List<String> get debugLogs => _debugLogs;
   @override
   void info(String message) {
     _infoLogs.add(message);
@@ -47,5 +48,10 @@ class TestLogger implements Logger {
   @override
   void alert(String message) {
     info(message);
+  }
+
+  @override
+  void debug(String message) {
+    _debugLogs.add(message);
   }
 }

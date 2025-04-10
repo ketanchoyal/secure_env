@@ -64,15 +64,15 @@ abstract class Project with _$Project {
   factory Project.fromJson(Map<String, dynamic> json) =>
       _$ProjectFromJson(json);
 
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'path': path,
-        'description': description,
-        'environments': environments,
-        'config': config,
-        'status': status.toString().split('.').last,
-        'metadata': metadata,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+  // Map<String, dynamic> toJson() => {
+  //       'name': name,
+  //       'path': path,
+  //       'description': description,
+  //       'environments': environments,
+  //       'config': config,
+  //       'status': status.toString().split('.').last,
+  //       'metadata': metadata,
+  //       'createdAt': createdAt.toIso8601String(),
+  //       'updatedAt': updatedAt.toIso8601String(),
+  //     };
 }

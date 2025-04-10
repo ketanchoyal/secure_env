@@ -1,11 +1,11 @@
 name: secure_env_gui
-description: "A new Flutter package project."
+description: A GUI application for managing secure environment variables.
 version: 0.0.1
 publish_to: none # Prevent publishing
 homepage: https://github.com/ketanchoyal/secure_env
 
 environment:
-  sdk: ^3.7.2
+  sdk: '>=3.0.0 <4.0.0'
   flutter: ">=1.17.0"
 
 dependencies:
@@ -13,7 +13,14 @@ dependencies:
     sdk: flutter
 
   # State Management
-  flutter_riverpod: ^2.5.1 # Use a recent version compatible with your Flutter SDK
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Storage
+  shared_preferences: ^2.5.3
+
+  # Logging
+  logger: ^2.5.0
 
   # Core Logic
   secure_env_core:
@@ -21,14 +28,20 @@ dependencies:
 
   # UI Components
   wolt_modal_sheet: ^0.11.0
-  go_router: ^14.2.0 # Add go_router
-  flex_color_scheme: ^7.3.1 # Add flex_color_scheme
-  font_awesome_flutter: ^10.7.0 # Add FontAwesome icons
+  go_router: ^14.8.1 # Add go_router
+  flex_color_scheme: ^ 8.2.0 # Add flex_color_scheme
+  font_awesome_flutter: ^10.8.0 # Add FontAwesome icons
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  build_runner: ^2.4.15
+  freezed: ^3.0.6
+  json_serializable: ^6.9.4
+  riverpod_generator: ^2.6.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

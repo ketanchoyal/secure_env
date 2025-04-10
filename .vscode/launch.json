@@ -6,20 +6,17 @@
     "configurations": [
         {
             "name": "secure_env_gui",
-            "cwd": "packages/secure_env_gui",
             "request": "launch",
             "type": "dart"
         },
         {
             "name": "secure_env_gui (profile mode)",
-            "cwd": "packages/secure_env_gui",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
             "name": "secure_env_gui (release mode)",
-            "cwd": "packages/secure_env_gui",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

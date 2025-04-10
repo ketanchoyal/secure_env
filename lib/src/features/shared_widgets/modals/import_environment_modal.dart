@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import for icons
-
-import '../../../providers/providers.dart';
+import 'package:secure_env_gui/src/providers/project_provider.dart';
 
 // Placeholder state for the modal - allows access from stickyActionBar
 class ImportEnvironmentModalStateContainer {
   final GlobalKey<FormState> formKey;
   final Future<bool> Function()
-  importCallback; // Function to trigger the import logic
+      importCallback; // Function to trigger the import logic
 
   ImportEnvironmentModalStateContainer({
     required this.formKey,
@@ -43,7 +42,7 @@ class _ImportEnvironmentModalState
 
   // Map to hold the current state instance for access via exposeState
   static final Map<ImportEnvironmentModal, _ImportEnvironmentModalState>
-  _currentStateMap = {};
+      _currentStateMap = {};
 
   @override
   void initState() {
@@ -211,21 +210,29 @@ class _ImportEnvironmentModalState
             // TODO: Replace with actual project data fetched from a provider
             Consumer(
               builder: (context, ref, child) {
-                final projectsAsync = ref.watch(projectListProvider);
-                return projectsAsync.when(
-                  data: (projects) {
-                    // If current selection is not in the list, reset it
-                    if (_selectedProjectName != null &&
-                        !projects.any((p) => p.name == _selectedProjectName)) {
-                      _selectedProjectName = null;
-                    }
-                    
+                final projectListState = ref.watch(projectProvider);
+                switch (projectListState) {
+                  case ProjectListStateInitial():
+                    return const Center(child: CircularProgressIndicator());
+                  case ProjectListStateLoading():
+                    return const Center(child: CircularProgressIndicator());
+                  case ProjectListStateError(:final message, :final projects):
+                    //Show Error SnackBar
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(message)),
+                    );
+                    return const Center(child: CircularProgressIndicator());
+                  case ProjectListStateLoaded(:final projects):
                     return DropdownButtonFormField<String>(
                       value: _selectedProjectName,
-                      items: projects.map((project) => DropdownMenuItem(
-                        value: project.name,
-                        child: Text(project.name),
-                      )).toList(),
+                      items: projects
+                          .map(
+                            (project) => DropdownMenuItem(
+                              value: project.name,
+                              child: Text(project.name),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (String? newValue) {
                         setState(() {
                           _selectedProjectName = newValue;
@@ -236,22 +243,54 @@ class _ImportEnvironmentModalState
                         labelText: 'Target Project*',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) =>
-                          value == null || value.isEmpty
-                              ? 'Please select a target project'
-                              : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Please select a target project'
+                          : null,
                     );
-                  },
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                  error: (err, stack) => Text(
-                    'Error loading projects: $err',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                );
+                }
+
+                // return projectsAsync.when(
+                //   data: (projects) {
+                //     // If current selection is not in the list, reset it
+                //     if (_selectedProjectName != null &&
+                //         !projects.any((p) => p.name == _selectedProjectName)) {
+                //       _selectedProjectName = null;
+                //     }
+
+                //     return DropdownButtonFormField<String>(
+                //       value: _selectedProjectName,
+                //       items: projects
+                //           .map(
+                //             (project) => DropdownMenuItem(
+                //               value: project.name,
+                //               child: Text(project.name),
+                //             ),
+                //           )
+                //           .toList(),
+                //       onChanged: (String? newValue) {
+                //         setState(() {
+                //           _selectedProjectName = newValue;
+                //         });
+                //         print('Selected project: $newValue');
+                //       },
+                //       decoration: const InputDecoration(
+                //         labelText: 'Target Project*',
+                //         border: OutlineInputBorder(),
+                //       ),
+                //       validator: (value) => value == null || value.isEmpty
+                //           ? 'Please select a target project'
+                //           : null,
+                //     );
+                //   },
+                //   loading: () =>
+                //       const Center(child: CircularProgressIndicator()),
+                //   error: (err, stack) => Text(
+                //     'Error loading projects: $err',
+                //     style: TextStyle(
+                //       color: Theme.of(context).colorScheme.error,
+                //     ),
+                //   ),
+                // );
               },
             ),
             const SizedBox(height: 16),

@@ -5,6 +5,7 @@ import 'package:secure_env_core/src/utils/logger.dart';
 class MasonLoggerAdapter implements Logger {
   /// Create a new mason logger adapter
   MasonLoggerAdapter() : _logger = mason.Logger();
+  static const bool kReleaseMode = bool.fromEnvironment('dart.vm.product');
 
   final mason.Logger _logger;
 
@@ -36,5 +37,13 @@ class MasonLoggerAdapter implements Logger {
   @override
   void write(String message) {
     _logger.write(message);
+  }
+
+  @override
+  void debug(String message) {
+    // Only log debug messages in debug mode
+    if (!kReleaseMode) {
+      _logger.alert(message);
+    }
   }
 }

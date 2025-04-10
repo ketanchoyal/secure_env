@@ -31,13 +31,13 @@ class EnvironmentService {
             );
 
   /// Create an EnvironmentService for a specific project
-  static Future<EnvironmentService> forProject({
+  static EnvironmentService forProject({
     required Project project,
     required ProjectService projectService,
     Logger? logger,
     SecureStorageService? secureStorage,
     EncryptionService? encryptionService,
-  }) async {
+  }) {
     if (project.status == ProjectStatus.markedForDeletion) {
       throw ValidationException('Project is pending deletion');
     }

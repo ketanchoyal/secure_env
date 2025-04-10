@@ -2,6 +2,8 @@ import 'logger.dart';
 
 /// A simple default logger implementation
 class DefaultLogger implements Logger {
+  static const bool kReleaseMode = bool.fromEnvironment('dart.vm.product');
+
   @override
   void error(String message) {
     print('ERROR: $message');
@@ -30,5 +32,12 @@ class DefaultLogger implements Logger {
   @override
   void alert(String message) {
     print('ALERT: $message');
+  }
+
+  @override
+  void debug(String message) {
+    if (!kReleaseMode) {
+      print('DEBUG: $message');
+    }
   }
 }

@@ -1,8 +1,7 @@
 // lib/src/features/shared_widgets/modals/new_project_modal.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../providers/providers.dart';
+import 'package:secure_env_gui/src/providers/core_providers.dart';
 
 class NewProjectModal extends ConsumerStatefulWidget {
   const NewProjectModal({super.key});
@@ -47,10 +46,10 @@ class NewProjectModalState extends ConsumerState<NewProjectModal> {
 
       try {
         await ref.read(projectServiceProvider).createProject(
-          name: name,
-          path: path,
-          description: description.isNotEmpty ? description : null,
-        );
+              name: name,
+              path: path,
+              description: description.isNotEmpty ? description : null,
+            );
 
         print('Project save successful.');
         // Show success feedback
