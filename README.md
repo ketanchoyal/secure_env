@@ -1,6 +1,6 @@
 # Secure Environment Manager
 
-A robust environment management system for handling multiple project configurations with encrypted storage in Git.
+A robust environment management system for handling multiple project configurations.
 
 ## Overview
 
@@ -76,12 +76,10 @@ This tool manages environment variables across different projects and environmen
 
 ## Planned Features
 
-- [ ] CLI tool for easy management
+- [x] CLI tool for easy management
 - [ ] Web interface for non-technical users
-- [ ] Automatic key rotation
 - [ ] Change history and rollback capability
 - [ ] Environment variable validation
-- [ ] Secret scanning to prevent accidental commits
 - [ ] Integration with popular CI/CD platforms
 
 ## Requirements
