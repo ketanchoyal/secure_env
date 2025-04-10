@@ -488,10 +488,8 @@
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2025-04-09T17:28:19.474152Z",
+  "generated": "2025-04-10T15:17:30.744463Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
-  "flutterRoot": "file:///Users/ketanchoyal/fvm/versions/stable",
-  "flutterVersion": "3.29.2",
   "pubCache": "file:///Users/ketanchoyal/.pub-cache"
 }

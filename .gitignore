@@ -1,10 +1,10 @@
 # Dart/Flutter specific
-*/.dart_tool/*
-.packages
-build/
-pubspec.lock
-.flutter-plugins
-.flutter-plugins-dependencies
+packages/*/.dart_tool/
+packages/*/.packages
+packages/*/build/
+packages/*/pubspec.lock
+packages/*/.flutter-plugins
+packages/*/.flutter-plugins-dependencies
 
 # IDE specific
 .idea/
@@ -14,16 +14,17 @@ pubspec.lock
 .DS_Store
 
 # Project specific
-.secure_env/
+packages/*/.secure_env/
+packages/*/*.env
+!packages/secure_env_core/test/fixtures/**/*.env
+packages/*/*.properties
+!packages/secure_env_core/test/fixtures/**/*.properties
+packages/*/*.xcconfig
+!packages/secure_env_core/test/fixtures/**/*.xcconfig
+packages/*/coverage/
+packages/*/.test_coverage.dart
+packages/*/.test_runner.dart
 *.env
-!test/fixtures/**/*.env
-*.properties
-!test/fixtures/**/*.properties
-*.xcconfig
-!test/fixtures/**/*.xcconfig
-coverage/
-.test_coverage.dart
-.test_runner.dart
 
 # Temporary files
 *.log

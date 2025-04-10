@@ -1,7 +1,7 @@
 name: secure_env_cli
 description: A CLI tool for managing environment variables securely
 version: 1.0.0
-homepage: https://github.com/ketanchoyal/secure_env
+repository: https://github.com/ketanchoyal/secure_env
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

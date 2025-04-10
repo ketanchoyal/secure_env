@@ -1,6 +1,7 @@
 name: secure_env_core
 description: Core functionality for secure environment variable management
 version: 1.0.0
+repository: https://github.com/ketanchoyal/secure_env
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
