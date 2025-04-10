@@ -14,14 +14,18 @@ void main() {
   late CommandRunner<int> runner;
   late ProjectService projectService;
   late Directory secureEnvDir;
+  late String currentDirectoryPath;
+  late Project project;
 
   setUp(() async {
     logger = TestLogger();
+    currentDirectoryPath = Directory.systemTemp.createTempSync().path;
     projectService = ProjectService(
       logger: logger,
-      registryService: ProjectRegistryService(logger: logger),
+      registryService: ProjectRegistryService.test(logger: logger),
     );
-    final project = await projectService.createProjectFromCurrentDirectory(
+    projectService.testCurrentDirectoryPath = currentDirectoryPath;
+    project = await projectService.createProjectFromCurrentDirectory(
       name: 'test_project',
     );
     environmentService = await EnvironmentService.forProject(
@@ -67,15 +71,18 @@ APP_ENV = development
         }
       }
     }
+    await projectService.deleteProject(
+      project.path,
+    );
   });
 
   group('XConfigImportCommand', () {
-    test('requires project and name arguments', () async {
+    test('requires name arguments', () async {
       final result = await runner.run(['xcconfig']);
       expect(result, equals(ExitCode.usage.code));
       expect(
         logger.errorLogs,
-        contains(contains('Option project is mandatory')),
+        contains(contains('Option name is mandatory')),
       );
     });
 
@@ -202,7 +209,7 @@ KEY = value = invalid
         '.secure_env/invalid.xcconfig',
       ]);
 
-      expect(result, equals(ExitCode.software.code));
+      expect(result, equals(ExitCode.usage.code));
       expect(logger.errorLogs, contains(contains('Error: Empty key found')));
     });
 
@@ -214,7 +221,7 @@ KEY = value = invalid
         '.secure_env/non_existent.xcconfig',
       ]);
 
-      expect(result, equals(ExitCode.software.code));
+      expect(result, equals(ExitCode.unavailable.code));
       expect(logger.errorLogs, contains(contains('File not found')));
     });
 
@@ -231,7 +238,7 @@ TEST_KEY = value
         '.secure_env/missing_include.xcconfig',
       ]);
 
-      expect(result, equals(ExitCode.software.code));
+      expect(result, equals(ExitCode.unavailable.code));
       expect(logger.errorLogs, contains(contains('File not found')));
     });
   });

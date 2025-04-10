@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/src/services/environment_service.dart';
 import 'package:secure_env_core/src/services/format/env.dart';
@@ -43,7 +41,7 @@ class EnvImportCommand extends BaseCommand {
 
   @override
   Future<int> run() => handleErrors(() async {
-        final project = await projectService.getProject(Directory.current.path);
+        final project = await projectService.getProjectFromCurrentDirectory();
         if (project == null) {
           throw 'No project found in the current directory. Please run "secure_env init" first.';
         }

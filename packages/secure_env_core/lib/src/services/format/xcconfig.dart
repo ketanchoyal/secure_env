@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:secure_env_core/secure_env_core.dart';
 
+import '../../exceptions/exceptions.dart';
+
 class XConfigService {
   /// Reads an xcconfig file and returns a map of key-value pairs
   Future<Map<String, String>> readXConfig(
@@ -20,7 +22,7 @@ class XConfigService {
     final config = <String, String>{};
 
     if (!await File(filePath).exists()) {
-      throw Exception('File not found: $filePath');
+      throw FileNotFoundException('File not found: $filePath');
     }
 
     final directory = path.dirname(filePath);

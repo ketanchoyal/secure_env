@@ -32,7 +32,7 @@ void main() {
     );
 
     // Initialize services
-    registryService = ProjectRegistryService(
+    registryService = ProjectRegistryService.test(
       logger: logger,
     );
 

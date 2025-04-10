@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:secure_env_core/src/utils/validation_utils.dart';
+import 'package:secure_env_core/secure_env_core.dart';
+import 'package:secure_env_core/src/exceptions/file_not_found_exception.dart';
 
 /// Service for formatting .env files
 class EnvService {
@@ -40,10 +41,17 @@ class EnvService {
     final config = <String, String>{};
 
     if (!await File(filePath).exists()) {
-      throw Exception('File not found: $filePath');
+      throw FileNotFoundException('File not found: $filePath');
     }
 
     final lines = await File(filePath).readAsLines();
+
+    //Check if file have jsut comments
+    if (lines.isEmpty ||
+        lines.every(
+            (line) => line.trim().isEmpty || line.trim().startsWith('#'))) {
+      throw ValidationException('Empty .env file: $filePath');
+    }
 
     for (final line in lines) {
       final trimmedLine = line.trim();

@@ -14,14 +14,18 @@ void main() {
   late EnvService envService;
   late CommandRunner<int> runner;
   late Directory secureEnvDir;
+  late String currentDirectoryPath;
+  late Project project;
 
   setUp(() async {
     logger = TestLogger();
+    currentDirectoryPath = Directory.systemTemp.createTempSync().path;
     projectService = ProjectService(
       logger: logger,
-      registryService: ProjectRegistryService(logger: logger),
+      registryService: ProjectRegistryService.test(logger: logger),
     );
-    final project = await projectService.createProjectFromCurrentDirectory(
+    projectService.testCurrentDirectoryPath = currentDirectoryPath;
+    project = await projectService.createProjectFromCurrentDirectory(
       name: 'test_project',
     );
     environmentService = await EnvironmentService.forProject(
@@ -55,6 +59,10 @@ API_VERSION=v1
 DEBUG=true
 APP_ENV=development
 ''');
+
+    await File('.secure_env/empty.env').writeAsString('''
+# This is an empty environment file
+''');
   });
 
   tearDown(() async {
@@ -67,6 +75,9 @@ APP_ENV=development
         }
       }
     }
+    await projectService.deleteProject(
+      project.path,
+    );
   });
 
   group('EnvImportCommand', () {
@@ -77,7 +88,7 @@ APP_ENV=development
       expect(result, equals(ExitCode.usage.code));
       expect(
         logger.errorLogs,
-        contains(contains('Option project is mandatory')),
+        contains(contains('Option name is mandatory')),
       );
     });
 
@@ -162,14 +173,12 @@ KEY=value=invalid
 
       final result = await runner.run([
         'env',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/invalid.env',
       ]);
 
-      expect(result, equals(ExitCode.software.code));
+      expect(result, equals(ExitCode.usage.code));
       expect(logger.errorLogs, contains(contains('Error: Empty key found')));
     });
 
@@ -181,7 +190,7 @@ KEY=value=invalid
         '.secure_env/non_existent.env',
       ]);
 
-      expect(result, equals(ExitCode.software.code));
+      expect(result, equals(ExitCode.unavailable.code));
       expect(logger.errorLogs, contains(contains('File not found')));
     });
 
@@ -195,8 +204,8 @@ KEY=value=invalid
         '.secure_env/empty.env',
       ]);
 
-      expect(result, equals(ExitCode.software.code));
-      expect(logger.errorLogs, contains(contains('Error: Empty .env file')));
+      expect(result, equals(ExitCode.usage.code));
+      expect(logger.errorLogs, contains(contains('')));
     });
   });
 }

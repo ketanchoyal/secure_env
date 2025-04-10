@@ -19,7 +19,7 @@ void main() {
     currentDirectoryPath = Directory.systemTemp.createTempSync().path;
     projectService = ProjectService(
       logger: logger,
-      registryService: ProjectRegistryService(logger: logger),
+      registryService: ProjectRegistryService.test(logger: logger),
     );
     projectService.testCurrentDirectoryPath = currentDirectoryPath;
     project = await projectService.createProjectFromCurrentDirectory(

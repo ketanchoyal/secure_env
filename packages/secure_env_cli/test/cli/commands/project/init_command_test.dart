@@ -19,7 +19,7 @@ void main() {
       logger = TestLogger();
       projectService = ProjectService(
         logger: logger,
-        registryService: ProjectRegistryService(logger: logger),
+        registryService: ProjectRegistryService.test(logger: logger),
       );
       projectService.testCurrentDirectoryPath =
           Directory.systemTemp.createTempSync().path;
@@ -60,7 +60,7 @@ void main() {
         logger = TestLogger();
         projectService = ProjectService(
           logger: logger,
-          registryService: ProjectRegistryService(logger: logger),
+          registryService: ProjectRegistryService.test(logger: logger),
         );
         projectService.testCurrentDirectoryPath =
             Directory.systemTemp.createTempSync().path;
@@ -99,7 +99,7 @@ void main() {
       logger = TestLogger();
       projectService = ProjectService(
         logger: logger,
-        registryService: ProjectRegistryService(logger: logger),
+        registryService: ProjectRegistryService.test(logger: logger),
       );
       projectService.testCurrentDirectoryPath =
           Directory.systemTemp.createTempSync().path + '/Name With Space';

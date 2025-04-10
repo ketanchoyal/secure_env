@@ -15,7 +15,7 @@ void main() {
         .create();
     logger = TestLogger();
 
-    registryService = ProjectRegistryService(
+    registryService = ProjectRegistryService.test(
       logger: logger,
     );
 
@@ -85,6 +85,7 @@ void main() {
     });
 
     test('listProjects returns all projects', () async {
+      await registryService.cleanRegistry();
       await projectService.createProject(
         name: 'project1',
         path: tempDir.path,

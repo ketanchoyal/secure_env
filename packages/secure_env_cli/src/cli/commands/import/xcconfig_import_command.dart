@@ -47,7 +47,7 @@ class XConfigImportCommand extends BaseCommand {
 
   @override
   Future<int> run() => handleErrors(() async {
-        final project = await projectService.getProject(Directory.current.path);
+        final project = await projectService.getProjectFromCurrentDirectory();
         if (project == null) {
           throw 'No project found in the current directory. Please run "secure_env init" first.';
         }

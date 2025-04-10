@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/src/services/environment_service.dart';
 import '../base_command.dart';

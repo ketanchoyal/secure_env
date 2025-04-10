@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:path/path.dart' as path;
 import 'package:secure_env_core/src/exceptions/exceptions.dart';
 import 'package:secure_env_core/src/models/models.dart';
@@ -11,7 +12,16 @@ class ProjectRegistryService {
   /// Creates a new instance of [ProjectRegistryService].
   ProjectRegistryService({
     required this.logger,
-  }) {
+  }) : _isTest = false {
+    _initializeRegistry();
+  }
+
+  final bool _isTest;
+
+  @visibleForTesting
+  ProjectRegistryService.test({
+    required this.logger,
+  }) : _isTest = true {
     _initializeRegistry();
   }
 
@@ -32,8 +42,15 @@ class ProjectRegistryService {
       throw StateError('Could not determine user home directory');
     }
 
-    _registryPath = path.join(homeDir, '.secure_env_registry');
-    _registryFilePath = path.join(_registryPath, 'registry.json');
+    // Use a different path for test environments
+
+    if (_isTest) {
+      _registryPath = path.join(homeDir, '.secure_env_registry_test');
+      _registryFilePath = path.join(_registryPath, 'registry.json');
+    } else {
+      _registryPath = path.join(homeDir, '.secure_env_registry');
+      _registryFilePath = path.join(_registryPath, 'registry.json');
+    }
 
     final registryDir = Directory(_registryPath);
     if (!registryDir.existsSync()) {
@@ -169,6 +186,20 @@ class ProjectRegistryService {
     } catch (e) {
       logger.error('Failed to write project registry: $e');
       throw StateError('Failed to update project registry');
+    }
+  }
+
+  /// Cleans the project registry by removing all projects.
+  /// This is useful for testing purposes.
+  /// It clears the registry file and resets the projects list.
+  @visibleForTesting
+  Future<void> cleanRegistry() async {
+    try {
+      final file = File(_registryFilePath);
+      await file.writeAsString(jsonEncode({'projects': []}));
+    } catch (e) {
+      logger.error('Failed to clean project registry: $e');
+      throw StateError('Failed to clean project registry');
     }
   }
 }

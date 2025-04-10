@@ -14,15 +14,18 @@ void main() {
   late ProjectService projectService;
   late CommandRunner<int> runner;
   late Directory secureEnvDir;
+  late String currentDirectoryPath;
+  late Project project;
 
   setUp(() async {
     logger = TestLogger();
-    propertiesService = PropertiesService();
+    currentDirectoryPath = Directory.systemTemp.createTempSync().path;
     projectService = ProjectService(
       logger: logger,
-      registryService: ProjectRegistryService(logger: logger),
+      registryService: ProjectRegistryService.test(logger: logger),
     );
-    final project = await projectService.createProjectFromCurrentDirectory(
+    projectService.testCurrentDirectoryPath = currentDirectoryPath;
+    project = await projectService.createProjectFromCurrentDirectory(
       name: 'test_project',
     );
     environmentService = await EnvironmentService.forProject(
@@ -30,6 +33,7 @@ void main() {
       projectService: projectService,
       logger: logger,
     );
+    propertiesService = PropertiesService();
     runner = CommandRunner<int>('test', 'Test runner')
       ..addCommand(PropertiesImportCommand(
           logger: logger,
@@ -66,15 +70,18 @@ app.env=development
         }
       }
     }
+    await projectService.deleteProject(
+      project.path,
+    );
   });
 
   group('PropertiesImportCommand', () {
-    test('requires project and name arguments', () async {
+    test('requires name arguments', () async {
       final result = await runner.run(['properties']);
       expect(result, equals(ExitCode.usage.code));
       expect(
         logger.errorLogs,
-        contains(contains('Option project is mandatory')),
+        contains(contains('Option name is mandatory')),
       );
     });
 
@@ -94,10 +101,10 @@ app.env=development
         name: 'test_env',
       );
       expect(env, isNotNull);
-      expect(env!.values['API_KEY'],
+      expect(env!.values['api.key'],
           equals('test123')); // Should be converted to uppercase
-      expect(env.values['DB_URL'], equals('localhost:5432'));
-      expect(env.values['APP_NAME'], equals('Test App'));
+      expect(env.values['db.url'], equals('localhost:5432'));
+      expect(env.values['app.name'], equals('Test App'));
     });
 
     test('imports multiple .properties files and merges values', () async {
@@ -117,9 +124,9 @@ app.env=development
         name: 'test_env',
       );
       expect(env, isNotNull);
-      expect(env!.values['API_KEY'], equals('test123'));
-      expect(env.values['API_VERSION'], equals('v1'));
-      expect(env.values['DEBUG'], equals('true'));
+      expect(env!.values['api.key'], equals('test123'));
+      expect(env.values['api.version'], equals('v1'));
+      expect(env.values['debug'], equals('true'));
     });
 
     test('updates existing environment when it exists', () async {
@@ -165,7 +172,7 @@ key=value=invalid
         '.secure_env/invalid.properties',
       ]);
 
-      expect(result, equals(ExitCode.software.code));
+      expect(result, equals(ExitCode.usage.code));
       expect(logger.errorLogs, contains(contains('Error: Empty key found')));
     });
 
@@ -177,7 +184,7 @@ key=value=invalid
         '.secure_env/non_existent.properties',
       ]);
 
-      expect(result, equals(ExitCode.software.code));
+      expect(result, equals(ExitCode.unavailable.code));
       expect(logger.errorLogs, contains(contains('File not found')));
     });
 

@@ -13,7 +13,7 @@ void main() {
     logger = TestLogger();
     projectService = ProjectService(
       logger: logger,
-      registryService: ProjectRegistryService(logger: logger),
+      registryService: ProjectRegistryService.test(logger: logger),
     );
 
     runner = CommandRunner<int>('test', 'Test runner')
