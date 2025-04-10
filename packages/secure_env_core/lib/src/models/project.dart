@@ -10,6 +10,9 @@ abstract class Project with _$Project {
     /// Unique name of the project
     required String name,
 
+    /// Unique identifier for the project
+    required String id,
+
     /// Base directory path where project files are stored
     required String path,
 
@@ -39,12 +42,14 @@ abstract class Project with _$Project {
   factory Project.create({
     required String name,
     required String path,
+    required String id,
     String? description,
     Map<String, String>? metadata,
   }) {
     final now = DateTime.now();
     return Project(
       name: name,
+      id: id,
       path: path,
       description: description,
       metadata: metadata ?? {},

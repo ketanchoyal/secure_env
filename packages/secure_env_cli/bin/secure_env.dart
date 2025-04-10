@@ -4,11 +4,14 @@ import 'package:secure_env_core/secure_env_core.dart';
 import '../src/utils/mason_logger_adapter.dart';
 
 Future<void> main(List<String> args) async {
-  final environmentService = EnvironmentService(
+  final projectService = ProjectService(
     logger: MasonLoggerAdapter(),
+    registryService: ProjectRegistryService(
+      logger: MasonLoggerAdapter(),
+    ),
   );
   final runner = SecureEnvRunner(
-    environmentService: environmentService,
+    projectService: projectService,
   );
   final exitCode = await runner.run(args);
   exit(exitCode);

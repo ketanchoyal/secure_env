@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/src/services/environment_service.dart';
 import 'package:secure_env_core/src/services/format/env.dart';
@@ -7,16 +9,10 @@ import '../base_command.dart';
 class EnvImportCommand extends BaseCommand {
   EnvImportCommand({
     required super.logger,
-    required this.environmentService,
     required this.envService,
+    required super.projectService,
   }) {
     argParser
-      ..addOption(
-        'project',
-        abbr: 'p',
-        help: 'Project name',
-        mandatory: true,
-      )
       ..addOption(
         'name',
         abbr: 'n',
@@ -36,7 +32,7 @@ class EnvImportCommand extends BaseCommand {
       );
   }
 
-  final EnvironmentService environmentService;
+  late final EnvironmentService _environmentService;
   final EnvService envService;
 
   @override
@@ -47,7 +43,12 @@ class EnvImportCommand extends BaseCommand {
 
   @override
   Future<int> run() => handleErrors(() async {
-        final projectName = argResults!['project'] as String;
+        final project = await projectService.getProject(Directory.current.path);
+        if (project == null) {
+          throw 'No project found in the current directory. Please run "secure_env init" first.';
+        }
+        _environmentService = await EnvironmentService.forProject(
+            project: project, projectService: projectService, logger: logger);
         final envName = argResults!['name'] as String;
         final description = argResults!['description'] as String?;
         final files = argResults!['files'] as List<String>;
@@ -69,9 +70,8 @@ class EnvImportCommand extends BaseCommand {
         }
 
         // Create or update environment
-        final existingEnv = await environmentService.loadEnvironment(
+        final existingEnv = await _environmentService.loadEnvironment(
           name: envName,
-          projectName: projectName,
         );
 
         if (existingEnv != null) {
@@ -79,7 +79,7 @@ class EnvImportCommand extends BaseCommand {
           final updatedValues = Map<String, String>.from(existingEnv.values)
             ..addAll(mergedValues);
 
-          await environmentService.saveEnvironment(
+          await _environmentService.saveEnvironment(
             existingEnv.copyWith(
               values: updatedValues,
               description: description ?? existingEnv.description,
@@ -88,9 +88,8 @@ class EnvImportCommand extends BaseCommand {
           );
         } else {
           logger.info('Creating new environment: $envName');
-          await environmentService.createEnvironment(
+          await _environmentService.createEnvironment(
             name: envName,
-            projectName: projectName,
             description: description,
             initialValues: mergedValues,
           );

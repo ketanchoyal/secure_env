@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/src/services/environment_service.dart';
 import '../base_command.dart';
@@ -6,18 +8,9 @@ import '../base_command.dart';
 class EditCommand extends BaseCommand {
   EditCommand({
     required super.logger,
-    EnvironmentService? environmentService,
-  }) : _environmentService = environmentService ??
-            EnvironmentService(
-              logger: logger,
-            ) {
+    required super.projectService,
+  }) {
     argParser
-      ..addOption(
-        'project',
-        abbr: 'p',
-        help: 'Project name',
-        mandatory: true,
-      )
       ..addOption(
         'name',
         abbr: 'n',
@@ -43,7 +36,7 @@ class EditCommand extends BaseCommand {
       );
   }
 
-  final EnvironmentService _environmentService;
+  late final EnvironmentService _environmentService;
 
   @override
   String get description => 'Edit an environment value';
@@ -53,7 +46,12 @@ class EditCommand extends BaseCommand {
 
   @override
   Future<int> run() => handleErrors(() async {
-        final projectName = argResults!['project'] as String;
+        final project = await projectService.getProjectFromCurrentDirectory();
+        if (project == null) {
+          throw 'No project found in the current directory. Please run "secure_env init" first.';
+        }
+        _environmentService = await EnvironmentService.forProject(
+            project: project, projectService: projectService, logger: logger);
         final envName = argResults!['name'] as String;
         final key = argResults!['key'] as String;
         final value = argResults!['value'] as String;
@@ -63,7 +61,6 @@ class EditCommand extends BaseCommand {
           key: key,
           value: value,
           envName: envName,
-          projectName: projectName,
           isSecret: isSecret,
         );
 

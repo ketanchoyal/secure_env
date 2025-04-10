@@ -1,11 +1,10 @@
 import 'dart:io';
 
 import 'package:mason_logger/mason_logger.dart';
-import 'package:secure_env_core/src/services/format/xcconfig.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
 import 'package:args/command_runner.dart';
 import '../../../../src/cli/commands/import/xcconfig_import_command.dart';
-import 'package:secure_env_core/src/services/environment_service.dart';
 import '../../../utils/test_logger.dart';
 
 void main() {
@@ -13,17 +12,29 @@ void main() {
   late EnvironmentService environmentService;
   late XConfigService xconfigService;
   late CommandRunner<int> runner;
+  late ProjectService projectService;
   late Directory secureEnvDir;
 
   setUp(() async {
     logger = TestLogger();
-    environmentService = EnvironmentService();
+    projectService = ProjectService(
+      logger: logger,
+      registryService: ProjectRegistryService(logger: logger),
+    );
+    final project = await projectService.createProjectFromCurrentDirectory(
+      name: 'test_project',
+    );
+    environmentService = await EnvironmentService.forProject(
+      project: project,
+      projectService: projectService,
+      logger: logger,
+    );
     xconfigService = XConfigService();
     runner = CommandRunner<int>('test', 'Test runner')
       ..addCommand(XConfigImportCommand(
         logger: logger,
-        environmentService: environmentService,
         xconfigService: xconfigService,
+        projectService: projectService,
       ));
 
     // Create .secure_env directory in the project root
@@ -71,8 +82,6 @@ APP_ENV = development
     test('imports single .xcconfig file successfully', () async {
       final result = await runner.run([
         'xcconfig',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/test1.xcconfig',
@@ -84,7 +93,6 @@ APP_ENV = development
       // Verify environment was created with correct values
       final env = await environmentService.loadEnvironment(
         name: 'test_env',
-        projectName: 'test_project',
       );
       expect(env, isNotNull);
       expect(env!.values['API_KEY'], equals('test123'));
@@ -95,8 +103,6 @@ APP_ENV = development
     test('imports multiple .xcconfig files and merges values', () async {
       final result = await runner.run([
         'xcconfig',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/test1.xcconfig',
@@ -109,7 +115,6 @@ APP_ENV = development
       // Verify environment was created with merged values
       final env = await environmentService.loadEnvironment(
         name: 'test_env',
-        projectName: 'test_project',
       );
       expect(env, isNotNull);
       expect(env!.values['API_KEY'], equals('test123'));
@@ -134,8 +139,6 @@ SERVICE_URL = \$(BASE_URL)/\$(ENV)/api
 
       final result = await runner.run([
         'xcconfig',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/complex.xcconfig',
@@ -146,7 +149,6 @@ SERVICE_URL = \$(BASE_URL)/\$(ENV)/api
       // Verify environment includes base values and resolved variables
       final env = await environmentService.loadEnvironment(
         name: 'test_env',
-        projectName: 'test_project',
       );
       expect(env, isNotNull);
       expect(env!.values['BASE_URL'], equals('https://api.example.com'));
@@ -161,14 +163,11 @@ SERVICE_URL = \$(BASE_URL)/\$(ENV)/api
       // Create initial environment
       await environmentService.createEnvironment(
         name: 'existing_env',
-        projectName: 'test_project',
         initialValues: {'EXISTING_KEY': 'old_value'},
       );
 
       final result = await runner.run([
         'xcconfig',
-        '--project',
-        'test_project',
         '--name',
         'existing_env',
         '.secure_env/test1.xcconfig',
@@ -181,7 +180,6 @@ SERVICE_URL = \$(BASE_URL)/\$(ENV)/api
       // Verify environment was updated
       final env = await environmentService.loadEnvironment(
         name: 'existing_env',
-        projectName: 'test_project',
       );
       expect(env, isNotNull);
       expect(
@@ -199,8 +197,6 @@ KEY = value = invalid
 
       final result = await runner.run([
         'xcconfig',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/invalid.xcconfig',
@@ -213,8 +209,6 @@ KEY = value = invalid
     test('handles non-existent file', () async {
       final result = await runner.run([
         'xcconfig',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/non_existent.xcconfig',
@@ -232,8 +226,6 @@ TEST_KEY = value
 
       final result = await runner.run([
         'xcconfig',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/missing_include.xcconfig',

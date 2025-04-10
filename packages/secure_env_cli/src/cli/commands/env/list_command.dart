@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/src/services/environment_service.dart';
 import '../base_command.dart';
 
@@ -5,11 +8,8 @@ import '../base_command.dart';
 class ListCommand extends BaseCommand {
   ListCommand({
     required super.logger,
-    EnvironmentService? environmentService,
-  }) : _environmentService = environmentService ??
-            EnvironmentService(
-              logger: logger,
-            ) {
+    required super.projectService,
+  }) {
     argParser.addOption(
       'project',
       abbr: 'p',
@@ -18,7 +18,7 @@ class ListCommand extends BaseCommand {
     );
   }
 
-  final EnvironmentService _environmentService;
+  late final EnvironmentService _environmentService;
 
   @override
   String get description => 'List all environments';
@@ -28,14 +28,19 @@ class ListCommand extends BaseCommand {
 
   @override
   Future<int> run() => handleErrors(() async {
+        final project = await projectService.getProject(Directory.current.path);
+        if (project == null) {
+          throw 'No project found in the current directory. Please run "secure_env init" first.';
+        }
+        _environmentService = await EnvironmentService.forProject(
+            project: project, projectService: projectService, logger: logger);
         final projectName = argResults!['project'] as String;
 
-        final environments =
-            await _environmentService.listEnvironments(projectName);
+        final environments = await _environmentService.listEnvironments();
 
         if (environments.isEmpty) {
           logger.info('No environments found for project: $projectName');
-          return BaseCommand.successExitCode;
+          return ExitCode.success.code;
         }
 
         logger.info('Environments for project: $projectName\n');
@@ -55,6 +60,6 @@ class ListCommand extends BaseCommand {
             ..info('');
         }
 
-        return BaseCommand.successExitCode;
+        return ExitCode.success.code;
       });
 }

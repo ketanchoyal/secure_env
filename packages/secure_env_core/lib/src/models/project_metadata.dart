@@ -5,6 +5,9 @@ class ProjectMetadata {
   /// The unique name of the project.
   final String name;
 
+  /// The unique identifier for the project.
+  final String id;
+
   /// The absolute base path of the project directory.
   final String basePath;
 
@@ -17,11 +20,15 @@ class ProjectMetadata {
   /// The current status of the project (e.g., active, archived).
   final ProjectStatus status;
 
+  final Map<String, dynamic> config;
+
   ProjectMetadata({
     required this.name,
     required this.basePath,
+    required this.id,
     required this.createdAt,
     required this.updatedAt,
+    this.config = const {},
     this.status = ProjectStatus.active,
   });
 
@@ -29,26 +36,32 @@ class ProjectMetadata {
   ProjectMetadata copyWith({
     String? name,
     String? basePath,
+    String? id,
     DateTime? createdAt,
     DateTime? updatedAt,
     ProjectStatus? status,
+    Map<String, dynamic>? config,
   }) {
     return ProjectMetadata(
       name: name ?? this.name,
       basePath: basePath ?? this.basePath,
+      id: id ?? this.id,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       status: status ?? this.status,
+      config: config ?? this.config,
     );
   }
 
   /// Creates [ProjectMetadata] from a JSON map.
   factory ProjectMetadata.fromJson(Map<String, dynamic> json) {
     return ProjectMetadata(
+      id: json['id'] as String,
       name: json['name'] as String,
       basePath: json['basePath'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      config: json['config'] as Map<String, dynamic>? ?? const {},
       status: ProjectStatus.values.firstWhere(
         (e) => e.toString() == json['status'],
         orElse: () => ProjectStatus.active,
@@ -59,11 +72,13 @@ class ProjectMetadata {
   /// Converts this [ProjectMetadata] instance to a JSON map.
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'basePath': basePath,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'status': status.toString(),
+      'config': config,
     };
   }
 
@@ -73,13 +88,15 @@ class ProjectMetadata {
       other is ProjectMetadata &&
           runtimeType == other.runtimeType &&
           name == other.name &&
-          basePath == other.basePath;
+          basePath == other.basePath &&
+          id == other.id &&
+          config == other.config;
 
   @override
   int get hashCode => name.hashCode ^ basePath.hashCode;
 
   @override
   String toString() {
-    return 'ProjectMetadata{name: $name, basePath: $basePath, status: $status}';
+    return 'ProjectMetadata{name: $name, basePath: $basePath, status: $status, id: $id, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

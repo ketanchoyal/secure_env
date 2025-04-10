@@ -1,3 +1,4 @@
+import 'package:mason_logger/mason_logger.dart';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 import 'package:yaml/yaml.dart';
@@ -9,6 +10,7 @@ import 'base_command.dart';
 class VersionCommand extends BaseCommand {
   VersionCommand({
     required super.logger,
+    required super.projectService,
   }) {
     argParser.addFlag(
       'verbose',
@@ -39,7 +41,7 @@ class VersionCommand extends BaseCommand {
           logger.info(version.toString());
         }
 
-        return BaseCommand.successExitCode;
+        return ExitCode.success.code;
       });
 
   Future<Version> _getVersion() async {

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:secure_env_core/secure_env_core.dart';
-import 'package:secure_env_core/src/services/project_service.dart';
 import 'package:test/test.dart';
 import '../utils/test_logger.dart';
 
@@ -49,10 +48,27 @@ void main() {
       expect(project.status, equals(ProjectStatus.active));
       expect(project.environments, isEmpty);
     });
+    test(
+        'createProjectFromCurrentDirectory creates new project with correct values',
+        () async {
+      projectService.testCurrentDirectoryPath = Directory.current.path +
+          "/Name With Space"; // Set the current directory for testing
+      final project = await projectService.createProjectFromCurrentDirectory();
+
+      expect(project.name, equals('Name_With_Space'));
+      expect(
+        project.path,
+        equals(projectService.testCurrentDirectoryPath),
+      );
+      // expect(project.description, equals('Test project'));
+      expect(project.metadata, equals({'original_name': 'Name With Space'}));
+      expect(project.status, equals(ProjectStatus.active));
+      expect(project.environments, isEmpty);
+      Directory(project.path).deleteSync(recursive: true);
+    });
 
     test('getProject returns null for non-existent project', () async {
-      final project =
-          await projectService.getProject('non_existent', tempDir.path);
+      final project = await projectService.getProject(tempDir.path);
       expect(project, isNull);
     });
 
@@ -62,8 +78,7 @@ void main() {
         path: tempDir.path,
       );
 
-      final project =
-          await projectService.getProject('test_project', tempDir.path);
+      final project = await projectService.getProject(tempDir.path);
       expect(project, isNotNull);
       expect(project?.name, equals(created.name));
       expect(project?.path, equals(created.path));
@@ -122,9 +137,8 @@ void main() {
         path: path.join(tempDir.path, 'test_project'),
       );
 
-      await projectService.deleteProject('test_project', project.path);
-      final _project =
-          await projectService.getProject('test_project', project.path);
+      await projectService.deleteProject(project.path);
+      final _project = await projectService.getProject(project.path);
       expect(_project, isNull);
     });
 
@@ -228,6 +242,7 @@ void main() {
           () => projectService.updateProject(
             Project.create(
               name: 'non_existent',
+              id: 'non_existent',
               path: path.join(tempDir.path, 'non_existent'),
             ),
           ),

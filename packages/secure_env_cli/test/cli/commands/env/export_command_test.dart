@@ -1,37 +1,45 @@
 import 'dart:io';
 
 import 'package:mason_logger/mason_logger.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
 import 'package:args/command_runner.dart';
 import '../../../../src/cli/commands/env/export_command.dart';
-import 'package:secure_env_core/src/services/environment_service.dart';
 import '../../../utils/test_logger.dart';
 
 void main() {
   late TestLogger logger;
   late EnvironmentService environmentService;
+  late ProjectService projectService;
   late CommandRunner<int> runner;
-  late Directory secureEnvDir;
+  late String currentDirectoryPath;
+  late Project project;
 
   setUp(() async {
     logger = TestLogger();
-    environmentService = EnvironmentService();
+    currentDirectoryPath = Directory.systemTemp.createTempSync().path;
+    projectService = ProjectService(
+      logger: logger,
+      registryService: ProjectRegistryService(logger: logger),
+    );
+    projectService.testCurrentDirectoryPath = currentDirectoryPath;
+    project = await projectService.createProjectFromCurrentDirectory(
+      name: 'test_project',
+    );
+    environmentService = await EnvironmentService.forProject(
+      project: project,
+      projectService: projectService,
+      logger: logger,
+    );
     runner = CommandRunner<int>('test', 'Test runner')
       ..addCommand(ExportCommand(
         logger: logger,
-        environmentService: environmentService,
+        projectService: projectService,
       ));
-
-    // Create .secure_env directory in the project root
-    secureEnvDir = Directory('.secure_env');
-    if (!await secureEnvDir.exists()) {
-      await secureEnvDir.create();
-    }
 
     // Create a test environment
     await environmentService.createEnvironment(
       name: 'test_env',
-      projectName: 'test_project',
       description: 'Test environment',
       initialValues: {
         'API_KEY': 'test123',
@@ -42,29 +50,26 @@ void main() {
   });
 
   tearDown(() async {
-    // Clean up .secure_env directory
-    if (await secureEnvDir.exists()) {
-      // Only delete files created during tests, not the directory itself
-      final files = await secureEnvDir.list().toList();
-      for (final file in files) {
-        if (file is File) {
-          await file.delete();
-        }
-      }
-    }
+    await projectService.deleteProject(
+      project.path,
+    );
   });
 
   group('ExportCommand', () {
     test('requires environment name', () async {
-      final result = await runner.run(['export', '--project', 'test_project']);
+      final result = await runner.run([
+        'export',
+      ]);
       expect(result, equals(ExitCode.usage.code));
       expect(
           logger.errorLogs, contains(contains('Environment name is required')));
     });
 
     test('shows error when environment does not exist', () async {
-      final result = await runner
-          .run(['export', 'non_existent', '--project', 'test_project']);
+      final result = await runner.run([
+        'export',
+        'non_existent',
+      ]);
       expect(result, equals(ExitCode.software.code));
       expect(logger.errorLogs, contains(contains('Environment not found')));
     });
@@ -74,8 +79,6 @@ void main() {
       final result = await runner.run([
         'export',
         'test_env',
-        '--project',
-        'test_project',
         '--output',
         outputPath,
       ]);
@@ -95,8 +98,6 @@ void main() {
       final result = await runner.run([
         'export',
         'test_env',
-        '--project',
-        'test_project',
         '--format',
         'properties',
         '--output',
@@ -115,8 +116,6 @@ void main() {
       final result = await runner.run([
         'export',
         'test_env',
-        '--project',
-        'test_project',
         '--format',
         'xcconfig',
         '--output',
@@ -135,8 +134,6 @@ void main() {
       final result = await runner.run([
         'export',
         'test_env',
-        '--project',
-        'test_project',
         '--output',
         outputPath,
       ]);
@@ -150,8 +147,6 @@ void main() {
       final result = await runner.run([
         'export',
         'test_env',
-        '--project',
-        'test_project',
       ]);
 
       expect(result, equals(ExitCode.success.code));

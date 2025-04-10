@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:meta/meta.dart';
 import 'package:secure_env_core/src/exceptions/exceptions.dart';
 import 'package:secure_env_core/src/utils/logger.dart';
 import 'package:secure_env_core/src/models/models.dart';
@@ -21,11 +22,17 @@ class ProjectService {
   /// Logger instance
   final Logger logger;
 
+  // /// Get the path to a project's configuration file
+  // String _getProjectConfigPath(String basePath, String projectName) {
+  //   return Platform.isWindows
+  //       ? '$basePath\.secure_env\$projectName\config.json'
+  //       : '$basePath/.secure_env/$projectName/config.json';
+  // }
   /// Get the path to a project's configuration file
-  String _getProjectConfigPath(String basePath, String projectName) {
+  String _getProjectConfigPath(String basePath) {
     return Platform.isWindows
-        ? '$basePath\.secure_env\$projectName\config.json'
-        : '$basePath/.secure_env/$projectName/config.json';
+        ? '$basePath\.secure_env\config.json'
+        : '$basePath/.secure_env/config.json';
   }
 
   /// Validate project path
@@ -44,30 +51,52 @@ class ProjectService {
   }
 
   /// Validate project name
-  void _validateProjectName(String name) {
+  String _validateProjectName(String name, {bool returnCleanName = false}) {
+    // Check if the name is empty or contains invalid characters
+    // Only allow alphanumeric characters, underscores, and hyphens
+    // If the name is empty, throw an exception
+    // If the name contains invalid characters, replace them with underscores
+    // and throw an exception with a suggestion to use the cleaned name
+    // If returnCleanName is true, return the cleaned name instead of throwing an exception
     if (name.isEmpty) {
       throw ValidationException('Project name cannot be empty');
     }
 
     if (!RegExp(r'^[a-zA-Z0-9_-]+$').hasMatch(name)) {
       final cleanName = name.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+      if (returnCleanName) {
+        return cleanName;
+      }
       throw ValidationException(
         'Invalid project name "$name". Project names can only contain letters, numbers, underscores, and hyphens. '
         'Consider using "$cleanName" instead.',
       );
     }
+    if (name.length > 50) {
+      throw ValidationException(
+        'Project name "$name" is too long. '
+        'Project names must be less than 50 characters.',
+      );
+    }
+    if (name.length < 3) {
+      throw ValidationException(
+        'Project name "$name" is too short. '
+        'Project names must be at least 3 characters long.',
+      );
+    }
+    return name;
   }
 
   /// Save project configuration and sync with registry
   Future<void> _saveProjectConfig(Project project) async {
-    final configPath = _getProjectConfigPath(project.path, project.name);
+    final configPath = _getProjectConfigPath(project.path);
     final configFile = File(configPath);
     await configFile.parent.create(recursive: true);
     await configFile.writeAsString(jsonEncode(project.toJson()));
 
     // Sync with registry
     try {
-      final metadata = await registryService.getProjectMetadata(project.name);
+      final metadata = await registryService.getProjectMetadata(project.id);
       if (metadata == null) {
         // New project, register it
         await registryService.registerProject(
@@ -77,11 +106,14 @@ class ProjectService {
             createdAt: project.createdAt,
             updatedAt: project.updatedAt,
             status: project.status,
+            id: project.id,
           ),
         );
       } else if (metadata.updatedAt != project.updatedAt ||
-          metadata.status != project.status) {
-        // Update existing project metadata if timestamps or status differ
+          metadata.status != project.status ||
+          metadata.id != project.id) {
+        // Check if the id has changed
+        // Update existing project metadata if timestamps, status, or id differ
         await registryService.updateProjectMetadata(
           metadata.copyWith(
             updatedAt: project.updatedAt,
@@ -92,6 +124,36 @@ class ProjectService {
     } catch (e) {
       logger.error('Failed to sync project with registry: $e');
     }
+  }
+
+  @visibleForTesting
+  String? testCurrentDirectoryPath;
+
+  /// Create a new Project in current directory
+  /// This will take current directory as the base path and uses the name of the directory as the project name
+  /// If the name is not provided, it will use the last part of the path as the project name
+  /// If project name is invalid, it will sanitize the name and use it and store original name in metadata
+  Future<Project> createProjectFromCurrentDirectory(
+      {String? name, String? description}) async {
+    final currentPath = testCurrentDirectoryPath ?? Directory.current.path;
+    name ??= currentPath.split(Platform.pathSeparator).last;
+    final cleanName = _validateProjectName(name, returnCleanName: true);
+
+    if (name != cleanName) {
+      logger.warn(
+        'Project name "$name" is invalid. '
+        'Using sanitized name "$cleanName" instead.',
+      );
+    }
+
+    return await createProject(
+      name: cleanName,
+      path: currentPath,
+      metadata: {
+        'original_name': name,
+      },
+      description: description,
+    );
   }
 
   /// Create a new project
@@ -114,9 +176,11 @@ class ProjectService {
     _validateProjectName(projectName);
 
     final now = DateTime.now();
+    final id = now.millisecondsSinceEpoch.toString();
     final project = Project(
       name: projectName,
       path: path,
+      id: id,
       description: description,
       environments: [],
       config: {},
@@ -137,10 +201,17 @@ class ProjectService {
     return project;
   }
 
+  /// Get Project from current directory
+  /// This will take current directory as the base path
+  Future<Project?> getProjectFromCurrentDirectory() async {
+    final currentPath = testCurrentDirectoryPath ?? Directory.current.path;
+    return await getProject(currentPath);
+  }
+
   /// Get a project by name
-  Future<Project?> getProject(String name, String path) async {
+  Future<Project?> getProject(String path) async {
     try {
-      final configPath = _getProjectConfigPath(path, name);
+      final configPath = _getProjectConfigPath(path);
       final configFile = File(configPath);
       if (!await configFile.exists()) {
         return null;
@@ -150,7 +221,7 @@ class ProjectService {
       final projectJson = jsonDecode(content) as Map<String, dynamic>;
       return Project.fromJson(projectJson);
     } catch (e) {
-      logger.error('Failed to get project "$name": $e');
+      logger.error('Failed to get project at "$path": $e');
       return null;
     }
   }
@@ -165,7 +236,7 @@ class ProjectService {
       );
 
       final futures = registeredProjects.map(
-        (metadata) => getProject(metadata.name, metadata.basePath),
+        (metadata) => getProject(metadata.basePath),
       );
       final results = await Future.wait(futures);
       projects.addAll(results.whereType<Project>());
@@ -180,7 +251,7 @@ class ProjectService {
   /// Update project details
   Future<Project> updateProject(Project project) async {
     // Ensure project exists
-    final existingProject = await getProject(project.name, project.path);
+    final existingProject = await getProject(project.path);
     if (existingProject == null) {
       throw ValidationException('Project "${project.name}" not found');
     }
@@ -211,7 +282,7 @@ class ProjectService {
 
   /// Archive a project
   Future<Project> archiveProject(String name, String path) async {
-    final project = await getProject(name, path);
+    final project = await getProject(path);
     if (project == null) {
       throw ValidationException('Project "$name" not found');
     }
@@ -241,14 +312,16 @@ class ProjectService {
   }
 
   /// Delete a project
-  Future<void> deleteProject(String name, String path) async {
-    final project = await getProject(name, path);
+  Future<void> deleteProject(String path) async {
+    final project = await getProject(path);
     if (project == null) {
-      throw ValidationException('Project "$name" not found');
+      logger.error('Project at "$path" not found');
+      return;
+      // throw ValidationException('Project at "$path" not found');
     }
 
     // Mark project for deletion in registry
-    final metadata = await registryService.getProjectMetadata(name);
+    final metadata = await registryService.getProjectMetadata(project.name);
     if (metadata != null) {
       await registryService.updateProjectMetadata(
         metadata.copyWith(status: ProjectStatus.markedForDeletion),
@@ -259,21 +332,24 @@ class ProjectService {
     final secureEnvPath = Platform.isWindows
         ? '${project.path}\.secure_env'
         : '${project.path}/.secure_env';
-    final projectPath =
-        Platform.isWindows ? '$secureEnvPath\$name' : '$secureEnvPath/$name';
+    final projectPath = Platform.isWindows
+        ? '$secureEnvPath\${project.name}'
+        : '$secureEnvPath/${project.name}';
     final projectDir = Directory(projectPath);
     if (projectDir.existsSync()) {
       await projectDir.delete(recursive: true);
     }
 
     // Remove project configuration file
-    final configPath = _getProjectConfigPath(project.path, name);
+    final configPath = _getProjectConfigPath(project.path);
     final configFile = File(configPath);
     if (await configFile.exists()) {
       await configFile.delete();
     }
 
     // Unregister project from central registry
-    await registryService.unregisterProject(name);
+    await registryService.unregisterProject(project.id);
+
+    logger.info('Deleted project at "$path" at path "$path"');
   }
 }

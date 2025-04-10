@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import '../base_command.dart';
 
@@ -5,16 +8,10 @@ import '../base_command.dart';
 class PropertiesImportCommand extends BaseCommand {
   PropertiesImportCommand({
     required super.logger,
-    required this.environmentService,
     required this.propertiesService,
+    required super.projectService,
   }) {
     argParser
-      ..addOption(
-        'project',
-        abbr: 'p',
-        help: 'Project name',
-        mandatory: true,
-      )
       ..addOption(
         'name',
         abbr: 'n',
@@ -39,7 +36,7 @@ class PropertiesImportCommand extends BaseCommand {
       );
   }
 
-  final EnvironmentService environmentService;
+  late final EnvironmentService _environmentService;
   final PropertiesService propertiesService;
 
   @override
@@ -50,7 +47,12 @@ class PropertiesImportCommand extends BaseCommand {
 
   @override
   Future<int> run() => handleErrors(() async {
-        final projectName = argResults!['project'] as String;
+        final project = await projectService.getProject(Directory.current.path);
+        if (project == null) {
+          throw 'No project found in the current directory. Please run "secure_env init" first.';
+        }
+        _environmentService = await EnvironmentService.forProject(
+            project: project, projectService: projectService, logger: logger);
         final envName = argResults!['name'] as String;
         final description = argResults!['description'] as String?;
         final files = argResults!['files'] as List<String>;
@@ -77,9 +79,8 @@ class PropertiesImportCommand extends BaseCommand {
         }
 
         // Create or update environment
-        final existingEnv = await environmentService.loadEnvironment(
+        final existingEnv = await _environmentService.loadEnvironment(
           name: envName,
-          projectName: projectName,
         );
 
         if (existingEnv != null) {
@@ -87,7 +88,7 @@ class PropertiesImportCommand extends BaseCommand {
           final updatedValues = Map<String, String>.from(existingEnv.values)
             ..addAll(mergedValues);
 
-          await environmentService.saveEnvironment(
+          await _environmentService.saveEnvironment(
             existingEnv.copyWith(
               values: updatedValues,
               description: description ?? existingEnv.description,
@@ -96,9 +97,8 @@ class PropertiesImportCommand extends BaseCommand {
           );
         } else {
           logger.info('Creating new environment: $envName');
-          await environmentService.createEnvironment(
+          await _environmentService.createEnvironment(
             name: envName,
-            projectName: projectName,
             description: description,
             initialValues: mergedValues,
           );
@@ -107,6 +107,6 @@ class PropertiesImportCommand extends BaseCommand {
         logger.success(
           'Successfully imported ${mergedValues.length} variables from ${allFiles.length} files',
         );
-        return BaseCommand.successExitCode;
+        return ExitCode.success.code;
       });
 }

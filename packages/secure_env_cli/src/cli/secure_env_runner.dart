@@ -1,19 +1,20 @@
 import 'package:args/command_runner.dart';
-import 'package:mason_logger/mason_logger.dart';
+import 'package:mason_logger/mason_logger.dart' hide Logger;
+import 'package:secure_env_core/secure_env_core.dart';
 import 'commands/env/env_command.dart';
 import 'commands/import/import_command.dart';
+import 'commands/init_command.dart';
 import 'commands/version_command.dart';
 import 'commands/xcconfig_command.dart';
 import '../utils/mason_logger_adapter.dart';
-import 'package:secure_env_core/src/services/environment_service.dart';
 
 /// Command runner for the secure_env CLI
 class SecureEnvRunner extends CommandRunner<int> {
   SecureEnvRunner({
-    MasonLoggerAdapter? logger,
-    required EnvironmentService environmentService,
+    Logger? logger,
+    required ProjectService projectService,
   })  : _logger = logger ?? MasonLoggerAdapter(),
-        _environmentService = environmentService,
+        _projectService = projectService,
         super(
           'secure_env',
           'A robust CLI tool for managing environment variables across different formats.',
@@ -25,15 +26,17 @@ class SecureEnvRunner extends CommandRunner<int> {
       negatable: false,
     );
 
-    addCommand(VersionCommand(logger: _logger));
-    addCommand(XConfigCommand(logger: _logger));
     addCommand(
-        EnvCommand(logger: _logger, environmentService: _environmentService));
-    addCommand(ImportCommand(logger: _logger));
+        VersionCommand(logger: _logger, projectService: _projectService));
+    addCommand(InitCommand(logger: _logger, projectService: _projectService));
+    addCommand(
+        XConfigCommand(logger: _logger, projectService: _projectService));
+    addCommand(EnvCommand(logger: _logger, projectService: _projectService));
+    addCommand(ImportCommand(logger: _logger, projectService: _projectService));
   }
 
-  final MasonLoggerAdapter _logger;
-  final EnvironmentService _environmentService;
+  final Logger _logger;
+  final ProjectService _projectService;
 
   @override
   Future<int> run(Iterable<String> args) async {
@@ -41,7 +44,8 @@ class SecureEnvRunner extends CommandRunner<int> {
       // Handle version flag globally
       final topLevelResults = parse(args);
       if (topLevelResults['version'] as bool) {
-        final command = VersionCommand(logger: _logger);
+        final command =
+            VersionCommand(logger: _logger, projectService: _projectService);
         final result = await command.run();
         return result;
       }

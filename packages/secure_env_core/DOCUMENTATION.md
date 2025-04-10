@@ -1,9 +1,297 @@
 # secure_env_core Documentation
 
-## Core Services
+## Models
+
+### Environment
+Represents an environment with its variables and metadata.
+
+#### Properties:
+- **name** (required): Name of the environment
+- **projectName** (required): Name of the project this environment belongs to
+- **values** (required): Map of environment variables
+- **sensitiveKeys** (optional): Map indicating which keys contain sensitive values
+- **description** (optional): Description of the environment
+- **lastModified** (optional): Last modification timestamp
+- **metadata** (optional): Additional metadata key-value pairs
+
+```dart
+// Example: Create a new environment
+final env = Environment(
+  name: 'production',
+  projectName: 'my-project',
+  values: {'API_URL': 'https://api.example.com'},
+  sensitiveKeys: {'API_KEY': true},
+  description: 'Production environment',
+  metadata: {'region': 'us-east-1'}
+);
+```
+
+### Project
+Represents a secure environment project.
+
+#### Properties:
+- **name** (required): Unique name of the project
+- **path** (required): Base directory path where project files are stored
+- **description** (optional): Description of the project
+- **environments** (optional): List of environment names in this project
+- **config** (optional): Project configuration
+- **status** (optional): Project status (active/archived/markedForDeletion)
+- **metadata** (optional): Additional metadata key-value pairs
+- **createdAt**: Creation timestamp
+- **updatedAt**: Last update timestamp
+
+```dart
+// Example: Create a new project
+final project = Project(
+  name: 'my-app',
+  path: '/path/to/project',
+  description: 'My application',
+  environments: ['dev', 'prod'],
+  metadata: {'team': 'backend'}
+);
+```
+
+### ProjectMetadata
+Metadata about a project stored in the central registry.
+
+#### Properties:
+- **name** (required): Unique name of the project
+- **basePath** (required): Absolute base path of the project directory
+- **createdAt**: Creation timestamp
+- **updatedAt**: Last update timestamp
+- **status**: Project status
+
+## Services
+
+### ProjectService
+Manages secure environment projects.
+
+#### Methods:
+- **createProject({String? name, required String path, String? description, Map<String, String>? metadata})**
+  - Creates a new project with the given name and path
+  - Returns: `Future<Project>`
+
+- **getProject(String name, String path)**
+  - Gets a project by name and path
+  - Returns: `Future<Project?>`
+
+- **listProjects()**
+  - Lists all active projects
+  - Returns: `Future<List<Project>>`
+
+- **updateProject(Project project)**
+  - Updates project details
+  - Returns: `Future<Project>`
+
+- **archiveProject(String name, String path)**
+  - Archives a project
+  - Returns: `Future<Project>`
+
+- **deleteProject(String name, String path)**
+  - Deletes a project and its files
+  - Returns: `Future<void>`
+
+### ProjectRegistryService
+Manages a central registry of all secure_env projects.
+
+#### Methods:
+- **listProjects({ProjectStatus? status})**
+  - Lists all registered projects, optionally filtered by status
+  - Returns: `Future<List<ProjectMetadata>>`
+
+- **getProjectMetadata(String name)**
+  - Gets metadata for a specific project
+  - Returns: `Future<ProjectMetadata?>`
+
+- **registerProject(ProjectMetadata metadata)**
+  - Registers a new project in the central registry
+  - Returns: `Future<ProjectMetadata>`
+
+- **updateProjectMetadata(ProjectMetadata metadata)**
+  - Updates metadata for an existing project
+  - Returns: `Future<ProjectMetadata>`
+
+- **unregisterProject(String name)**
+  - Removes a project from the central registry
+  - Returns: `Future<void>`
 
 ### EnvironmentService
-Manages environment variables and their storage across different project environments.
+Manages environment variables and their storage across different project environments. The service provides methods for creating, updating, and deleting environments, as well as managing their values and sensitive keys.
+
+#### Key Features
+- Create and manage multiple environments per project
+- Secure storage of sensitive values
+- Import from various file formats (.env, .properties, .xcconfig)
+- Export environment variables to different formats
+- Track environment modifications
+
+#### Configuration
+```dart
+final environmentService = await EnvironmentService.forProject(
+  project: project,
+  projectService: projectService,
+  logger: logger,
+  secureStorage: secureStorageService,
+  encryptionService: encryptionService,
+);
+```
+
+#### Usage Examples
+
+```dart
+// Create a new environment
+final env = await environmentService.createEnvironment(
+  name: 'production',
+  description: 'Production environment',
+  initialValues: {
+    'API_URL': 'https://api.example.com',
+    'API_KEY': 'secret-key'
+  },
+  sensitiveKeys: {'API_KEY': true}
+);
+
+// Set environment variables
+await environmentService.setValue(
+  key: 'DATABASE_URL',
+  value: 'postgres://localhost:5432/db',
+  envName: 'production',
+  isSecret: true
+);
+
+// Import from .env file
+final importedEnv = await environmentService.importFromEnv(
+  filePath: '/path/to/.env',
+  name: 'staging',
+  description: 'Staging environment',
+  sensitiveKeys: {'API_KEY': true}
+);
+
+// List all environments
+final environments = await environmentService.listEnvironments();
+
+// Delete an environment
+await environmentService.deleteEnvironment(name: 'staging');
+```
+
+#### Methods
+- **forProject({required Project project, required ProjectService projectService, Logger? logger, SecureStorageService? secureStorage, EncryptionService? encryptionService})**
+  - Creates an EnvironmentService for a specific project
+  - Returns: `Future<EnvironmentService>`
+
+- **createEnvironment({required String name, String? description, Map<String, String>? initialValues, Map<String, bool>? sensitiveKeys})**
+  - Creates a new environment
+  - Returns: `Future<Environment>`
+
+- **listEnvironments()**
+  - Lists all environments for a project
+  - Returns: `Future<List<Environment>>`
+
+- **loadEnvironment({required String name})**
+  - Loads an environment from disk
+  - Returns: `Future<Environment?>`
+
+- **setValue({required String key, required String value, required String envName, bool isSecret = false})**
+  - Sets a value in an environment
+  - Returns: `Future<Environment>`
+
+- **deleteEnvironment({required String name})**
+  - Deletes an environment and its sensitive values
+  - Returns: `Future<void>`
+
+- **importFromEnv({required String filePath, required String name, String? description, Map<String, bool>? sensitiveKeys})**
+  - Imports environment from a .env file
+  - Returns: `Future<Environment>`
+
+## Utils
+
+## Format Services
+
+### EnvService
+Handles .env file format operations.
+
+#### Methods:
+- **readEnvFile(String filePath)**
+  - Reads and parses a .env file
+  - Returns: `Future<Map<String, String>>`
+
+### PropertiesService
+Handles Java properties file format operations.
+
+#### Methods:
+- **readPropertiesFile(String filePath)**
+  - Reads and parses a .properties file
+  - Returns: `Future<Map<String, String>>`
+
+### XcConfigService
+Handles Xcode configuration file format operations.
+
+#### Methods:
+- **readXcConfigFile(String filePath)**
+  - Reads and parses a .xcconfig file
+  - Returns: `Future<Map<String, String>>`
+
+## Core Services
+
+### ProjectService
+The ProjectService is responsible for managing secure environment projects. It provides methods for creating, updating, and deleting projects, as well as managing their configurations.
+
+#### Configuration
+```dart
+final projectService = ProjectService(
+  projectRegistry: projectRegistry,
+  logger: logger,
+);
+```
+
+#### Usage Examples
+
+```dart
+// Create a new project
+final project = await projectService.createProject(
+  name: 'my-app',
+  path: '/path/to/project',
+  description: 'My application',
+  metadata: {'team': 'backend'}
+);
+
+// Get a project
+final project = await projectService.getProject('my-app', '/path/to/project');
+
+// Update a project
+final updatedProject = await projectService.updateProject(
+  project: project,
+);
+
+// Import from .env file
+final importedEnv = await environmentService.importFromEnv(
+  filePath: '/path/to/.env',
+  name: 'staging',
+  description: 'Staging environment',
+  sensitiveKeys: {'API_KEY': true}
+);
+
+// Import from .properties file
+final importedProperties = await environmentService.importFromProperties(
+  filePath: '/path/to/.properties',
+  name: 'staging',
+  description: 'Staging environment',
+  sensitiveKeys: {'API_KEY': true}
+);
+
+// Import from .xcconfig file
+final importedXcconfig = await environmentService.importFromXcconfig(
+  filePath: '/path/to/.xcconfig',
+  name: 'staging',
+  description: 'Staging environment',
+  sensitiveKeys: {'API_KEY': true}
+);
+
+// List all environments
+final environments = await environmentService.listEnvironments();
+
+// Delete an environment
+await environmentService.deleteEnvironment(name: 'staging');
+```
 
 #### Methods:
 - **listEnvironments(String projectName)**

@@ -1,30 +1,40 @@
 import 'dart:io';
 
 import 'package:mason_logger/mason_logger.dart';
-import 'package:secure_env_core/src/services/format/properties.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
 import 'package:args/command_runner.dart';
 import '../../../../src/cli/commands/import/properties_import_command.dart';
-import 'package:secure_env_core/src/services/environment_service.dart';
 import '../../../utils/test_logger.dart';
 
 void main() {
   late TestLogger logger;
   late EnvironmentService environmentService;
   late PropertiesService propertiesService;
+  late ProjectService projectService;
   late CommandRunner<int> runner;
   late Directory secureEnvDir;
 
   setUp(() async {
     logger = TestLogger();
-    environmentService = EnvironmentService();
     propertiesService = PropertiesService();
+    projectService = ProjectService(
+      logger: logger,
+      registryService: ProjectRegistryService(logger: logger),
+    );
+    final project = await projectService.createProjectFromCurrentDirectory(
+      name: 'test_project',
+    );
+    environmentService = await EnvironmentService.forProject(
+      project: project,
+      projectService: projectService,
+      logger: logger,
+    );
     runner = CommandRunner<int>('test', 'Test runner')
       ..addCommand(PropertiesImportCommand(
-        logger: logger,
-        environmentService: environmentService,
-        propertiesService: propertiesService,
-      ));
+          logger: logger,
+          propertiesService: propertiesService,
+          projectService: projectService));
 
     // Create .secure_env directory in the project root
     secureEnvDir = Directory('.secure_env');
@@ -71,8 +81,6 @@ app.env=development
     test('imports single .properties file successfully', () async {
       final result = await runner.run([
         'properties',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/test1.properties',
@@ -84,7 +92,6 @@ app.env=development
       // Verify environment was created with correct values
       final env = await environmentService.loadEnvironment(
         name: 'test_env',
-        projectName: 'test_project',
       );
       expect(env, isNotNull);
       expect(env!.values['API_KEY'],
@@ -96,8 +103,6 @@ app.env=development
     test('imports multiple .properties files and merges values', () async {
       final result = await runner.run([
         'properties',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/test1.properties',
@@ -110,7 +115,6 @@ app.env=development
       // Verify environment was created with merged values
       final env = await environmentService.loadEnvironment(
         name: 'test_env',
-        projectName: 'test_project',
       );
       expect(env, isNotNull);
       expect(env!.values['API_KEY'], equals('test123'));
@@ -122,14 +126,11 @@ app.env=development
       // Create initial environment
       await environmentService.createEnvironment(
         name: 'existing_env',
-        projectName: 'test_project',
         initialValues: {'EXISTING_KEY': 'old_value'},
       );
 
       final result = await runner.run([
         'properties',
-        '--project',
-        'test_project',
         '--name',
         'existing_env',
         '.secure_env/test1.properties',
@@ -142,7 +143,6 @@ app.env=development
       // Verify environment was updated
       final env = await environmentService.loadEnvironment(
         name: 'existing_env',
-        projectName: 'test_project',
       );
       expect(env, isNotNull);
       expect(
@@ -160,8 +160,6 @@ key=value=invalid
 
       final result = await runner.run([
         'properties',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/invalid.properties',
@@ -174,8 +172,6 @@ key=value=invalid
     test('handles non-existent file', () async {
       final result = await runner.run([
         'properties',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/non_existent.properties',
@@ -194,8 +190,6 @@ camelCase.key=camel-value
 
       final result = await runner.run([
         'properties',
-        '--project',
-        'test_project',
         '--name',
         'test_env',
         '.secure_env/format.properties',
@@ -206,7 +200,6 @@ camelCase.key=camel-value
       // Verify key format conversion
       final env = await environmentService.loadEnvironment(
         name: 'test_env',
-        projectName: 'test_project',
       );
       expect(env, isNotNull);
       expect(env!.values['my.api.key'], equals('value123'));

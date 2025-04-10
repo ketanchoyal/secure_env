@@ -26,7 +26,8 @@ class ProjectRegistryService {
 
   /// Initialize the registry directory and file.
   void _initializeRegistry() {
-    final homeDir = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    final homeDir =
+        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
     if (homeDir == null) {
       throw StateError('Could not determine user home directory');
     }
@@ -67,7 +68,8 @@ class ProjectRegistryService {
   }
 
   /// Update the metadata for an existing project.
-  Future<ProjectMetadata> updateProjectMetadata(ProjectMetadata metadata) async {
+  Future<ProjectMetadata> updateProjectMetadata(
+      ProjectMetadata metadata) async {
     final existingProject = await getProjectMetadata(metadata.name);
     if (existingProject == null) {
       throw ValidationException('Project "${metadata.name}" not found');
@@ -83,36 +85,40 @@ class ProjectRegistryService {
     final index = projects.indexWhere(
       (p) => (p as Map<String, dynamic>)['name'] == metadata.name,
     );
+    if (index == -1) {
+      throw ValidationException('Project "${metadata.name}" not found');
+    }
     projects[index] = updatedMetadata.toJson();
 
     await _writeRegistry(registry);
-    logger.info('Updated metadata for project "${metadata.name}" in central registry');
+    logger.info(
+        'Updated metadata for project "${metadata.name}" in central registry');
     return updatedMetadata;
   }
 
   /// Remove a project from the central registry.
-  Future<void> unregisterProject(String name) async {
+  Future<void> unregisterProject(String id) async {
     final registry = await _readRegistry();
     final projects = registry['projects'] as List;
     final index = projects.indexWhere(
-      (p) => (p as Map<String, dynamic>)['name'] == name,
+      (p) => (p as Map<String, dynamic>)['id'] == id,
     );
 
     if (index == -1) {
-      throw ValidationException('Project "$name" not found');
+      throw ValidationException('Project "$id" not found');
     }
 
     projects.removeAt(index);
     await _writeRegistry(registry);
-    logger.info('Unregistered project "$name" from central registry');
+    logger.info('Unregistered project "$id" from central registry');
   }
 
   /// Get the metadata for a specific project.
-  Future<ProjectMetadata?> getProjectMetadata(String name) async {
+  Future<ProjectMetadata?> getProjectMetadata(String id) async {
     final registry = await _readRegistry();
     final projects = registry['projects'] as List;
     final projectJson = projects.cast<Map<String, dynamic>>().firstWhere(
-          (p) => p['name'] == name,
+          (p) => p['id'] == id,
           orElse: () => <String, dynamic>{},
         );
 

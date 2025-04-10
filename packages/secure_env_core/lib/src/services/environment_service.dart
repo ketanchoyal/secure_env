@@ -7,8 +7,6 @@ import '../models/models.dart';
 import 'services.dart';
 import '../utils/logger.dart';
 import '../utils/default_logger.dart';
-import 'format/format.dart';
-import 'project_service.dart';
 
 /// Service for managing environments
 class EnvironmentService {
@@ -58,7 +56,7 @@ class EnvironmentService {
 
   /// Get the path to the environments directory for this project
   String getProjectEnvDir() {
-    return path.join(project.path, 'environments');
+    return path.join(project.path, '.secure_env', 'environments');
   }
 
   /// Get the path to the environment type directory
@@ -165,7 +163,7 @@ class EnvironmentService {
   }) async {
     final file = File(filePath);
     if (!await file.exists()) {
-      throw ValidationException('File does not exist');
+      throw FileNotFoundException('File does not exist');
     }
 
     final extension = path.extension(filePath).toLowerCase();
@@ -189,7 +187,8 @@ class EnvironmentService {
           description: description,
         );
       default:
-        throw ValidationException('Invalid file format');
+        throw ValidationException(
+            'Unsupported file format. Supported formats: .env, .xcconfig, .properties');
     }
   }
 
@@ -357,7 +356,7 @@ class EnvironmentService {
     );
 
     if (env == null) {
-      throw ValidationException('Environment "$name" not found');
+      throw ValidationException('Environment $name not found');
     }
 
     // Delete sensitive values
@@ -370,18 +369,17 @@ class EnvironmentService {
     // Delete environment file
     final sanitizedName = _sanitizeName(name);
     final typeDir = Directory(_getEnvTypeDir(sanitizedName));
-    if (typeDir.existsSync()) {
-      await for (final type in typeDir.list()) {
-        if (type is Directory) {
-          final envFile = File(path.join(type.path, '$name.json'));
-          if (envFile.existsSync()) {
-            await envFile.delete();
-            // Delete type directory if empty
-            if (await type.list().isEmpty) {
-              await type.delete();
-            }
-          }
-        }
+    final envFile = File(path.join(typeDir.path, '$sanitizedName.json'));
+
+    if (await envFile.exists()) {
+      await envFile.delete();
+    }
+
+    // Delete the type directory if it exists and is empty
+    if (await typeDir.exists()) {
+      final contents = await typeDir.list().toList();
+      if (contents.isEmpty) {
+        await typeDir.delete();
       }
     }
 
@@ -410,7 +408,7 @@ class EnvironmentService {
     );
 
     if (env == null) {
-      throw ValidationException('Environment "$envName" not found');
+      throw ValidationException('Environment $envName not found');
     }
 
     final values = Map<String, String>.from(env.values);

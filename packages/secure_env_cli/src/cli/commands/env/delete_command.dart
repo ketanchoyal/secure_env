@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/src/services/environment_service.dart';
 import '../base_command.dart';
@@ -6,18 +8,9 @@ import '../base_command.dart';
 class DeleteCommand extends BaseCommand {
   DeleteCommand({
     required super.logger,
-    EnvironmentService? environmentService,
-  }) : _environmentService = environmentService ??
-            EnvironmentService(
-              logger: logger,
-            ) {
+    required super.projectService,
+  }) {
     argParser
-      ..addOption(
-        'project',
-        abbr: 'p',
-        help: 'Project name',
-        mandatory: true,
-      )
       ..addOption(
         'name',
         abbr: 'n',
@@ -26,7 +19,7 @@ class DeleteCommand extends BaseCommand {
       );
   }
 
-  final EnvironmentService _environmentService;
+  late final EnvironmentService _environmentService;
 
   @override
   String get description => 'Delete an environment';
@@ -36,12 +29,17 @@ class DeleteCommand extends BaseCommand {
 
   @override
   Future<int> run() => handleErrors(() async {
-        final projectName = argResults!['project'] as String;
+        final project = await projectService.getProjectFromCurrentDirectory();
+        if (project == null) {
+          throw 'No project found in the current directory. Please run "secure_env init" first.';
+        }
+        _environmentService = await EnvironmentService.forProject(
+            project: project, projectService: projectService, logger: logger);
+
         final envName = argResults!['name'] as String;
 
         await _environmentService.deleteEnvironment(
           name: envName,
-          projectName: projectName,
         );
 
         logger.success('Deleted environment: $envName');

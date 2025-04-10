@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:secure_env_core/secure_env_core.dart';
-import 'package:secure_env_core/src/services/project_service.dart';
-import 'package:secure_env_core/src/services/project_registry_service.dart';
-import 'package:secure_env_core/src/services/secure_storage_service.dart';
+import 'package:secure_env_core/src/exceptions/file_not_found_exception.dart';
 import 'package:test/test.dart';
 import '../utils/test_logger.dart';
 
@@ -216,15 +214,15 @@ void main() {
         await invalidFile.writeAsString('invalid=content');
 
         expect(
-          () => environmentService.importEnvironment(
+          () async => await environmentService.importEnvironment(
             filePath: invalidFile.path,
             envName: 'test',
           ),
-          throwsA(
-            equals(
-              'Unsupported file format. Supported formats: .env, .xcconfig, .properties',
-            ),
-          ),
+          throwsA(isA<ValidationException>().having(
+              (e) => e.message,
+              'message',
+              contains(
+                  'Unsupported file format. Supported formats: .env, .xcconfig, .properties'))),
         );
       });
 
@@ -234,7 +232,7 @@ void main() {
             filePath: '${tempDir.path}/non_existent.env',
             envName: 'test',
           ),
-          throwsA(equals('File not found: ${tempDir.path}/non_existent.env')),
+          throwsA(isA<FileNotFoundException>()),
         );
       });
     });

@@ -11,18 +11,9 @@ class ExportCommand extends BaseCommand {
   /// Creates a new export command
   ExportCommand({
     required super.logger,
-    EnvironmentService? environmentService,
-  }) : _environmentService = environmentService ??
-            EnvironmentService(
-              logger: logger,
-            ) {
+    required super.projectService,
+  }) {
     argParser
-      ..addOption(
-        'project',
-        abbr: 'p',
-        help: 'Project name',
-        mandatory: true,
-      )
       ..addOption(
         'format',
         abbr: 'f',
@@ -37,7 +28,7 @@ class ExportCommand extends BaseCommand {
       );
   }
 
-  final EnvironmentService _environmentService;
+  late final EnvironmentService _environmentService;
 
   @override
   String get description => 'Export an environment to a file';
@@ -47,6 +38,12 @@ class ExportCommand extends BaseCommand {
 
   @override
   Future<int> run() => handleErrors(() async {
+        final project = await projectService.getProjectFromCurrentDirectory();
+        if (project == null) {
+          throw 'No project found in the current directory. Please run "secure_env init" first.';
+        }
+        _environmentService = await EnvironmentService.forProject(
+            project: project, projectService: projectService, logger: logger);
         final envName =
             argResults?.rest.isEmpty ?? true ? null : argResults!.rest.first;
         if (envName == null) {
@@ -54,14 +51,12 @@ class ExportCommand extends BaseCommand {
           return ExitCode.usage.code;
         }
 
-        final projectName = argResults!['project'] as String;
         final format = argResults!['format'] as String;
-        var outputPath = argResults!['output'] as String?;
+        String? outputPath = argResults!['output'] as String?;
 
         // Load the environment
         final env = await _environmentService.loadEnvironment(
           name: envName,
-          projectName: projectName,
         );
 
         if (env == null) {

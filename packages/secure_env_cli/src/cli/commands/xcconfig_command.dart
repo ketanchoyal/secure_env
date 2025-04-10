@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:mason_logger/mason_logger.dart';
 import 'package:path/path.dart' as path;
 import 'package:secure_env_core/secure_env_core.dart';
 import 'base_command.dart';
@@ -8,6 +9,7 @@ import 'base_command.dart';
 class XConfigCommand extends BaseCommand {
   XConfigCommand({
     required super.logger,
+    required super.projectService,
   }) {
     argParser
       ..addOption(
@@ -118,7 +120,7 @@ class XConfigCommand extends BaseCommand {
           }
         }
 
-        return BaseCommand.successExitCode;
+        return ExitCode.success.code;
       });
 
   Map<String, String> _applyConfig(Map<String, String> values, Config? config) {

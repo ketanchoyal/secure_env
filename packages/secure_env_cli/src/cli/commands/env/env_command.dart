@@ -1,8 +1,6 @@
 import 'package:args/command_runner.dart';
-import '../../../utils/mason_logger_adapter.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 
-import 'package:secure_env_core/src/services/environment_service.dart';
 import 'create_command.dart';
 import 'delete_command.dart';
 import 'edit_command.dart';
@@ -15,31 +13,31 @@ class EnvCommand extends Command<int> {
   /// Creates a new environment command
   EnvCommand({
     required Logger logger,
-    EnvironmentService? environmentService,
+    required ProjectService projectService,
   }) {
     addSubcommand(CreateCommand(
       logger: logger,
-      environmentService: environmentService,
+      projectService: projectService,
     ));
     addSubcommand(ListCommand(
       logger: logger,
-      environmentService: environmentService,
+      projectService: projectService,
     ));
     addSubcommand(InfoCommand(
       logger: logger,
-      environmentService: environmentService,
+      projectService: projectService,
     ));
     addSubcommand(EditCommand(
       logger: logger,
-      environmentService: environmentService,
+      projectService: projectService,
     ));
     addSubcommand(DeleteCommand(
       logger: logger,
-      environmentService: environmentService,
+      projectService: projectService,
     ));
     addSubcommand(ExportCommand(
       logger: logger,
-      environmentService: environmentService,
+      projectService: projectService,
     ));
   }
 

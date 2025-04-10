@@ -6,7 +6,10 @@ import 'package:secure_env_core/src/exceptions/exceptions.dart';
 /// Base command class for all commands
 abstract class BaseCommand extends Command<int> {
   /// Create a new base command
-  BaseCommand({required this.logger});
+  BaseCommand({required this.logger, required this.projectService});
+
+  /// We need ProjectService to do anything here
+  final ProjectService projectService;
 
   /// Logger instance
   final Logger logger;
@@ -28,7 +31,9 @@ abstract class BaseCommand extends Command<int> {
         ..error('Error: $error')
         ..info('')
         ..info(usage);
-      if (error is UsageException || error is ArgumentError) {
+      if (error is UsageException ||
+          error is ArgumentError ||
+          error is ValidationException) {
         return ExitCode.usage.code;
       }
       if (error is FileNotFoundException) {

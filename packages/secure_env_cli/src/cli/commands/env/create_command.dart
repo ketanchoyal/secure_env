@@ -1,23 +1,16 @@
+import 'dart:io';
+
 import 'package:mason_logger/mason_logger.dart';
-import 'package:secure_env_core/src/services/environment_service.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import '../base_command.dart';
 
 /// Command to create a new environment
 class CreateCommand extends BaseCommand {
   CreateCommand({
     required super.logger,
-    EnvironmentService? environmentService,
-  }) : _environmentService = environmentService ??
-            EnvironmentService(
-              logger: logger,
-            ) {
+    required super.projectService,
+  }) {
     argParser
-      ..addOption(
-        'project',
-        abbr: 'p',
-        help: 'Project name',
-        mandatory: true,
-      )
       ..addOption(
         'description',
         abbr: 'd',
@@ -40,7 +33,7 @@ class CreateCommand extends BaseCommand {
       );
   }
 
-  final EnvironmentService _environmentService;
+  late final EnvironmentService _environmentService;
 
   @override
   String get description => 'Create a new environment';
@@ -50,14 +43,20 @@ class CreateCommand extends BaseCommand {
 
   @override
   Future<int> run() => handleErrors(() async {
-        final projectName = argResults!['project'] as String;
+        final project = await projectService.getProjectFromCurrentDirectory();
+        if (project == null) {
+          throw 'No project found in the current directory. Please run "secure_env init" first.';
+        }
+        _environmentService = await EnvironmentService.forProject(
+            project: project, projectService: projectService, logger: logger);
+        // final projectName = argResults!['project'] as String;
         final description = argResults!['description'] as String?;
         final template = argResults!['template'] as String?;
         final keys = argResults!['key'] as List<String>;
         final values = argResults!['value'] as List<String>;
 
         if (argResults!.rest.isEmpty) {
-          throw const FormatException('Environment name is required');
+          throw const ValidationException('Environment name is required');
         }
 
         final envName = argResults!.rest.first;
@@ -65,7 +64,6 @@ class CreateCommand extends BaseCommand {
         // Check if environment already exists
         final existingEnv = await _environmentService.loadEnvironment(
           name: envName,
-          projectName: projectName,
         );
 
         if (existingEnv != null) {
@@ -77,7 +75,6 @@ class CreateCommand extends BaseCommand {
           // Load values from template
           final templateEnv = await _environmentService.loadEnvironment(
             name: template,
-            projectName: projectName,
           );
 
           if (templateEnv == null) {
@@ -101,7 +98,6 @@ class CreateCommand extends BaseCommand {
 
         final env = await _environmentService.createEnvironment(
           name: envName,
-          projectName: projectName,
           description: description,
           initialValues: initialValues,
         );

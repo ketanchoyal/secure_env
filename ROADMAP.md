@@ -1,204 +1,219 @@
 # Development Roadmap
 
-## Phase 1: CLI Implementation (4-5 weeks)
 
-### Current Project Structure
-```dart
-packages/
-├── secure_env_cli/        # CLI implementation
-│   ├── lib/
-│   │   └── src/
-│   │       ├── cli/
-│   │       │   ├── commands/
-│   │       │   │   ├── base_command.dart
-│   │       │   │   ├── version_command.dart
-│   │       │   │   ├── xcconfig_command.dart
-│   │       │   │   ├── env/
-│   │       │   │   │   ├── env_command.dart
-│   │       │   │   │   ├── create_command.dart
-│   │       │   │   │   ├── list_command.dart
-│   │       │   │   │   ├── info_command.dart
-│   │       │   │   │   ├── edit_command.dart
-│   │       │   │   │   ├── export_command.dart
-│   │       │   │   │   └── delete_command.dart
-│   │       │   │   └── import/
-│   │       │   │       ├── import_command.dart
-│   │       │   │       ├── env_import_command.dart
-│   │       │   │       ├── properties_import_command.dart
-│   │       │   │       └── xcconfig_import_command.dart
-│   │       │   └── secure_env_runner.dart
+
+### Project Structure
+```
+secure_env/
+├── docs/                  # Project documentation
+│   ├── README.md
+│   └── examples.md
+├── packages/
+│   ├── secure_env_core/   # Core package (Completed)
+│   │   ├── lib/
+│   │   │   ├── src/
+│   │   │   │   ├── exceptions/
+│   │   │   │   │   ├── exceptions.dart
+│   │   │   │   │   ├── file_not_found_exception.dart
+│   │   │   │   │   └── validation_exception.dart
+│   │   │   │   ├── models/
+│   │   │   │   │   ├── config.dart
+│   │   │   │   │   ├── environment.dart
+│   │   │   │   │   ├── models.dart
+│   │   │   │   │   ├── project.dart
+│   │   │   │   │   ├── project_metadata.dart
+│   │   │   │   │   └── project_status.dart
+│   │   │   │   ├── services/
+│   │   │   │   │   ├── encryption_service.dart
+│   │   │   │   │   ├── environment_service.dart
+│   │   │   │   │   ├── format/
+│   │   │   │   │   │   ├── env.dart
+│   │   │   │   │   │   ├── format.dart
+│   │   │   │   │   │   ├── properties.dart
+│   │   │   │   │   │   └── xcconfig.dart
+│   │   │   │   │   ├── project_registry_service.dart
+│   │   │   │   │   ├── project_service.dart
+│   │   │   │   │   └── secure_storage_service.dart
+│   │   │   │   └── utils/
+│   │   │   │   │   ├── default_logger.dart
+│   │   │   │   │   ├── logger.dart
+│   │   │   │   │   └── validation_utils.dart
+│   │   │   └── secure_env_core.dart
+│   │   └── test/
+│   │       ├── fixtures/
+│   │       ├── services/
+│   │       │   ├── encryption_service_test.dart
+│   │       │   ├── environment_service_test.dart
+│   │       │   ├── project_service_test.dart
+│   │       │   └── secure_storage_service_test.dart
 │   │       └── utils/
-│   │           └── mason_logger_adapter.dart
-│   ├── bin/
-│   │   └── secure_env.dart
-│   └── test/             # CLI Tests
-│       ├── cli/
-│       │   └── commands/
-│       │       ├── env/
-│       │       │   ├── create_command_test.dart
-│       │       │   ├── delete_command_test.dart
-│       │       │   ├── edit_command_test.dart
-│       │       │   ├── export_command_test.dart
-│       │       │   └── info_command_test.dart
-│       │       └── import/
-│       │           ├── env_import_command_test.dart
-│       │           ├── import_command_test.dart
-│       │           ├── properties_import_command_test.dart
-│       │           └── xcconfig_import_command_test.dart
-│       └── utils/
-│           └── test_logger.dart
-└── secure_env_core/       # Core library
-    ├── lib/
-    │   ├── src/
-    │   │   ├── exceptions/
-    │   │   │   ├── exceptions.dart
-    │   │   │   ├── file_not_found_exception.dart
-    │   │   │   └── validation_exception.dart
-    │   │   ├── models/
-    │   │   │   ├── models.dart
-    │   │   │   ├── environment.dart
-    │   │   │   ├── project.dart
-    │   │   │   └── config.dart
-    │   │   ├── services/
-    │   │   │   ├── services.dart
-    │   │   │   ├── format/
-    │   │   │   │   ├── format.dart
-    │   │   │   │   ├── xcconfig.dart
-    │   │   │   │   ├── env.dart
-    │   │   │   │   └── properties.dart
-    │   │   │   ├── encryption_service.dart
-    │   │   │   ├── secure_storage_service.dart
-    │   │   │   └── environment_service.dart
-    │   │   └── utils/
-    │   │       ├── logger.dart
-    │   │       ├── default_logger.dart
-    │   │       └── validation_utils.dart
-    │   └── secure_env_core.dart
-    └── test/             # Core Tests
-        └── core/
-            ├── services/
-            │   ├── encryption_service_test.dart
-            │   ├── environment_service_test.dart
-            │   └── secure_storage_service_test.dart
-            └── utils/
-                ├── test_logger.dart
-                └── validation_utils_test.dart
+│   │           ├── test_logger.dart
+│   │           └── validation_utils_test.dart
+│   └── secure_env_cli/   # CLI package (In Progress)
+│       ├── lib/
+│       │   └── src/
+│       │       ├── commands/     # CLI commands
+│       │       │   ├── project/  # Project management
+│       │       │   │   ├── init.dart
+│       │       │   │   ├── info.dart
+│       │       │   │   └── list.dart
+│       │       │   ├── env/      # Environment management
+│       │       │   │   ├── create.dart
+│       │       │   │   ├── list.dart
+│       │       │   │   └── edit.dart
+│       │       │   └── keys/     # Key management
+│       │       │       ├── rotate.dart
+│       │       │       └── backup.dart
+│       │       └── utils/        # CLI utilities
+│       └── test/
+└── ROADMAP.md            # This file
 ```
 
-### Completed Features
-- [x] Project setup and core dependencies
-- [x] Core models (Environment, Project, Config)
+## Phase 1: Core Implementation (Completed)
+
+### Features Completed
+- [x] Core models implementation
+  - [x] Environment model
+  - [x] Project model
+  - [x] Configuration model
+- [x] Services implementation
+  - [x] Environment management service
+  - [x] Encryption service
+  - [x] Secure storage service
 - [x] Format services
-  - [x] XConfig parser
-  - [x] .env generator/parser
-  - [x] .properties generator/parser
-- [x] Environment management service
-- [x] CLI Commands
-  - [x] Version command
-  - [x] XConfig conversion
-  - [x] Environment management
-    - [x] Create command
-    - [x] List command
-    - [x] Info command
-    - [x] Edit command
-    - [x] Delete command
-  - [x] Import commands (env, properties, xcconfig)
-- [x] Error handling
-  - [x] Base command error handling wrapper
-  - [x] Consistent error messages
-  - [x] Command validation
-
-### Week 3: Environment Management (Completed)
-
-#### Environment Commands
-- [x] Create environment
-- [x] List environments
-- [x] Show environment info
-- [x] Edit environment
-- [x] Delete environment
-- [x] Export environment
-- [x] Import environment
-  - [x] .env format
-  - [x] .properties format
-  - [x] .xcconfig format with variable substitution
-
-### Week 4: Security & Testing (In Progress)
-
-#### Security Features
-- [x] Implement encryption service
-  - [x] AES-256 encryption with random IV
-  - [x] Secure key derivation
-  - [x] Non-deterministic encryption
-- [x] Add key management
-  - [x] Master key generation
+  - [x] XConfig parser/generator
+  - [x] .env parser/generator
+  - [x] .properties parser/generator
+- [x] Security features
+  - [x] AES-256 encryption
   - [x] Secure key storage
-- [x] Secure storage implementation
-  - [x] File-based secure storage
-  - [x] Secure deletion
-  - [x] Path traversal prevention
-- [x] Input validation
-  - [x] Empty key validation for imports
-  - [x] Consistent error handling
-  - [x] Proper exit codes
+  - [x] Key management
+- [x] Error handling
+  - [x] Custom exceptions
+  - [x] Validation utilities
+  - [x] Logging interface
 
-#### Testing & Documentation
-- [x] Unit tests for core services
-  - [x] Environment service tests
-  - [x] Encryption service tests
-  - [x] Secure storage service tests
-  - [x] Validation utils tests
-- [x] Integration tests for base commands
-- [x] Integration tests for import commands
-- [ ] Integration tests for remaining commands
-- [ ] CLI documentation
-- [ ] Usage examples
+## Phase 2: CLI Implementation (In Progress)
 
-#### Documentation (Docusaurus)
-- [ ] Set up Docusaurus documentation site
-  - [ ] Project configuration and branding
-  - [ ] Custom theme and styling
-  - [ ] GitHub Pages deployment setup
-- [ ] Content creation
-  - [ ] Getting started guide
-  - [ ] Command reference documentation
-  - [ ] Usage examples and best practices
-  - [ ] Security guidelines
+### Phase 2.1: Project Management (1 week)
+
+#### Core Project Commands
+- [ ] Project Initialization
+  - [ ] Initialize new project (`secure_env init`)
+  - [ ] Project configuration setup
+  - [ ] Default environment creation
+- [ ] Project Management
+  - [ ] Project info command
+  - [ ] List projects command
+  - [ ] Delete project command
+- [ ] Testing
+  - [ ] Unit tests for project commands
+  - [ ] Integration tests
+  - [ ] Edge case handling
+
+### Phase 2.2: Enhanced Environment Management (1 week)
+
+#### Advanced Environment Features
+- [ ] Project setup and core dependencies
+- [ ] Format services
+  - [ ] XConfig parser/generator
+  - [ ] .env generator/parser
+  - [ ] .properties generator/parser
+- [ ] Environment management service
+- [ ] CLI Commands
+  - [ ] Version command
+  - [ ] XConfig conversion
+  - [ ] Env conversion
+  - [ ] Properties conversion
+  - [ ] Environment management
+    - [ ] Create command
+    - [ ] List command
+    - [ ] Info command
+    - [ ] Edit command
+    - [ ] Delete command
+  - [ ] Import commands (env, properties, xcconfig)
+- [ ] Error handling
+  - [ ] Base command error handling wrapper
+  - [ ] Consistent error messages
+  - [ ] Command validation
+
+
+#### Documentation
+- [ ] CLI Documentation
+  - [ ] Command reference
+  - [ ] Usage examples
+  - [ ] Best practices
+- [ ] API Documentation
+  - [ ] Public API docs
+  - [ ] Integration guides
+
+### Phase 2.5: Release Preparation (1 week)
+
+#### Release Tasks
+- [ ] Testing
+  - [ ] End-to-end testing
+  - [ ] Cross-platform validation
+  - [ ] Performance testing
+- [ ] Documentation Site
+  - [ ] Docusaurus setup
+  - [ ] Content migration
+  - [ ] SEO optimization
+- [ ] Distribution
+  - [ ] pub.dev package
+  - [ ] Homebrew formula
+  - [ ] Release notes
+
+## Phase 3: GUI Implementation (Future)
+
+### Planning Phase (2 weeks)
+- [ ] Design System
+  - [ ] UI component library
+  - [ ] Theme system
+  - [ ] Design tokens
+- [ ] Architecture
+  - [ ] State management strategy
+  - [ ] Navigation system
+  - [ ] Error handling
+
+### Implementation Phase (8-10 weeks)
+
+#### Core Features
+- [ ] Project Management
+  - [ ] Project creation wizard
+  - [ ] Project settings panel
+  - [ ] Multi-project support
+- [ ] Environment Management
+  - [ ] Environment editor
+  - [ ] Variable management
+  - [ ] Environment comparison
+- [ ] Security Features
+  - [ ] Key management UI
+  - [ ] Access control panel
+  - [ ] Audit logging
+
+#### Advanced Features
+- [ ] Team Collaboration
+  - [ ] User management
+  - [ ] Role-based access
+  - [ ] Activity history
+- [ ] Integrations
+  - [ ] Version control
+  - [ ] CI/CD pipelines
+  - [ ] Cloud services
+
+### Testing & Release (2 weeks)
+- [ ] Testing
+  - [ ] Unit tests
+  - [ ] Integration tests
+  - [ ] E2E tests
+- [ ] Documentation
+  - [ ] User guide
   - [ ] API documentation
-- [ ] Features
-  - [ ] Search functionality
-  - [ ] Versioning support
-  - [ ] Mobile-responsive design
-  - [ ] Code snippet highlighting
-  - [ ] Integration with GitHub repository
-
-### Week 5: Polish & Release
-
-#### Final Features
-- [x] Add configuration validation
-- [x] Implement logging
-  - [x] Mason logger integration
-  - [x] Consistent logging interface
-  - [x] Error reporting
-- [x] Add error handling
-- [ ] Performance optimizations
-
-#### Release Preparation
-- [ ] Final testing
-- [ ] Documentation review
-- [ ] Package publishing
-- [ ] Release notes
-
-## Phase 2: GUI Implementation (Future)
-
-### Planning Phase
-- Design system setup
-- Screen mockups
-- State management architecture
-
-### Core Features
-- Project Management
-  - Create project with dedicated directory
-  - Project configuration and settings
+  - [ ] Integration guides
+- [ ] Distribution
+  - [ ] Installer creation
+  - [ ] Auto-update system
+  - [ ] Release process
   - Project deletion and archival
 - Environment Management
   - Create environments within projects

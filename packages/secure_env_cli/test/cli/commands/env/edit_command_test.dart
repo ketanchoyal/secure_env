@@ -1,47 +1,58 @@
 import 'dart:io';
 import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
 import '../../../../src/cli/commands/env/env_command.dart';
-import 'package:secure_env_core/src/services/environment_service.dart';
 import '../../../utils/test_logger.dart';
 
 void main() {
   late TestLogger logger;
   late EnvironmentService environmentService;
+  late ProjectService projectService;
   late CommandRunner<int> runner;
+  late String currentDirectoryPath;
+  late Project project;
 
-  setUp(() {
+  setUp(() async {
     logger = TestLogger();
-    environmentService = EnvironmentService();
+    currentDirectoryPath = Directory.systemTemp.createTempSync().path;
+    projectService = ProjectService(
+      logger: logger,
+      registryService: ProjectRegistryService(logger: logger),
+    );
+    projectService.testCurrentDirectoryPath = currentDirectoryPath;
+    project = await projectService.createProjectFromCurrentDirectory(
+      name: 'test_project',
+    );
+    environmentService = await EnvironmentService.forProject(
+      project: project,
+      projectService: projectService,
+      logger: logger,
+    );
     runner = CommandRunner<int>('test', 'Test runner')
       ..addCommand(EnvCommand(
         logger: logger,
-        environmentService: environmentService,
+        projectService: projectService,
       ));
   });
 
   tearDown(() async {
-    final envDir = environmentService.getProjectEnvDir('test_project');
-    final dir = Directory(envDir);
-    if (await dir.exists()) {
-      await dir.delete(recursive: true);
-    }
+    await projectService.deleteProject(
+      project.path,
+    );
   });
 
   group('EditCommand', () {
     test('edits environment value successfully', () async {
       await environmentService.createEnvironment(
         name: 'test',
-        projectName: 'test_project',
         initialValues: {'API_KEY': 'old_value'},
       );
 
       final result = await runner.run([
         'env',
         'edit',
-        '--project',
-        'test_project',
         '--name',
         'test',
         '--key',
@@ -63,7 +74,6 @@ void main() {
 
       final env = await environmentService.loadEnvironment(
         name: 'test',
-        projectName: 'test_project',
       );
       expect(env?.values['API_KEY'], equals('new_value'));
     });
@@ -71,15 +81,12 @@ void main() {
     test('edits environment value as secret', () async {
       await environmentService.createEnvironment(
         name: 'test',
-        projectName: 'test_project',
         initialValues: {'API_KEY': 'old_value'},
       );
 
       final result = await runner.run([
         'env',
         'edit',
-        '--project',
-        'test_project',
         '--name',
         'test',
         '--key',
@@ -102,7 +109,6 @@ void main() {
 
       final env = await environmentService.loadEnvironment(
         name: 'test',
-        projectName: 'test_project',
       );
       expect(env?.values['API_KEY'], equals('secret_value'));
     });
@@ -111,8 +117,6 @@ void main() {
       final result = await runner.run([
         'env',
         'edit',
-        '--project',
-        'test_project',
         '--name',
         'non_existent',
         '--key',
@@ -121,16 +125,27 @@ void main() {
         'new_value',
       ]);
 
-      expect(result, equals(ExitCode.software.code));
-      expect(logger.errorLogs, contains(contains('Environment not found')));
+      expect(result, equals(ExitCode.usage.code));
+      expect(logger.errorLogs,
+          contains(contains('Environment non_existent not found')));
     });
 
-    test('requires project, name, key, and value arguments', () async {
+    test('requires name, key, and value arguments', () async {
       final result = await runner.run(['env', 'edit']);
       expect(result, equals(ExitCode.usage.code));
       expect(
         logger.errorLogs,
-        contains(contains('Option project is mandatory')),
+        contains(contains('Option name is mandatory')),
+      );
+    });
+
+    test('requires value argument when editing', () async {
+      final result = await runner
+          .run(['env', 'edit', '--name', 'test', '--key', 'API_KEY']);
+      expect(result, equals(ExitCode.usage.code));
+      expect(
+        logger.errorLogs,
+        contains(contains('Option value is mandatory')),
       );
     });
   });

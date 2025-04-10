@@ -1,3 +1,4 @@
+import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 
 import '../base_command.dart';
@@ -9,6 +10,7 @@ import 'xcconfig_import_command.dart';
 class ImportCommand extends BaseCommand {
   ImportCommand({
     required super.logger,
+    required super.projectService,
   }) {
     // argParser
     //   ..addFlag(
@@ -29,25 +31,24 @@ class ImportCommand extends BaseCommand {
     //     help: 'Target environment name',
     //     valueHelp: 'name',
     //   );
-    final environmentService = EnvironmentService();
     final envService = EnvService();
     final propertiesService = PropertiesService();
     final xconfigService = XConfigService();
 
     addSubcommand(EnvImportCommand(
       logger: logger,
-      environmentService: environmentService,
+      projectService: projectService,
       envService: envService,
     ));
     addSubcommand(PropertiesImportCommand(
       logger: logger,
-      environmentService: environmentService,
       propertiesService: propertiesService,
+      projectService: projectService,
     ));
     addSubcommand(XConfigImportCommand(
       logger: logger,
-      environmentService: environmentService,
       xconfigService: xconfigService,
+      projectService: projectService,
     ));
   }
 

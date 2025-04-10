@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
 import '../../../../src/cli/commands/env/env_command.dart';
-import 'package:secure_env_core/src/services/environment_service.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
 
@@ -12,44 +11,49 @@ import '../../../utils/test_logger.dart';
 void main() {
   late TestLogger logger;
   late EnvironmentService environmentService;
+  late ProjectService projectService;
   late CommandRunner<int> runner;
+  late String currentDirectoryPath;
+  late Project project;
 
-  setUp(() {
+  setUp(() async {
     logger = TestLogger();
-    environmentService = EnvironmentService();
+    currentDirectoryPath = Directory.systemTemp.createTempSync().path;
+    projectService = ProjectService(
+      logger: logger,
+      registryService: ProjectRegistryService(logger: logger),
+    );
+    projectService.testCurrentDirectoryPath = currentDirectoryPath;
+    project = await projectService.createProjectFromCurrentDirectory(
+      name: 'test_project',
+    );
+    environmentService = await EnvironmentService.forProject(
+      project: project,
+      projectService: projectService,
+      logger: logger,
+    );
     runner = CommandRunner<int>('test', 'Test runner')
       ..addCommand(EnvCommand(
         logger: logger,
-        environmentService: environmentService,
+        projectService: projectService,
       ));
   });
 
   tearDown(() async {
-    await environmentService.deleteEnvironment(
-      name: 'test',
-      projectName: 'test_project',
-    );
-    await environmentService.deleteEnvironment(
-      name: 'test',
-      projectName: 'test_project_2',
-    );
-    await environmentService.deleteEnvironment(
-      name: 'test',
-      projectName: 'test_project_3',
+    await projectService.deleteProject(
+      project.path,
     );
   });
 
   group('CreateCommand', () {
     test('creates environment successfully', () async {
-      await environmentService.deleteEnvironment(
-        name: 'test',
-        projectName: 'test_project',
-      );
+      // await environmentService.deleteEnvironment(
+      //   name: 'test',
+      //   projectName: 'test_project',
+      // );
       final result = await runner.run([
         'env',
         'create',
-        '--project',
-        'test_project',
         'test',
         '--description',
         'Test environment',
@@ -67,11 +71,9 @@ void main() {
 
       final env = await environmentService.loadEnvironment(
         name: 'test',
-        projectName: 'test_project',
       );
       expect(env, isNotNull);
       expect(env?.name, equals('test'));
-      expect(env?.projectName, equals('test_project'));
       expect(env?.description, equals('Test environment'));
       expect(env?.values, equals({'API_KEY': 'test123'}));
     });
@@ -80,8 +82,6 @@ void main() {
       final result = await runner.run([
         'env',
         'create',
-        '--project',
-        'test_project_2',
         'test',
         '--description',
         'Test environment',
@@ -103,11 +103,9 @@ void main() {
 
       final env = await environmentService.loadEnvironment(
         name: 'test',
-        projectName: 'test_project_2',
       );
       expect(env, isNotNull);
       expect(env?.name, equals('test'));
-      expect(env?.projectName, equals('test_project_2'));
       expect(env?.description, equals('Test environment'));
       expect(
         env?.values,
@@ -121,14 +119,11 @@ void main() {
     test('shows error when environment already exists', () async {
       await environmentService.createEnvironment(
         name: 'test',
-        projectName: 'test_project',
       );
 
       final result = await runner.run([
         'env',
         'create',
-        '--project',
-        'test_project',
         'test',
       ]);
 
@@ -139,12 +134,12 @@ void main() {
       );
     });
 
-    test('requires project and name arguments', () async {
+    test('requires name arguments', () async {
       final result = await runner.run(['env', 'create']);
       expect(result, equals(ExitCode.usage.code));
       expect(
         logger.errorLogs,
-        contains(contains('Option project is mandatory')),
+        contains(contains('Environment name is required')),
       );
     });
 
@@ -152,8 +147,6 @@ void main() {
       final result = await runner.run([
         'env',
         'create',
-        '--project',
-        'test_project_3',
         'test',
       ]);
 
@@ -165,11 +158,9 @@ void main() {
 
       final env = await environmentService.loadEnvironment(
         name: 'test',
-        projectName: 'test_project_3',
       );
       expect(env, isNotNull);
       expect(env?.name, equals('test'));
-      expect(env?.projectName, equals('test_project_3'));
       expect(env?.values, isEmpty);
     });
   });
