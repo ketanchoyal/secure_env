@@ -1,9 +1,19 @@
-# secure_env_cli Documentation
+# secure_env_cli
 
-## Overview
-secure_env_cli is a command-line interface tool for managing environment variables securely across different projects and environments. It provides a robust set of commands for creating, managing, and importing environment variables from various file formats.
+A command-line interface tool for managing environment variables securely across different projects and environments.
+
+## Features
+
+- **Project Management**: Create and manage secure environment projects
+- **Environment Variables**: Create, edit, and manage environment variables
+- **Multiple Formats**: Support for .env, .properties, and .xcconfig file formats
+- **Import/Export**: Import from and export to various file formats
+- **Secure Storage**: Securely store sensitive values with encryption
+- **Cross-Platform**: Works on macOS, Linux, and Windows
 
 ## Installation
+
+### Using Dart
 
 ```bash
 # Install globally
@@ -12,6 +22,35 @@ dart pub global activate secure_env_cli
 # Or run directly
 dart run secure_env_cli
 ```
+
+### Using Homebrew (macOS) [WIP]
+
+```bash
+brew tap ketanchoyal/secure_env
+brew install secure_env
+```
+
+## Quick Start
+
+1. **Initialize a new project**:
+   ```bash
+   secure-env init --name my-app --description "My application"
+   ```
+
+2. **Create an environment**:
+   ```bash
+   secure-env env create -n production -d "Production environment" --key "API_URL" --value "https://api.example.com" --sensitive-keys "API_KEY"
+   ```
+
+3. **Import from existing files**:
+   ```bash
+   secure-env import env -f .env.example -n staging -d "Staging environment" -s "API_KEY,DB_PASSWORD"
+   ```
+
+4. **Export to different formats**:
+   ```bash
+   secure-env env export -n production -f env -o .env.production
+   ```
 
 ## Commands
 
@@ -32,15 +71,11 @@ secure-env init [options]
 ### Environment Management
 
 #### List Environments
-List all environments in the current project.
-
 ```bash
 secure-env env list
 ```
 
 #### Create Environment
-Create a new environment.
-
 ```bash
 secure-env env create [options]
 ```
@@ -53,8 +88,6 @@ secure-env env create [options]
 - `--sensitive-keys, -s`: Keys to mark as sensitive (comma-separated)
 
 #### Edit Environment
-Edit an existing environment.
-
 ```bash
 secure-env env edit [options]
 ```
@@ -66,8 +99,6 @@ secure-env env edit [options]
 - `--sensitive, -s`: Mark as sensitive value
 
 #### Delete Environment
-Delete an environment.
-
 ```bash
 secure-env env delete [options]
 ```
@@ -76,8 +107,6 @@ secure-env env delete [options]
 - `--name, -n`: Environment name (required)
 
 #### Environment Info
-Display information about an environment.
-
 ```bash
 secure-env env info [options]
 ```
@@ -86,8 +115,6 @@ secure-env env info [options]
 - `--name, -n`: Environment name (required)
 
 #### Export Environment
-Export an environment to a file.
-
 ```bash
 secure-env env export [options]
 ```
@@ -100,8 +127,6 @@ secure-env env export [options]
 ### Import Commands
 
 #### Import .env File
-Import environment variables from a .env file.
-
 ```bash
 secure-env import env [options]
 ```
@@ -113,8 +138,6 @@ secure-env import env [options]
 - `--sensitive-keys, -s`: Keys to mark as sensitive (comma-separated)
 
 #### Import .properties File
-Import environment variables from a .properties file.
-
 ```bash
 secure-env import properties [options]
 ```
@@ -124,10 +147,9 @@ secure-env import properties [options]
 - `--name, -n`: Target environment name (required)
 - `--description, -d`: Environment description
 - `--sensitive-keys, -s`: Keys to mark as sensitive (comma-separated)
+- `--android-style`: Use Android-style properties format
 
 #### Import .xcconfig File
-Import environment variables from an .xcconfig file.
-
 ```bash
 secure-env import xcconfig [options]
 ```
@@ -138,7 +160,7 @@ secure-env import xcconfig [options]
 - `--description, -d`: Environment description
 - `--sensitive-keys, -s`: Keys to mark as sensitive (comma-separated)
 
-### XConfig Command [WIP]
+### XConfig Command
 Convert xcconfig files to env/properties format.
 
 ```bash
@@ -195,7 +217,7 @@ secure-env import properties -f config.properties -n android -d "Android configu
 secure-env import xcconfig -f Debug.xcconfig -n ios-debug -d "iOS Debug configuration" -s "API_KEY"
 ```
 
-### Convert XConfig Files [IN PROGRESS]
+### Convert XConfig Files
 ```bash
 # Convert xcconfig files to both .env and .properties
 secure-env xcconfig -p /path/to/flutter/project -f both
@@ -207,38 +229,53 @@ secure-env xcconfig -p /path/to/flutter/project -f env -e .env.ios
 secure-env xcconfig -p /path/to/flutter/project -f properties -a android/app/src/main/res/values
 ```
 
-## Architecture
+## Development
 
-The CLI is built using the following components:
+### Prerequisites
 
-### Command Runner
-The `SecureEnvRunner` class serves as the main entry point for the CLI, handling command parsing and execution.
+- Dart SDK (>=3.0.0)
+- Git
 
-### Base Command
-All commands extend the `BaseCommand` class, which provides common functionality like error handling and logging.
+### Setup
 
-### Command Structure
-Commands are organized hierarchically:
-- Top-level commands (init, env, import, xcconfig)
-- Subcommands (e.g., env create, env list, import env)
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ketanchoyal/secure_env.git
+   cd secure_env
+   ```
 
-### Integration with Core
-The CLI integrates with the `secure_env_core` package to provide the underlying functionality for managing projects and environments.
+2. Install dependencies:
+   ```bash
+   dart pub get
+   ```
 
-## Error Handling
+3. Build the CLI:
+   ```bash
+   dart compile exe bin/secure_env.dart -o secure-env
+   ```
 
-The CLI provides consistent error handling across all commands:
-- Usage errors (ExitCode.usage)
-- File not found errors (ExitCode.unavailable)
-- Other errors (ExitCode.software)
+### Running Tests
 
-## Logging
+```bash
+dart test
+```
 
-The CLI uses the `mason_logger` package for consistent and colorful logging output.
+## Contributing
 
-## Dependencies
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- args: Command-line argument parsing
-- mason_logger: Logging functionality
-- yaml: YAML file parsing
-- secure_env_core: Core functionality for managing environments 
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [args](https://pub.dev/packages/args) - Command-line argument parsing
+- [mason_logger](https://pub.dev/packages/mason_logger) - Logging functionality
+- [secure_env_core](https://github.com/ketanchoyal/secure_env/tree/main/packages/secure_env_core) - Core functionality 

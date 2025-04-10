@@ -25,25 +25,30 @@ class XConfigCommand extends BaseCommand {
       )
       ..addOption(
         'env-path',
+        abbr: 'e',
         help: 'Output env file path',
         defaultsTo: '.env',
       )
       ..addOption(
         'properties-path',
+        abbr: 'p',
         help: 'Output properties file path',
       )
       ..addOption(
         'format',
+        abbr: 'f',
         help: 'Output format: env, properties, both',
         defaultsTo: 'both',
         allowed: ['env', 'properties', 'both'],
       )
       ..addOption(
         'config',
+        abbr: 'c',
         help: 'Path to env_config.json',
       )
       ..addOption(
         'android-res',
+        abbr: 'a',
         help: 'Android resources directory',
       );
   }
