@@ -1,7 +1,7 @@
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
 import 'package:args/command_runner.dart';
-import '../../../../src/cli/commands/import/import_command.dart';
+import '../../../../lib/src/cli/commands/import/import_command.dart';
 import '../../../utils/test_logger.dart';
 
 void main() {

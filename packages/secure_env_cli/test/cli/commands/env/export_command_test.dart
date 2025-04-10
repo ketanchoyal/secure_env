@@ -4,7 +4,7 @@ import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
 import 'package:args/command_runner.dart';
-import '../../../../src/cli/commands/env/export_command.dart';
+import '../../../../lib/src/cli/commands/env/export_command.dart';
 import '../../../utils/test_logger.dart';
 
 void main() {

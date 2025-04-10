@@ -12,9 +12,15 @@ import '../utils/mason_logger_adapter.dart';
 class SecureEnvRunner extends CommandRunner<int> {
   SecureEnvRunner({
     Logger? logger,
-    required ProjectService projectService,
+    ProjectService? projectService,
   })  : _logger = logger ?? MasonLoggerAdapter(),
-        _projectService = projectService,
+        _projectService = projectService ??
+            ProjectService(
+              logger: logger ?? MasonLoggerAdapter(),
+              registryService: ProjectRegistryService(
+                logger: logger ?? MasonLoggerAdapter(),
+              ),
+            ),
         super(
           'secure_env',
           'A robust CLI tool for managing environment variables across different formats.',

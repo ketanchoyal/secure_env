@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
-import '../../../../src/cli/commands/env/env_command.dart';
+import '../../../../lib/src/cli/commands/env/env_command.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
 

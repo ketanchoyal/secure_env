@@ -1,18 +1,17 @@
 import 'dart:io';
-import '../src/cli/secure_env_runner.dart';
-import 'package:secure_env_core/secure_env_core.dart';
-import '../src/utils/mason_logger_adapter.dart';
+import 'package:secure_env_cli/secure_env_cli.dart';
 
 Future<void> main(List<String> args) async {
-  final projectService = ProjectService(
-    logger: MasonLoggerAdapter(),
-    registryService: ProjectRegistryService(
-      logger: MasonLoggerAdapter(),
-    ),
-  );
-  final runner = SecureEnvRunner(
-    projectService: projectService,
-  );
-  final exitCode = await runner.run(args);
-  exit(exitCode);
+  await flushThenExit(await SecureEnvRunner().run(args));
+}
+
+/// Flushes the stdout and stderr streams, then exits the program with the given
+/// status code.
+///
+/// This returns a Future that will never complete, since the program will have
+/// exited already. This is useful to prevent Future chains from proceeding
+/// after you've decided to exit.
+Future<dynamic> flushThenExit(int status) {
+  return Future.wait<void>([stdout.close(), stderr.close()])
+      .then<void>((_) => exit(status));
 }
