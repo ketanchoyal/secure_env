@@ -51,11 +51,11 @@ void main() {
     test(
         'createProjectFromCurrentDirectory creates new project with correct values',
         () async {
-      projectService.testCurrentDirectoryPath = Directory.current.path +
-          "/Name With Space"; // Set the current directory for testing
+      projectService.testCurrentDirectoryPath =
+          "${Directory.current.path}/Name With Space"; // Set the current directory for testing
       final project = await projectService.createProjectFromCurrentDirectory();
 
-      expect(project.name, equals('Name_With_Space'));
+      expect(project.name, equals('Name With Space'));
       expect(
         project.path,
         equals(projectService.testCurrentDirectoryPath),
@@ -92,7 +92,7 @@ void main() {
       );
       await projectService.createProject(
         name: 'project2',
-        path: tempDir.path + Platform.pathSeparator + 'project2',
+        path: '${tempDir.path}${Platform.pathSeparator}project2',
       );
 
       final projects = await projectService.listProjects();
@@ -139,8 +139,8 @@ void main() {
       );
 
       await projectService.deleteProject(project.path);
-      final _project = await projectService.getProject(project.path);
-      expect(_project, isNull);
+      final project0 = await projectService.getProject(project.path);
+      expect(project0, isNull);
     });
 
     group('validation', () {

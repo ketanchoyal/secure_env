@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'src/features/dashboard/dashboard_screen.dart'; // Keep for now, might remove if not directly used
+import 'package:secure_env_gui/src/providers/registry_watcher_provider.dart';
 import 'src/routing/app_router.dart';
-
-// TODO: Define providers
-// import 'src/theme/app_theme.dart'; // Import theme
 import 'src/theme/app_theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     const ProviderScope(
       child: SecureEnvApp(),
@@ -23,6 +20,7 @@ class SecureEnvApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the provider to get the GoRouter instance
     final router = ref.watch(goRouterProvider);
+    ref.watch(registryWatcherProvider);
 
     return MaterialApp.router(
       title: 'Secure Env',

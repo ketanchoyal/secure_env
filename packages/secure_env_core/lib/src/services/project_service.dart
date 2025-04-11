@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:meta/meta.dart';
+import 'package:path/path.dart' as Path;
 import 'package:secure_env_core/src/exceptions/exceptions.dart';
 import 'package:secure_env_core/src/utils/logger.dart';
 import 'package:secure_env_core/src/models/models.dart';
@@ -31,7 +32,7 @@ class ProjectService {
   /// Get the path to a project's configuration file
   String _getProjectConfigPath(String basePath) {
     return Platform.isWindows
-        ? '$basePath\.secure_env\config.json'
+        ? '$basePath.secure_envconfig.json'
         : '$basePath/.secure_env/config.json';
   }
 
@@ -39,7 +40,7 @@ class ProjectService {
   Future<void> _validateProjectPath(String path) async {
     //path will always have .secure_env so remove it
     final originalPath = path.replaceFirst(
-        Platform.isWindows ? '\.secure_env' : '/.secure_env', '');
+        Platform.isWindows ? '.secure_env' : '/.secure_env', '');
     if (originalPath.isEmpty) {
       throw ValidationException('Project path cannot be empty');
     }
@@ -62,15 +63,14 @@ class ProjectService {
       throw ValidationException('Project name cannot be empty');
     }
 
-    if (!RegExp(r'^[a-zA-Z0-9_-]+$').hasMatch(name)) {
+    if (!RegExp(r'^[a-zA-Z0-9\s_-]+$').hasMatch(name)) {
       final cleanName = name.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
       if (returnCleanName) {
         return cleanName;
       }
       throw ValidationException(
-        'Invalid project name "$name". Project names can only contain letters, numbers, underscores, and hyphens. '
-        'Consider using "$cleanName" instead.',
-      );
+          'Project name can only contain letters, numbers, spaces, underscores, and hyphens.'
+          'Consider using "$cleanName" instead.');
     }
     if (name.length > 50) {
       throw ValidationException(
@@ -168,8 +168,7 @@ class ProjectService {
         : path.split(Platform.pathSeparator).last;
 
     // Create project directory structure
-    final secureEnvPath =
-        Platform.isWindows ? '$path\.secure_env' : '$path/.secure_env';
+    final secureEnvPath = '$path${Path.separator}.secure_env';
 
     // Validate project path and name
     await _validateProjectPath(secureEnvPath);
@@ -189,9 +188,7 @@ class ProjectService {
       updatedAt: now,
     );
 
-    final projectPath = Platform.isWindows
-        ? '$secureEnvPath\$projectName'
-        : '$secureEnvPath/$projectName';
+    final projectPath = '$secureEnvPath${Path.separator}$projectName';
 
     await Directory(projectPath).create(recursive: true);
 
@@ -330,7 +327,7 @@ class ProjectService {
 
     // Remove project directory
     final secureEnvPath = Platform.isWindows
-        ? '${project.path}\.secure_env'
+        ? '${project.path}.secure_env'
         : '${project.path}/.secure_env';
     final projectPath = Platform.isWindows
         ? '$secureEnvPath\${project.name}'

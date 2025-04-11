@@ -37,13 +37,13 @@ class $ProjectStateCopyWith<$Res> {
 
 /// @nodoc
 
-class _Initial implements ProjectState {
-  const _Initial();
+class ProjectStateInitial implements ProjectState {
+  const ProjectStateInitial();
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _Initial);
+        (other.runtimeType == runtimeType && other is ProjectStateInitial);
   }
 
   @override
@@ -57,113 +57,80 @@ class _Initial implements ProjectState {
 
 /// @nodoc
 
-class _Loading implements ProjectState {
-  const _Loading();
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _Loading);
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode;
-
-  @override
-  String toString() {
-    return 'ProjectState.loading()';
-  }
-}
-
-/// @nodoc
-
-class _Loaded implements ProjectState {
-  const _Loaded(
-      {required final List<Project> projects,
-      this.selectedProjectName,
-      this.selectedProject})
+class ProjectStateLoading implements ProjectState {
+  const ProjectStateLoading(
+      {final List<Project> projects = const [], this.selectedProject})
       : _projects = projects;
 
   final List<Project> _projects;
+  @JsonKey()
   List<Project> get projects {
     if (_projects is EqualUnmodifiableListView) return _projects;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_projects);
   }
 
-  final String? selectedProjectName;
   final Project? selectedProject;
 
   /// Create a copy of ProjectState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  _$LoadedCopyWith<_Loaded> get copyWith =>
-      __$LoadedCopyWithImpl<_Loaded>(this, _$identity);
+  $ProjectStateLoadingCopyWith<ProjectStateLoading> get copyWith =>
+      _$ProjectStateLoadingCopyWithImpl<ProjectStateLoading>(this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _Loaded &&
+            other is ProjectStateLoading &&
             const DeepCollectionEquality().equals(other._projects, _projects) &&
-            (identical(other.selectedProjectName, selectedProjectName) ||
-                other.selectedProjectName == selectedProjectName) &&
             (identical(other.selectedProject, selectedProject) ||
                 other.selectedProject == selectedProject));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      const DeepCollectionEquality().hash(_projects),
-      selectedProjectName,
-      selectedProject);
+  int get hashCode => Object.hash(runtimeType,
+      const DeepCollectionEquality().hash(_projects), selectedProject);
 
   @override
   String toString() {
-    return 'ProjectState.loaded(projects: $projects, selectedProjectName: $selectedProjectName, selectedProject: $selectedProject)';
+    return 'ProjectState.loading(projects: $projects, selectedProject: $selectedProject)';
   }
 }
 
 /// @nodoc
-abstract mixin class _$LoadedCopyWith<$Res>
+abstract mixin class $ProjectStateLoadingCopyWith<$Res>
     implements $ProjectStateCopyWith<$Res> {
-  factory _$LoadedCopyWith(_Loaded value, $Res Function(_Loaded) _then) =
-      __$LoadedCopyWithImpl;
+  factory $ProjectStateLoadingCopyWith(
+          ProjectStateLoading value, $Res Function(ProjectStateLoading) _then) =
+      _$ProjectStateLoadingCopyWithImpl;
   @useResult
-  $Res call(
-      {List<Project> projects,
-      String? selectedProjectName,
-      Project? selectedProject});
+  $Res call({List<Project> projects, Project? selectedProject});
 
   $ProjectCopyWith<$Res>? get selectedProject;
 }
 
 /// @nodoc
-class __$LoadedCopyWithImpl<$Res> implements _$LoadedCopyWith<$Res> {
-  __$LoadedCopyWithImpl(this._self, this._then);
+class _$ProjectStateLoadingCopyWithImpl<$Res>
+    implements $ProjectStateLoadingCopyWith<$Res> {
+  _$ProjectStateLoadingCopyWithImpl(this._self, this._then);
 
-  final _Loaded _self;
-  final $Res Function(_Loaded) _then;
+  final ProjectStateLoading _self;
+  final $Res Function(ProjectStateLoading) _then;
 
   /// Create a copy of ProjectState
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   $Res call({
     Object? projects = null,
-    Object? selectedProjectName = freezed,
     Object? selectedProject = freezed,
   }) {
-    return _then(_Loaded(
+    return _then(ProjectStateLoading(
       projects: null == projects
           ? _self._projects
           : projects // ignore: cast_nullable_to_non_nullable
               as List<Project>,
-      selectedProjectName: freezed == selectedProjectName
-          ? _self.selectedProjectName
-          : selectedProjectName // ignore: cast_nullable_to_non_nullable
-              as String?,
       selectedProject: freezed == selectedProject
           ? _self.selectedProject
           : selectedProject // ignore: cast_nullable_to_non_nullable
@@ -188,11 +155,107 @@ class __$LoadedCopyWithImpl<$Res> implements _$LoadedCopyWith<$Res> {
 
 /// @nodoc
 
-class _Error implements ProjectState {
-  const _Error(
+class ProjectStateLoaded implements ProjectState {
+  const ProjectStateLoaded(
+      {required final List<Project> projects, this.selectedProject})
+      : _projects = projects;
+
+  final List<Project> _projects;
+  List<Project> get projects {
+    if (_projects is EqualUnmodifiableListView) return _projects;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_projects);
+  }
+
+  final Project? selectedProject;
+
+  /// Create a copy of ProjectState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $ProjectStateLoadedCopyWith<ProjectStateLoaded> get copyWith =>
+      _$ProjectStateLoadedCopyWithImpl<ProjectStateLoaded>(this, _$identity);
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is ProjectStateLoaded &&
+            const DeepCollectionEquality().equals(other._projects, _projects) &&
+            (identical(other.selectedProject, selectedProject) ||
+                other.selectedProject == selectedProject));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType,
+      const DeepCollectionEquality().hash(_projects), selectedProject);
+
+  @override
+  String toString() {
+    return 'ProjectState.loaded(projects: $projects, selectedProject: $selectedProject)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $ProjectStateLoadedCopyWith<$Res>
+    implements $ProjectStateCopyWith<$Res> {
+  factory $ProjectStateLoadedCopyWith(
+          ProjectStateLoaded value, $Res Function(ProjectStateLoaded) _then) =
+      _$ProjectStateLoadedCopyWithImpl;
+  @useResult
+  $Res call({List<Project> projects, Project? selectedProject});
+
+  $ProjectCopyWith<$Res>? get selectedProject;
+}
+
+/// @nodoc
+class _$ProjectStateLoadedCopyWithImpl<$Res>
+    implements $ProjectStateLoadedCopyWith<$Res> {
+  _$ProjectStateLoadedCopyWithImpl(this._self, this._then);
+
+  final ProjectStateLoaded _self;
+  final $Res Function(ProjectStateLoaded) _then;
+
+  /// Create a copy of ProjectState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? projects = null,
+    Object? selectedProject = freezed,
+  }) {
+    return _then(ProjectStateLoaded(
+      projects: null == projects
+          ? _self._projects
+          : projects // ignore: cast_nullable_to_non_nullable
+              as List<Project>,
+      selectedProject: freezed == selectedProject
+          ? _self.selectedProject
+          : selectedProject // ignore: cast_nullable_to_non_nullable
+              as Project?,
+    ));
+  }
+
+  /// Create a copy of ProjectState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ProjectCopyWith<$Res>? get selectedProject {
+    if (_self.selectedProject == null) {
+      return null;
+    }
+
+    return $ProjectCopyWith<$Res>(_self.selectedProject!, (value) {
+      return _then(_self.copyWith(selectedProject: value));
+    });
+  }
+}
+
+/// @nodoc
+
+class ProjectStateError implements ProjectState {
+  const ProjectStateError(
       {required this.message,
       final List<Project>? projects,
-      this.selectedProjectName,
       this.selectedProject})
       : _projects = projects;
 
@@ -206,64 +269,56 @@ class _Error implements ProjectState {
     return EqualUnmodifiableListView(value);
   }
 
-  final String? selectedProjectName;
   final Project? selectedProject;
 
   /// Create a copy of ProjectState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  _$ErrorCopyWith<_Error> get copyWith =>
-      __$ErrorCopyWithImpl<_Error>(this, _$identity);
+  $ProjectStateErrorCopyWith<ProjectStateError> get copyWith =>
+      _$ProjectStateErrorCopyWithImpl<ProjectStateError>(this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _Error &&
+            other is ProjectStateError &&
             (identical(other.message, message) || other.message == message) &&
             const DeepCollectionEquality().equals(other._projects, _projects) &&
-            (identical(other.selectedProjectName, selectedProjectName) ||
-                other.selectedProjectName == selectedProjectName) &&
             (identical(other.selectedProject, selectedProject) ||
                 other.selectedProject == selectedProject));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      message,
-      const DeepCollectionEquality().hash(_projects),
-      selectedProjectName,
-      selectedProject);
+  int get hashCode => Object.hash(runtimeType, message,
+      const DeepCollectionEquality().hash(_projects), selectedProject);
 
   @override
   String toString() {
-    return 'ProjectState.error(message: $message, projects: $projects, selectedProjectName: $selectedProjectName, selectedProject: $selectedProject)';
+    return 'ProjectState.error(message: $message, projects: $projects, selectedProject: $selectedProject)';
   }
 }
 
 /// @nodoc
-abstract mixin class _$ErrorCopyWith<$Res>
+abstract mixin class $ProjectStateErrorCopyWith<$Res>
     implements $ProjectStateCopyWith<$Res> {
-  factory _$ErrorCopyWith(_Error value, $Res Function(_Error) _then) =
-      __$ErrorCopyWithImpl;
+  factory $ProjectStateErrorCopyWith(
+          ProjectStateError value, $Res Function(ProjectStateError) _then) =
+      _$ProjectStateErrorCopyWithImpl;
   @useResult
   $Res call(
-      {String message,
-      List<Project>? projects,
-      String? selectedProjectName,
-      Project? selectedProject});
+      {String message, List<Project>? projects, Project? selectedProject});
 
   $ProjectCopyWith<$Res>? get selectedProject;
 }
 
 /// @nodoc
-class __$ErrorCopyWithImpl<$Res> implements _$ErrorCopyWith<$Res> {
-  __$ErrorCopyWithImpl(this._self, this._then);
+class _$ProjectStateErrorCopyWithImpl<$Res>
+    implements $ProjectStateErrorCopyWith<$Res> {
+  _$ProjectStateErrorCopyWithImpl(this._self, this._then);
 
-  final _Error _self;
-  final $Res Function(_Error) _then;
+  final ProjectStateError _self;
+  final $Res Function(ProjectStateError) _then;
 
   /// Create a copy of ProjectState
   /// with the given fields replaced by the non-null parameter values.
@@ -271,10 +326,9 @@ class __$ErrorCopyWithImpl<$Res> implements _$ErrorCopyWith<$Res> {
   $Res call({
     Object? message = null,
     Object? projects = freezed,
-    Object? selectedProjectName = freezed,
     Object? selectedProject = freezed,
   }) {
-    return _then(_Error(
+    return _then(ProjectStateError(
       message: null == message
           ? _self.message
           : message // ignore: cast_nullable_to_non_nullable
@@ -283,10 +337,6 @@ class __$ErrorCopyWithImpl<$Res> implements _$ErrorCopyWith<$Res> {
           ? _self._projects
           : projects // ignore: cast_nullable_to_non_nullable
               as List<Project>?,
-      selectedProjectName: freezed == selectedProjectName
-          ? _self.selectedProjectName
-          : selectedProjectName // ignore: cast_nullable_to_non_nullable
-              as String?,
       selectedProject: freezed == selectedProject
           ? _self.selectedProject
           : selectedProject // ignore: cast_nullable_to_non_nullable
@@ -334,13 +384,13 @@ class $EnvironmentStateCopyWith<$Res> {
 
 /// @nodoc
 
-class _EnvInitial implements EnvironmentState {
-  const _EnvInitial();
+class EnvironmentStateInitial implements EnvironmentState {
+  const EnvironmentStateInitial();
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _EnvInitial);
+        (other.runtimeType == runtimeType && other is EnvironmentStateInitial);
   }
 
   @override
@@ -354,13 +404,13 @@ class _EnvInitial implements EnvironmentState {
 
 /// @nodoc
 
-class _EnvLoading implements EnvironmentState {
-  const _EnvLoading();
+class EnvironmentStateLoading implements EnvironmentState {
+  const EnvironmentStateLoading();
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _EnvLoading);
+        (other.runtimeType == runtimeType && other is EnvironmentStateLoading);
   }
 
   @override
@@ -374,8 +424,8 @@ class _EnvLoading implements EnvironmentState {
 
 /// @nodoc
 
-class _EnvLoaded implements EnvironmentState {
-  const _EnvLoaded(
+class EnvironmentStateLoaded implements EnvironmentState {
+  const EnvironmentStateLoaded(
       {required final List<Environment> environments,
       this.selectedEnvironmentName,
       this.selectedEnvironment,
@@ -409,14 +459,15 @@ class _EnvLoaded implements EnvironmentState {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  _$EnvLoadedCopyWith<_EnvLoaded> get copyWith =>
-      __$EnvLoadedCopyWithImpl<_EnvLoaded>(this, _$identity);
+  $EnvironmentStateLoadedCopyWith<EnvironmentStateLoaded> get copyWith =>
+      _$EnvironmentStateLoadedCopyWithImpl<EnvironmentStateLoaded>(
+          this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _EnvLoaded &&
+            other is EnvironmentStateLoaded &&
             const DeepCollectionEquality()
                 .equals(other._environments, _environments) &&
             (identical(
@@ -446,11 +497,11 @@ class _EnvLoaded implements EnvironmentState {
 }
 
 /// @nodoc
-abstract mixin class _$EnvLoadedCopyWith<$Res>
+abstract mixin class $EnvironmentStateLoadedCopyWith<$Res>
     implements $EnvironmentStateCopyWith<$Res> {
-  factory _$EnvLoadedCopyWith(
-          _EnvLoaded value, $Res Function(_EnvLoaded) _then) =
-      __$EnvLoadedCopyWithImpl;
+  factory $EnvironmentStateLoadedCopyWith(EnvironmentStateLoaded value,
+          $Res Function(EnvironmentStateLoaded) _then) =
+      _$EnvironmentStateLoadedCopyWithImpl;
   @useResult
   $Res call(
       {List<Environment> environments,
@@ -463,11 +514,12 @@ abstract mixin class _$EnvLoadedCopyWith<$Res>
 }
 
 /// @nodoc
-class __$EnvLoadedCopyWithImpl<$Res> implements _$EnvLoadedCopyWith<$Res> {
-  __$EnvLoadedCopyWithImpl(this._self, this._then);
+class _$EnvironmentStateLoadedCopyWithImpl<$Res>
+    implements $EnvironmentStateLoadedCopyWith<$Res> {
+  _$EnvironmentStateLoadedCopyWithImpl(this._self, this._then);
 
-  final _EnvLoaded _self;
-  final $Res Function(_EnvLoaded) _then;
+  final EnvironmentStateLoaded _self;
+  final $Res Function(EnvironmentStateLoaded) _then;
 
   /// Create a copy of EnvironmentState
   /// with the given fields replaced by the non-null parameter values.
@@ -479,7 +531,7 @@ class __$EnvLoadedCopyWithImpl<$Res> implements _$EnvLoadedCopyWith<$Res> {
     Object? environmentValues = null,
     Object? isEditing = null,
   }) {
-    return _then(_EnvLoaded(
+    return _then(EnvironmentStateLoaded(
       environments: null == environments
           ? _self._environments
           : environments // ignore: cast_nullable_to_non_nullable
@@ -520,8 +572,8 @@ class __$EnvLoadedCopyWithImpl<$Res> implements _$EnvLoadedCopyWith<$Res> {
 
 /// @nodoc
 
-class _EnvError implements EnvironmentState {
-  const _EnvError(
+class EnvironmentStateError implements EnvironmentState {
+  const EnvironmentStateError(
       {required this.message,
       final List<Environment>? environments,
       this.selectedEnvironmentName,
@@ -559,14 +611,15 @@ class _EnvError implements EnvironmentState {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  _$EnvErrorCopyWith<_EnvError> get copyWith =>
-      __$EnvErrorCopyWithImpl<_EnvError>(this, _$identity);
+  $EnvironmentStateErrorCopyWith<EnvironmentStateError> get copyWith =>
+      _$EnvironmentStateErrorCopyWithImpl<EnvironmentStateError>(
+          this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _EnvError &&
+            other is EnvironmentStateError &&
             (identical(other.message, message) || other.message == message) &&
             const DeepCollectionEquality()
                 .equals(other._environments, _environments) &&
@@ -598,10 +651,11 @@ class _EnvError implements EnvironmentState {
 }
 
 /// @nodoc
-abstract mixin class _$EnvErrorCopyWith<$Res>
+abstract mixin class $EnvironmentStateErrorCopyWith<$Res>
     implements $EnvironmentStateCopyWith<$Res> {
-  factory _$EnvErrorCopyWith(_EnvError value, $Res Function(_EnvError) _then) =
-      __$EnvErrorCopyWithImpl;
+  factory $EnvironmentStateErrorCopyWith(EnvironmentStateError value,
+          $Res Function(EnvironmentStateError) _then) =
+      _$EnvironmentStateErrorCopyWithImpl;
   @useResult
   $Res call(
       {String message,
@@ -615,11 +669,12 @@ abstract mixin class _$EnvErrorCopyWith<$Res>
 }
 
 /// @nodoc
-class __$EnvErrorCopyWithImpl<$Res> implements _$EnvErrorCopyWith<$Res> {
-  __$EnvErrorCopyWithImpl(this._self, this._then);
+class _$EnvironmentStateErrorCopyWithImpl<$Res>
+    implements $EnvironmentStateErrorCopyWith<$Res> {
+  _$EnvironmentStateErrorCopyWithImpl(this._self, this._then);
 
-  final _EnvError _self;
-  final $Res Function(_EnvError) _then;
+  final EnvironmentStateError _self;
+  final $Res Function(EnvironmentStateError) _then;
 
   /// Create a copy of EnvironmentState
   /// with the given fields replaced by the non-null parameter values.
@@ -632,7 +687,7 @@ class __$EnvErrorCopyWithImpl<$Res> implements _$EnvErrorCopyWith<$Res> {
     Object? environmentValues = freezed,
     Object? isEditing = freezed,
   }) {
-    return _then(_EnvError(
+    return _then(EnvironmentStateError(
       message: null == message
           ? _self.message
           : message // ignore: cast_nullable_to_non_nullable

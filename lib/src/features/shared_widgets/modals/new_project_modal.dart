@@ -1,7 +1,9 @@
 // lib/src/features/shared_widgets/modals/new_project_modal.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
+import 'package:secure_env_gui/src/providers/project_provider.dart';
 
 class NewProjectModal extends ConsumerStatefulWidget {
   const NewProjectModal({super.key});
@@ -33,6 +35,26 @@ class NewProjectModalState extends ConsumerState<NewProjectModal> {
     super.dispose();
   }
 
+  Future<void> _pickDirectory() async {
+    try {
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: 'Select Project Directory',
+      );
+
+      if (selectedDirectory != null) {
+        setState(() {
+          _pathController.text = selectedDirectory;
+        });
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error selecting directory: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
   // Public method to be called from the modal action button
   Future<bool> saveProject() async {
     if (formKey.currentState!.validate()) {
@@ -45,7 +67,7 @@ class NewProjectModalState extends ConsumerState<NewProjectModal> {
       );
 
       try {
-        await ref.read(projectServiceProvider).createProject(
+        await ref.read(projectOperationsProvider.notifier).createProject(
               name: name,
               path: path,
               description: description.isNotEmpty ? description : null,
@@ -98,17 +120,26 @@ class NewProjectModalState extends ConsumerState<NewProjectModal> {
                 if (value == null || value.trim().isEmpty) {
                   return 'Project name is required';
                 }
-                // TODO: Add validation for valid project name characters?
+                // Allow letters, numbers, spaces, underscores, and hyphens
+                if (!RegExp(r'^[a-zA-Z0-9\s_-]+$').hasMatch(value)) {
+                  return 'Project name can only contain letters, numbers, spaces, underscores, and hyphens';
+                }
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _pathController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Project Path*',
-                // TODO: Add button to browse for path?
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.folder_open),
+                  onPressed: _pickDirectory,
+                  tooltip: 'Browse for directory',
+                ),
               ),
+              readOnly:
+                  true, // Make the field read-only since we're using a file picker
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Project path is required';

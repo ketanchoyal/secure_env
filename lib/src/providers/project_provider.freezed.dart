@@ -14,11 +14,11 @@ part of 'project_provider.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$ProjectListState {
+mixin _$ProjectOperationState {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is ProjectListState);
+        (other.runtimeType == runtimeType && other is ProjectOperationState);
   }
 
   @override
@@ -26,25 +26,25 @@ mixin _$ProjectListState {
 
   @override
   String toString() {
-    return 'ProjectListState()';
+    return 'ProjectOperationState()';
   }
 }
 
 /// @nodoc
-class $ProjectListStateCopyWith<$Res> {
-  $ProjectListStateCopyWith(
-      ProjectListState _, $Res Function(ProjectListState) __);
+class $ProjectOperationStateCopyWith<$Res> {
+  $ProjectOperationStateCopyWith(
+      ProjectOperationState _, $Res Function(ProjectOperationState) __);
 }
 
 /// @nodoc
 
-class ProjectListStateInitial implements ProjectListState {
-  const ProjectListStateInitial();
+class ProjectOperationIdle implements ProjectOperationState {
+  const ProjectOperationIdle();
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is ProjectListStateInitial);
+        (other.runtimeType == runtimeType && other is ProjectOperationIdle);
   }
 
   @override
@@ -52,180 +52,112 @@ class ProjectListStateInitial implements ProjectListState {
 
   @override
   String toString() {
-    return 'ProjectListState.initial()';
+    return 'ProjectOperationState.idle()';
   }
 }
 
 /// @nodoc
 
-class ProjectListStateLoading implements ProjectListState {
-  const ProjectListStateLoading();
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is ProjectListStateLoading);
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode;
-
-  @override
-  String toString() {
-    return 'ProjectListState.loading()';
-  }
-}
-
-/// @nodoc
-
-class ProjectListStateLoaded implements ProjectListState {
-  const ProjectListStateLoaded({required final List<Project> projects})
-      : _projects = projects;
-
-  final List<Project> _projects;
-  List<Project> get projects {
-    if (_projects is EqualUnmodifiableListView) return _projects;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_projects);
-  }
-
-  /// Create a copy of ProjectListState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @pragma('vm:prefer-inline')
-  $ProjectListStateLoadedCopyWith<ProjectListStateLoaded> get copyWith =>
-      _$ProjectListStateLoadedCopyWithImpl<ProjectListStateLoaded>(
-          this, _$identity);
+class ProjectOperationInProgress implements ProjectOperationState {
+  const ProjectOperationInProgress();
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is ProjectListStateLoaded &&
-            const DeepCollectionEquality().equals(other._projects, _projects));
+            other is ProjectOperationInProgress);
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_projects));
+  int get hashCode => runtimeType.hashCode;
 
   @override
   String toString() {
-    return 'ProjectListState.loaded(projects: $projects)';
-  }
-}
-
-/// @nodoc
-abstract mixin class $ProjectListStateLoadedCopyWith<$Res>
-    implements $ProjectListStateCopyWith<$Res> {
-  factory $ProjectListStateLoadedCopyWith(ProjectListStateLoaded value,
-          $Res Function(ProjectListStateLoaded) _then) =
-      _$ProjectListStateLoadedCopyWithImpl;
-  @useResult
-  $Res call({List<Project> projects});
-}
-
-/// @nodoc
-class _$ProjectListStateLoadedCopyWithImpl<$Res>
-    implements $ProjectListStateLoadedCopyWith<$Res> {
-  _$ProjectListStateLoadedCopyWithImpl(this._self, this._then);
-
-  final ProjectListStateLoaded _self;
-  final $Res Function(ProjectListStateLoaded) _then;
-
-  /// Create a copy of ProjectListState
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  $Res call({
-    Object? projects = null,
-  }) {
-    return _then(ProjectListStateLoaded(
-      projects: null == projects
-          ? _self._projects
-          : projects // ignore: cast_nullable_to_non_nullable
-              as List<Project>,
-    ));
+    return 'ProjectOperationState.operating()';
   }
 }
 
 /// @nodoc
 
-class ProjectListStateError implements ProjectListState {
-  const ProjectListStateError(
-      {required this.message, final List<Project>? projects})
-      : _projects = projects;
+class ProjectOperationSuccess implements ProjectOperationState {
+  const ProjectOperationSuccess();
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is ProjectOperationSuccess);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  String toString() {
+    return 'ProjectOperationState.success()';
+  }
+}
+
+/// @nodoc
+
+class ProjectOperationError implements ProjectOperationState {
+  const ProjectOperationError({required this.message});
 
   final String message;
-  final List<Project>? _projects;
-  List<Project>? get projects {
-    final value = _projects;
-    if (value == null) return null;
-    if (_projects is EqualUnmodifiableListView) return _projects;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(value);
-  }
 
-  /// Create a copy of ProjectListState
+  /// Create a copy of ProjectOperationState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  $ProjectListStateErrorCopyWith<ProjectListStateError> get copyWith =>
-      _$ProjectListStateErrorCopyWithImpl<ProjectListStateError>(
+  $ProjectOperationErrorCopyWith<ProjectOperationError> get copyWith =>
+      _$ProjectOperationErrorCopyWithImpl<ProjectOperationError>(
           this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is ProjectListStateError &&
-            (identical(other.message, message) || other.message == message) &&
-            const DeepCollectionEquality().equals(other._projects, _projects));
+            other is ProjectOperationError &&
+            (identical(other.message, message) || other.message == message));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, message, const DeepCollectionEquality().hash(_projects));
+  int get hashCode => Object.hash(runtimeType, message);
 
   @override
   String toString() {
-    return 'ProjectListState.error(message: $message, projects: $projects)';
+    return 'ProjectOperationState.error(message: $message)';
   }
 }
 
 /// @nodoc
-abstract mixin class $ProjectListStateErrorCopyWith<$Res>
-    implements $ProjectListStateCopyWith<$Res> {
-  factory $ProjectListStateErrorCopyWith(ProjectListStateError value,
-          $Res Function(ProjectListStateError) _then) =
-      _$ProjectListStateErrorCopyWithImpl;
+abstract mixin class $ProjectOperationErrorCopyWith<$Res>
+    implements $ProjectOperationStateCopyWith<$Res> {
+  factory $ProjectOperationErrorCopyWith(ProjectOperationError value,
+          $Res Function(ProjectOperationError) _then) =
+      _$ProjectOperationErrorCopyWithImpl;
   @useResult
-  $Res call({String message, List<Project>? projects});
+  $Res call({String message});
 }
 
 /// @nodoc
-class _$ProjectListStateErrorCopyWithImpl<$Res>
-    implements $ProjectListStateErrorCopyWith<$Res> {
-  _$ProjectListStateErrorCopyWithImpl(this._self, this._then);
+class _$ProjectOperationErrorCopyWithImpl<$Res>
+    implements $ProjectOperationErrorCopyWith<$Res> {
+  _$ProjectOperationErrorCopyWithImpl(this._self, this._then);
 
-  final ProjectListStateError _self;
-  final $Res Function(ProjectListStateError) _then;
+  final ProjectOperationError _self;
+  final $Res Function(ProjectOperationError) _then;
 
-  /// Create a copy of ProjectListState
+  /// Create a copy of ProjectOperationState
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   $Res call({
     Object? message = null,
-    Object? projects = freezed,
   }) {
-    return _then(ProjectListStateError(
+    return _then(ProjectOperationError(
       message: null == message
           ? _self.message
           : message // ignore: cast_nullable_to_non_nullable
               as String,
-      projects: freezed == projects
-          ? _self._projects
-          : projects // ignore: cast_nullable_to_non_nullable
-              as List<Project>?,
     ));
   }
 }

@@ -2,6 +2,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
+import 'package:secure_env_gui/src/providers/project_provider.dart';
+import 'package:secure_env_gui/src/providers/registry_watcher_provider.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 
 part 'app_state_providers.freezed.dart';
@@ -10,33 +12,35 @@ part 'app_state_providers.g.dart';
 /// Union type for project states
 @freezed
 sealed class ProjectState with _$ProjectState {
-  const factory ProjectState.initial() = _Initial;
-  const factory ProjectState.loading() = _Loading;
+  const factory ProjectState.initial() = ProjectStateInitial;
+
+  const factory ProjectState.loading({
+    @Default([]) List<Project> projects,
+    Project? selectedProject,
+  }) = ProjectStateLoading;
   const factory ProjectState.loaded({
     required List<Project> projects,
-    String? selectedProjectName,
     Project? selectedProject,
-  }) = _Loaded;
+  }) = ProjectStateLoaded;
   const factory ProjectState.error({
     required String message,
     List<Project>? projects,
-    String? selectedProjectName,
     Project? selectedProject,
-  }) = _Error;
+  }) = ProjectStateError;
 }
 
 /// Union type for environment states
 @freezed
 sealed class EnvironmentState with _$EnvironmentState {
-  const factory EnvironmentState.initial() = _EnvInitial;
-  const factory EnvironmentState.loading() = _EnvLoading;
+  const factory EnvironmentState.initial() = EnvironmentStateInitial;
+  const factory EnvironmentState.loading() = EnvironmentStateLoading;
   const factory EnvironmentState.loaded({
     required List<Environment> environments,
     String? selectedEnvironmentName,
     Environment? selectedEnvironment,
     @Default({}) Map<String, String> environmentValues,
     @Default(false) bool isEditing,
-  }) = _EnvLoaded;
+  }) = EnvironmentStateLoaded;
   const factory EnvironmentState.error({
     required String message,
     List<Environment>? environments,
@@ -44,51 +48,69 @@ sealed class EnvironmentState with _$EnvironmentState {
     Environment? selectedEnvironment,
     Map<String, String>? environmentValues,
     bool? isEditing,
-  }) = _EnvError;
+  }) = EnvironmentStateError;
 }
 
 /// Provider for managing projects state
-@riverpod
+///
+/// This provider is just for fetching projects and not for managing them.
+/// For managing projects, use [ProjectNotifier].
+@Riverpod(keepAlive: true)
 class ProjectsNotifier extends _$ProjectsNotifier {
   @override
   ProjectState build() {
+    state = const ProjectState.initial();
+    ref.listen(projectOperationsProvider, (previous, next) {
+      if (next is ProjectOperationSuccess) {
+        loadProjects();
+      }
+    });
+
+    ref.listen(registryWatcherProvider, (previous, next) {
+      if (next) {
+        loadProjects();
+      }
+    });
+
+    loadProjects();
     return const ProjectState.initial();
   }
 
   Future<void> loadProjects() async {
-    state = const ProjectState.loading();
+    if (state is ProjectStateLoaded) {
+      // ignore: no_leading_underscores_for_local_identifiers
+      final _state = state as ProjectStateLoaded;
+      state = ProjectState.loading(
+        projects: _state.projects,
+        selectedProject: _state.selectedProject,
+      );
+    } else {
+      state = const ProjectState.loading();
+    }
     try {
       final projectService = ref.read(projectServiceProvider);
       final projects = await projectService.listProjects();
-      final selectedProjectName = switch (state) {
-        _Loaded(:final selectedProjectName) => selectedProjectName,
-        _ => null,
-      };
+
       state = ProjectState.loaded(
         projects: projects,
-        selectedProjectName: selectedProjectName,
         selectedProject: switch (state) {
-          _Loaded(:final selectedProject) => selectedProject,
-          _Error(:final selectedProject) => selectedProject,
+          ProjectStateLoaded(:final selectedProject) => selectedProject,
+          ProjectStateError(:final selectedProject) => selectedProject,
           _ => null,
         },
       );
+      ref.read(loggerProvider).info('Projects loaded: ${projects.length}');
     } catch (e, stack) {
       state = ProjectState.error(
         message: 'Failed to load projects: $e',
         projects: switch (state) {
-          _Loaded(:final projects) => projects,
-          _Error(:final projects) => projects,
+          ProjectStateLoaded(:final projects) => projects,
+          ProjectStateError(:final projects) => projects,
           _ => [],
         },
-        selectedProjectName: switch (state) {
-          _Loaded(:final selectedProjectName) => selectedProjectName,
-          _Error(:final selectedProjectName) => selectedProjectName,
-          _ => null,
-        },
         selectedProject: switch (state) {
-          _Loaded(:final selectedProject) => selectedProject,
-          _Error(:final selectedProject) => selectedProject,
+          ProjectStateLoaded(:final selectedProject) => selectedProject,
+          ProjectStateError(:final selectedProject) => selectedProject,
           _ => null,
         },
       );
@@ -96,142 +118,20 @@ class ProjectsNotifier extends _$ProjectsNotifier {
     }
   }
 
-  Future<void> createProject({
-    required String name,
-    required String path,
-    String? description,
-  }) async {
-    state = const ProjectState.loading();
-    try {
-      final projectService = ref.read(projectServiceProvider);
-      final project = await projectService.createProject(
-        name: name,
-        path: path,
-        description: description,
-      );
-      state = switch (state) {
-        _Loaded(
-          :final projects,
-          :final selectedProjectName,
-          :final selectedProject,
-        ) =>
-          ProjectState.loaded(
-            projects: [...projects, project],
-            selectedProjectName: selectedProjectName,
-            selectedProject: selectedProject,
-          ),
-        _Error(
-          :final projects,
-          :final selectedProjectName,
-          :final selectedProject,
-        ) =>
-          ProjectState.loaded(
-            projects: [...(projects ?? []), project],
-            selectedProjectName: selectedProjectName,
-            selectedProject: selectedProject,
-          ),
-        _ => ProjectState.loaded(projects: [project]),
-      };
-    } catch (e, stack) {
-      state = ProjectState.error(
-        message: 'Failed to create project: $e',
-        projects: switch (state) {
-          _Loaded(:final projects) => projects,
-          _Error(:final projects) => projects,
-          _ => [],
-        },
-        selectedProjectName: switch (state) {
-          _Loaded(:final selectedProjectName) => selectedProjectName,
-          _Error(:final selectedProjectName) => selectedProjectName,
-          _ => null,
-        },
-        selectedProject: switch (state) {
-          _Loaded(:final selectedProject) => selectedProject,
-          _Error(:final selectedProject) => selectedProject,
-          _ => null,
-        },
-      );
-      ref.read(loggerProvider).error('Failed to create project: $e');
-    }
-  }
-
-  Future<void> deleteProject(String name) async {
-    state = const ProjectState.loading();
-    try {
-      final projectService = ref.read(projectServiceProvider);
-      await projectService.deleteProject(name);
-      state = switch (state) {
-        _Loaded(
-          :final projects,
-          :final selectedProjectName,
-          :final selectedProject,
-        ) =>
-          ProjectState.loaded(
-            projects: projects.where((p) => p.name != name).toList(),
-            selectedProjectName:
-                selectedProjectName == name ? null : selectedProjectName,
-            selectedProject:
-                selectedProject?.name == name ? null : selectedProject,
-          ),
-        _Error(
-          :final projects,
-          :final selectedProjectName,
-          :final selectedProject,
-        ) =>
-          ProjectState.loaded(
-            projects: (projects ?? []).where((p) => p.name != name).toList(),
-            selectedProjectName:
-                selectedProjectName == name ? null : selectedProjectName,
-            selectedProject:
-                selectedProject?.name == name ? null : selectedProject,
-          ),
-        _ => const ProjectState.loaded(projects: []),
-      };
-    } catch (e, stack) {
-      state = ProjectState.error(
-        message: 'Failed to delete project: $e',
-        projects: switch (state) {
-          _Loaded(:final projects) => projects,
-          _Error(:final projects) => projects,
-          _ => [],
-        },
-        selectedProjectName: switch (state) {
-          _Loaded(:final selectedProjectName) => selectedProjectName,
-          _Error(:final selectedProjectName) => selectedProjectName,
-          _ => null,
-        },
-        selectedProject: switch (state) {
-          _Loaded(:final selectedProject) => selectedProject,
-          _Error(:final selectedProject) => selectedProject,
-          _ => null,
-        },
-      );
-      ref.read(loggerProvider).error('Failed to delete project: $e');
-    }
-  }
-
-  void selectProject(String name) {
-    if (state is _Loaded) {
-      final loaded = state as _Loaded;
+  void selectProject(Project project) {
+    if (state is ProjectStateLoaded) {
+      final loaded = state as ProjectStateLoaded;
       state = ProjectState.loaded(
         projects: loaded.projects,
-        selectedProjectName: name,
-        selectedProject: loaded.projects.firstWhere(
-          (p) => p.name == name,
-          orElse: () => throw Exception('Project not found: $name'),
-        ),
+        selectedProject: project,
       );
-    } else if (state is _Error) {
-      final error = state as _Error;
+    } else if (state is ProjectStateError) {
+      final error = state as ProjectStateError;
       if (error.projects != null) {
         state = ProjectState.error(
           message: error.message,
           projects: error.projects,
-          selectedProjectName: name,
-          selectedProject: error.projects!.firstWhere(
-            (p) => p.name == name,
-            orElse: () => throw Exception('Project not found: $name'),
-          ),
+          selectedProject: project,
         );
       }
     }
@@ -250,7 +150,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
     state = const EnvironmentState.loading();
     try {
       final project = switch (ref.read(projectsNotifierProvider)) {
-        _Loaded(:final selectedProject) => selectedProject,
+        ProjectStateLoaded(:final selectedProject) => selectedProject,
         _ => null,
       };
       if (project == null) {
@@ -262,23 +162,28 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
       state = EnvironmentState.loaded(
         environments: environments,
         selectedEnvironmentName: switch (state) {
-          _EnvLoaded(:final selectedEnvironmentName) => selectedEnvironmentName,
-          _EnvError(:final selectedEnvironmentName) => selectedEnvironmentName,
+          EnvironmentStateLoaded(:final selectedEnvironmentName) =>
+            selectedEnvironmentName,
+          EnvironmentStateError(:final selectedEnvironmentName) =>
+            selectedEnvironmentName,
           _ => null,
         },
         selectedEnvironment: switch (state) {
-          _EnvLoaded(:final selectedEnvironment) => selectedEnvironment,
-          _EnvError(:final selectedEnvironment) => selectedEnvironment,
+          EnvironmentStateLoaded(:final selectedEnvironment) =>
+            selectedEnvironment,
+          EnvironmentStateError(:final selectedEnvironment) =>
+            selectedEnvironment,
           _ => null,
         },
         environmentValues: switch (state) {
-          _EnvLoaded(:final environmentValues) => environmentValues,
-          _EnvError(:final environmentValues) => environmentValues ?? {},
+          EnvironmentStateLoaded(:final environmentValues) => environmentValues,
+          EnvironmentStateError(:final environmentValues) =>
+            environmentValues ?? {},
           _ => {},
         },
         isEditing: switch (state) {
-          _EnvLoaded(:final isEditing) => isEditing,
-          _EnvError(:final isEditing) => isEditing ?? false,
+          EnvironmentStateLoaded(:final isEditing) => isEditing,
+          EnvironmentStateError(:final isEditing) => isEditing ?? false,
           _ => false,
         },
       );
@@ -286,28 +191,32 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
       state = EnvironmentState.error(
         message: 'Failed to load environments: $e',
         environments: switch (state) {
-          _EnvLoaded(:final environments) => environments,
-          _EnvError(:final environments) => environments,
+          EnvironmentStateLoaded(:final environments) => environments,
+          EnvironmentStateError(:final environments) => environments,
           _ => [],
         },
         selectedEnvironmentName: switch (state) {
-          _EnvLoaded(:final selectedEnvironmentName) => selectedEnvironmentName,
-          _EnvError(:final selectedEnvironmentName) => selectedEnvironmentName,
+          EnvironmentStateLoaded(:final selectedEnvironmentName) =>
+            selectedEnvironmentName,
+          EnvironmentStateError(:final selectedEnvironmentName) =>
+            selectedEnvironmentName,
           _ => null,
         },
         selectedEnvironment: switch (state) {
-          _EnvLoaded(:final selectedEnvironment) => selectedEnvironment,
-          _EnvError(:final selectedEnvironment) => selectedEnvironment,
+          EnvironmentStateLoaded(:final selectedEnvironment) =>
+            selectedEnvironment,
+          EnvironmentStateError(:final selectedEnvironment) =>
+            selectedEnvironment,
           _ => null,
         },
         environmentValues: switch (state) {
-          _EnvLoaded(:final environmentValues) => environmentValues,
-          _EnvError(:final environmentValues) => environmentValues,
+          EnvironmentStateLoaded(:final environmentValues) => environmentValues,
+          EnvironmentStateError(:final environmentValues) => environmentValues,
           _ => {},
         },
         isEditing: switch (state) {
-          _EnvLoaded(:final isEditing) => isEditing,
-          _EnvError(:final isEditing) => isEditing,
+          EnvironmentStateLoaded(:final isEditing) => isEditing,
+          EnvironmentStateError(:final isEditing) => isEditing,
           _ => false,
         },
       );
@@ -324,7 +233,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
     state = const EnvironmentState.loading();
     try {
       final project = switch (ref.read(projectsNotifierProvider)) {
-        _Loaded(:final selectedProject) => selectedProject,
+        ProjectStateLoaded(:final selectedProject) => selectedProject,
         _ => null,
       };
       if (project == null) {
@@ -340,7 +249,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
         sensitiveKeys: sensitiveKeys ?? {},
       );
       state = switch (state) {
-        _EnvLoaded(
+        EnvironmentStateLoaded(
           :final environments,
           :final selectedEnvironmentName,
           :final selectedEnvironment,
@@ -354,7 +263,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
             environmentValues: environmentValues,
             isEditing: isEditing,
           ),
-        _EnvError(
+        EnvironmentStateError(
           :final environments,
           :final selectedEnvironmentName,
           :final selectedEnvironment,
@@ -374,28 +283,32 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
       state = EnvironmentState.error(
         message: 'Failed to create environment: $e',
         environments: switch (state) {
-          _EnvLoaded(:final environments) => environments,
-          _EnvError(:final environments) => environments,
+          EnvironmentStateLoaded(:final environments) => environments,
+          EnvironmentStateError(:final environments) => environments,
           _ => [],
         },
         selectedEnvironmentName: switch (state) {
-          _EnvLoaded(:final selectedEnvironmentName) => selectedEnvironmentName,
-          _EnvError(:final selectedEnvironmentName) => selectedEnvironmentName,
+          EnvironmentStateLoaded(:final selectedEnvironmentName) =>
+            selectedEnvironmentName,
+          EnvironmentStateError(:final selectedEnvironmentName) =>
+            selectedEnvironmentName,
           _ => null,
         },
         selectedEnvironment: switch (state) {
-          _EnvLoaded(:final selectedEnvironment) => selectedEnvironment,
-          _EnvError(:final selectedEnvironment) => selectedEnvironment,
+          EnvironmentStateLoaded(:final selectedEnvironment) =>
+            selectedEnvironment,
+          EnvironmentStateError(:final selectedEnvironment) =>
+            selectedEnvironment,
           _ => null,
         },
         environmentValues: switch (state) {
-          _EnvLoaded(:final environmentValues) => environmentValues,
-          _EnvError(:final environmentValues) => environmentValues,
+          EnvironmentStateLoaded(:final environmentValues) => environmentValues,
+          EnvironmentStateError(:final environmentValues) => environmentValues,
           _ => {},
         },
         isEditing: switch (state) {
-          _EnvLoaded(:final isEditing) => isEditing,
-          _EnvError(:final isEditing) => isEditing,
+          EnvironmentStateLoaded(:final isEditing) => isEditing,
+          EnvironmentStateError(:final isEditing) => isEditing,
           _ => false,
         },
       );
@@ -407,7 +320,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
     state = const EnvironmentState.loading();
     try {
       final project = switch (ref.read(projectsNotifierProvider)) {
-        _Loaded(:final selectedProject) => selectedProject,
+        ProjectStateLoaded(:final selectedProject) => selectedProject,
         _ => null,
       };
       if (project == null) {
@@ -417,7 +330,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
       final environmentService = ref.read(environmentServiceProvider(project));
       await environmentService.deleteEnvironment(name: name);
       state = switch (state) {
-        _EnvLoaded(
+        EnvironmentStateLoaded(
           :final environments,
           :final selectedEnvironmentName,
           :final selectedEnvironment,
@@ -434,7 +347,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
             environmentValues: environmentValues,
             isEditing: isEditing,
           ),
-        _EnvError(
+        EnvironmentStateError(
           :final environments,
           :final selectedEnvironmentName,
           :final selectedEnvironment,
@@ -458,28 +371,32 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
       state = EnvironmentState.error(
         message: 'Failed to delete environment: $e',
         environments: switch (state) {
-          _EnvLoaded(:final environments) => environments,
-          _EnvError(:final environments) => environments,
+          EnvironmentStateLoaded(:final environments) => environments,
+          EnvironmentStateError(:final environments) => environments,
           _ => [],
         },
         selectedEnvironmentName: switch (state) {
-          _EnvLoaded(:final selectedEnvironmentName) => selectedEnvironmentName,
-          _EnvError(:final selectedEnvironmentName) => selectedEnvironmentName,
+          EnvironmentStateLoaded(:final selectedEnvironmentName) =>
+            selectedEnvironmentName,
+          EnvironmentStateError(:final selectedEnvironmentName) =>
+            selectedEnvironmentName,
           _ => null,
         },
         selectedEnvironment: switch (state) {
-          _EnvLoaded(:final selectedEnvironment) => selectedEnvironment,
-          _EnvError(:final selectedEnvironment) => selectedEnvironment,
+          EnvironmentStateLoaded(:final selectedEnvironment) =>
+            selectedEnvironment,
+          EnvironmentStateError(:final selectedEnvironment) =>
+            selectedEnvironment,
           _ => null,
         },
         environmentValues: switch (state) {
-          _EnvLoaded(:final environmentValues) => environmentValues,
-          _EnvError(:final environmentValues) => environmentValues,
+          EnvironmentStateLoaded(:final environmentValues) => environmentValues,
+          EnvironmentStateError(:final environmentValues) => environmentValues,
           _ => {},
         },
         isEditing: switch (state) {
-          _EnvLoaded(:final isEditing) => isEditing,
-          _EnvError(:final isEditing) => isEditing,
+          EnvironmentStateLoaded(:final isEditing) => isEditing,
+          EnvironmentStateError(:final isEditing) => isEditing,
           _ => false,
         },
       );
@@ -488,8 +405,8 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
   }
 
   void selectEnvironment(String name) {
-    if (state is _EnvLoaded) {
-      final loaded = state as _EnvLoaded;
+    if (state is EnvironmentStateLoaded) {
+      final loaded = state as EnvironmentStateLoaded;
       state = EnvironmentState.loaded(
         environments: loaded.environments,
         selectedEnvironmentName: name,
@@ -507,8 +424,8 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
         ),
         isEditing: loaded.isEditing,
       );
-    } else if (state is _EnvError) {
-      final error = state as _EnvError;
+    } else if (state is EnvironmentStateError) {
+      final error = state as EnvironmentStateError;
       if (error.environments != null) {
         state = EnvironmentState.error(
           message: error.message,
@@ -538,7 +455,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
 
   void toggleEditing() {
     state = switch (state) {
-      _EnvLoaded(
+      EnvironmentStateLoaded(
         :final environments,
         :final selectedEnvironmentName,
         :final selectedEnvironment,
@@ -552,7 +469,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
           environmentValues: environmentValues,
           isEditing: !isEditing,
         ),
-      _EnvError(
+      EnvironmentStateError(
         :final message,
         :final environments,
         :final selectedEnvironmentName,

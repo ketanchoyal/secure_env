@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import for icons
+import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/providers/project_provider.dart';
 
 // Placeholder state for the modal - allows access from stickyActionBar
@@ -210,19 +211,19 @@ class _ImportEnvironmentModalState
             // TODO: Replace with actual project data fetched from a provider
             Consumer(
               builder: (context, ref, child) {
-                final projectListState = ref.watch(projectProvider);
+                final projectListState = ref.watch(projectsNotifierProvider);
                 switch (projectListState) {
-                  case ProjectListStateInitial():
+                  case ProjectStateInitial():
                     return const Center(child: CircularProgressIndicator());
-                  case ProjectListStateLoading():
+                  case ProjectStateLoading():
                     return const Center(child: CircularProgressIndicator());
-                  case ProjectListStateError(:final message, :final projects):
+                  case ProjectStateError(:final message, :final projects):
                     //Show Error SnackBar
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(message)),
                     );
                     return const Center(child: CircularProgressIndicator());
-                  case ProjectListStateLoaded(:final projects):
+                  case ProjectStateLoaded(:final projects):
                     return DropdownButtonFormField<String>(
                       value: _selectedProjectName,
                       items: projects

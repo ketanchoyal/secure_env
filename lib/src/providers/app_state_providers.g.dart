@@ -6,14 +6,17 @@ part of 'app_state_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$projectsNotifierHash() => r'4ceb8f165dfa9085ff4c1a6cd8d4e3728b6cd3f3';
+String _$projectsNotifierHash() => r'c9d8029e05a0667fddf4f835f09415a78f66be1e';
 
 /// Provider for managing projects state
+///
+/// This provider is just for fetching projects and not for managing them.
+/// For managing projects, use [ProjectNotifier].
 ///
 /// Copied from [ProjectsNotifier].
 @ProviderFor(ProjectsNotifier)
 final projectsNotifierProvider =
-    AutoDisposeNotifierProvider<ProjectsNotifier, ProjectState>.internal(
+    NotifierProvider<ProjectsNotifier, ProjectState>.internal(
   ProjectsNotifier.new,
   name: r'projectsNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -23,9 +26,9 @@ final projectsNotifierProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$ProjectsNotifier = AutoDisposeNotifier<ProjectState>;
+typedef _$ProjectsNotifier = Notifier<ProjectState>;
 String _$environmentsNotifierHash() =>
-    r'eace48e73c7b6940fb0ca15148e38b21a9c09240';
+    r'2b82fc919e2fe43dbd4ec338c84cc2bc6bbaa54f';
 
 /// Provider for managing environments state
 ///

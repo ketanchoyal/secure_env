@@ -1,18 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import FontAwesome
+import 'package:secure_env_core/secure_env_core.dart';
 
 import '../../../routing/app_router.dart'; // For goRouterProvider and AppRoutes
-
-// Simple data structure for a project (replace with actual model later)
-class Project {
-  final String id;
-  final String name;
-  final String description;
-
-  Project({required this.id, required this.name, required this.description});
-}
 
 class ProjectListItem extends ConsumerWidget {
   final Project project;
@@ -28,7 +19,8 @@ class ProjectListItem extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-      clipBehavior: Clip.antiAlias, // Ensure InkWell splash respects card boundaries
+      clipBehavior:
+          Clip.antiAlias, // Ensure InkWell splash respects card boundaries
       child: InkWell(
         hoverColor: Theme.of(context).hoverColor, // Use theme hover color
         onTap: () {
@@ -38,11 +30,17 @@ class ProjectListItem extends ConsumerWidget {
         child: ListTile(
           title: Text(
             project.name,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold), // Bold title
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold), // Bold title
           ),
-          subtitle: Text(project.description, maxLines: 1, overflow: TextOverflow.ellipsis),
-          leading: const FaIcon(FontAwesomeIcons.folder), // Use FontAwesome icon
-          trailing: const FaIcon(FontAwesomeIcons.chevronRight), // Use FontAwesome icon
+          subtitle: Text(project.description ?? 'No description',
+              maxLines: 1, overflow: TextOverflow.ellipsis),
+          leading:
+              const FaIcon(FontAwesomeIcons.folder), // Use FontAwesome icon
+          trailing: const FaIcon(
+              FontAwesomeIcons.chevronRight), // Use FontAwesome icon
           // Removed onTap: () { ... } from here
         ), // End ListTile
       ), // End InkWell
