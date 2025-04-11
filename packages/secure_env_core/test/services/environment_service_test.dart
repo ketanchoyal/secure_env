@@ -10,18 +10,17 @@ void main() {
   late ProjectRegistryService registryService;
   late EnvironmentService environmentService;
   late TestLogger logger;
-  late Directory projectStorageDir;
   late Directory tempDir;
 
   setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('secure_env_test_');
+    tempDir = await Directory.current.createTemp('secure_env_test_');
     logger = TestLogger();
     final encryptionService = EncryptionService()..initialize('test-password');
 
     // Create storage directories
-    projectStorageDir = Directory(path.join(tempDir.path, 'project_storage'));
+
     final envStorageDir = Directory(path.join(tempDir.path, 'env_storage'));
-    await projectStorageDir.create();
+
     await envStorageDir.create();
 
     // Initialize storage services
@@ -48,7 +47,7 @@ void main() {
     );
 
     // Initialize environment service for project
-    environmentService = await EnvironmentService.forProject(
+    environmentService = EnvironmentService.forProject(
       project: project,
       projectService: projectService,
       secureStorage: envStorageService,
@@ -57,7 +56,7 @@ void main() {
   });
 
   tearDown(() async {
-    await tempDir.delete(recursive: true);
+    // await tempDir.delete(recursive: true);
   });
 
   group('EnvironmentService', () {

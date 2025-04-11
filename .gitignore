@@ -12,7 +12,8 @@
 .swiftpm/
 migrate_working_dir/
 *.env
-DerivedData/*
+DerivedData/
+testing_stuff/
 
 # IntelliJ related
 *.iml

@@ -27,7 +27,8 @@ class MainLayout extends ConsumerWidget {
         case 1: // Settings (Placeholder)
           // TODO: Implement settings route
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Settings route not implemented yet.')),
+            const SnackBar(
+                content: Text('Settings route not implemented yet.')),
           );
           // context.go(AppRoutes.settings); // Uncomment when settings route exists
           break;
@@ -41,12 +42,13 @@ class MainLayout extends ConsumerWidget {
           NavigationRail(
             selectedIndex: selectedIndex,
             onDestinationSelected: onDestinationSelected,
-            labelType: NavigationRailLabelType.all, // Show labels
+            labelType: NavigationRailLabelType.selected, // Show labels
             groupAlignment: -0.85, // Align items towards the top
             destinations: const <NavigationRailDestination>[
               NavigationRailDestination(
                 icon: FaIcon(FontAwesomeIcons.tableColumns), // Use FontAwesome
-                selectedIcon: FaIcon(FontAwesomeIcons.tableColumns), // Keep consistent
+                selectedIcon:
+                    FaIcon(FontAwesomeIcons.tableColumns), // Keep consistent
                 label: Text('Dashboard'),
               ),
               NavigationRailDestination(

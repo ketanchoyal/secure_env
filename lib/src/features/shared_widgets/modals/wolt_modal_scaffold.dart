@@ -25,18 +25,15 @@ void showAppModalSheet({
   required String title,
   required Widget pageContent,
   required Future<bool> Function()?
-  onPrimaryAction, // Make async, return bool to control pop
+      onPrimaryAction, // Make async, return bool to control pop
   String primaryActionText = 'Save',
   Provider<bool>?
-  isPrimaryActionEnabledProvider, // Optional provider for enabling button
+      isPrimaryActionEnabledProvider, // Optional provider for enabling button
 
-  bool hasSabGradient = false,
   bool isTopBarLayerAlwaysVisible = true,
-  EdgeInsets pagePadding = const EdgeInsets.fromLTRB(
-    16,
-    16,
-    16,
-    96,
+  EdgeInsets pagePadding = const EdgeInsets.symmetric(
+    horizontal: 16,
+    vertical: 16,
   ), // Default padding
 }) {
   WoltModalSheet.show<void>(
@@ -47,9 +44,7 @@ void showAppModalSheet({
 
       return [
         WoltModalSheetPage(
-          hasSabGradient: hasSabGradient,
           isTopBarLayerAlwaysVisible: isTopBarLayerAlwaysVisible,
-
           // Standardized Top Bar Title
           topBarTitle: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -72,6 +67,9 @@ void showAppModalSheet({
                     // Cancel button
                     Expanded(
                       child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
                         onPressed: () => ref.read(goRouterProvider).pop(),
                         child: const Text('Cancel'),
                       ),
@@ -79,16 +77,18 @@ void showAppModalSheet({
                     const SizedBox(width: 16),
                     // Primary action button
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed:
-                            (isPrimaryEnabled && onPrimaryAction != null)
-                                ? () async {
-                                  bool shouldPop = await onPrimaryAction();
-                                  if (shouldPop && actionBarContext.mounted) {
-                                    ref.read(goRouterProvider).pop();
-                                  }
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                        onPressed: (isPrimaryEnabled && onPrimaryAction != null)
+                            ? () async {
+                                bool shouldPop = await onPrimaryAction();
+                                if (shouldPop && actionBarContext.mounted) {
+                                  ref.read(goRouterProvider).pop();
                                 }
-                                : null,
+                              }
+                            : null,
                         child: Text(primaryActionText),
                       ),
                     ),
@@ -97,17 +97,16 @@ void showAppModalSheet({
               }
 
               // Wrap with Consumer if provider exists
-              Widget buttonsRow =
-                  isPrimaryActionEnabledProvider != null
-                      ? Consumer(
-                        builder: (context, consumerRef, _) {
-                          final isEnabled = consumerRef.watch(
-                            isPrimaryActionEnabledProvider,
-                          );
-                          return buildActionButtons(isEnabled: isEnabled);
-                        },
-                      )
-                      : buildActionButtons();
+              Widget buttonsRow = isPrimaryActionEnabledProvider != null
+                  ? Consumer(
+                      builder: (context, consumerRef, _) {
+                        final isEnabled = consumerRef.watch(
+                          isPrimaryActionEnabledProvider,
+                        );
+                        return buildActionButtons(isEnabled: isEnabled);
+                      },
+                    )
+                  : buildActionButtons();
 
               return Padding(
                 padding: const EdgeInsets.all(16.0),

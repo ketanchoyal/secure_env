@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/providers/project_provider.dart';
 
 class NewProjectModal extends ConsumerStatefulWidget {
@@ -13,11 +12,11 @@ class NewProjectModal extends ConsumerStatefulWidget {
 }
 
 class NewProjectModalState extends ConsumerState<NewProjectModal> {
-  // Make key accessible to trigger save from outside
   final formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _pathController;
   late final TextEditingController _descriptionController;
+  bool _isCreating = false;
 
   @override
   void initState() {
@@ -47,116 +46,162 @@ class NewProjectModalState extends ConsumerState<NewProjectModal> {
         });
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error selecting directory: ${e.toString()}')),
+          SnackBar(
+            content: Text('Error selecting directory: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     }
   }
 
-  // Public method to be called from the modal action button
   Future<bool> saveProject() async {
-    if (formKey.currentState!.validate()) {
-      // Form is valid, proceed with saving
+    if (!formKey.currentState!.validate()) {
+      return false;
+    }
+
+    setState(() => _isCreating = true);
+
+    try {
       final name = _nameController.text.trim();
       final path = _pathController.text.trim();
       final description = _descriptionController.text.trim();
-      print(
-        'Attempting to save project: Name=$name, Path=$path, Desc=$description',
-      );
 
-      try {
-        await ref.read(projectOperationsProvider.notifier).createProject(
-              name: name,
-              path: path,
-              description: description.isNotEmpty ? description : null,
-            );
+      await ref.read(projectOperationsProvider.notifier).createProject(
+            name: name,
+            path: path,
+            description: description.isNotEmpty ? description : null,
+          );
 
-        print('Project save successful.');
-        // Show success feedback
-        if (context.mounted) {
-          // Always check mount status before using context async
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Project "$name" created successfully.')),
-          );
-        }
-        return true; // Indicate success to close modal
-      } catch (e) {
-        print('Error saving project: $e');
-        // Show error feedback
-        if (context.mounted) {
-          // Always check mount status
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error creating project: ${e.toString()}')),
-          );
-        }
-        return false; // Indicate failure, keep modal open
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Project "$name" created successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
-    } else {
-      print('Form validation failed.');
-      return false; // Form invalid, keep modal open
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating project: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() => _isCreating = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This widget provides the content *inside* the modal sheet page
     return Form(
       key: formKey,
       child: Padding(
-        padding: const EdgeInsets.only(
-          bottom: 80,
-        ), // Space for potential stickyActionBar
-        child: ListView(
-          // Use ListView for potential scrolling
-          padding: const EdgeInsets.all(16.0),
-          shrinkWrap: true,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // Project Name
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Project Name*'),
+              decoration: const InputDecoration(
+                labelText: 'Project Name',
+                hintText: 'e.g., my-awesome-project',
+                prefixIcon: Icon(Icons.folder),
+              ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Project name is required';
                 }
-                // Allow letters, numbers, spaces, underscores, and hyphens
                 if (!RegExp(r'^[a-zA-Z0-9\s_-]+$').hasMatch(value)) {
                   return 'Project name can only contain letters, numbers, spaces, underscores, and hyphens';
                 }
                 return null;
               },
+              autovalidateMode: AutovalidateMode.onUserInteraction,
             ),
             const SizedBox(height: 16),
+
+            // Project Path
             TextFormField(
               controller: _pathController,
               decoration: InputDecoration(
-                labelText: 'Project Path*',
+                labelText: 'Project Path',
+                hintText: 'Select a directory for your project',
+                prefixIcon: const Icon(Icons.folder_open),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.folder_open),
-                  onPressed: _pickDirectory,
+                  onPressed: _isCreating ? null : _pickDirectory,
                   tooltip: 'Browse for directory',
                 ),
               ),
-              readOnly:
-                  true, // Make the field read-only since we're using a file picker
+              readOnly: true,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Project path is required';
                 }
-                // TODO: Add validation for valid path?
                 return null;
               },
             ),
             const SizedBox(height: 16),
+
+            // Description
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
-                labelText: 'Description (Optional)',
+                labelText: 'Description',
+                hintText: 'Describe your project',
+                prefixIcon: Icon(Icons.description),
               ),
               maxLines: 3,
             ),
-            // Note: Buttons are typically placed in the stickyActionBar of WoltModalSheetPage
+            const SizedBox(height: 24),
+
+            // Selected Path Display
+            if (_pathController.text.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.folder, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _pathController.text,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 24),
+
+            // Create Progress
+            if (_isCreating)
+              const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Creating project...'),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

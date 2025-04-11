@@ -188,9 +188,9 @@ class ProjectService {
       updatedAt: now,
     );
 
-    final projectPath = '$secureEnvPath${Path.separator}$projectName';
+    // final projectPath = '$secureEnvPath${Path.separator}$projectName';
 
-    await Directory(projectPath).create(recursive: true);
+    // await Directory(projectPath).create(recursive: true);
 
     // Save project configuration
     await _saveProjectConfig(project);

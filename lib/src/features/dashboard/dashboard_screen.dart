@@ -56,9 +56,8 @@ class DashboardScreen extends ConsumerWidget {
                         final stateContainer = importModalContent.exposeState();
                         bool success = false;
                         if (stateContainer != null) {
-                          success =
-                              await stateContainer
-                                  .importCallback(); // Await the async call
+                          success = await stateContainer
+                              .importCallback(); // Await the async call
                           // Modal closure is now handled by the helper based on return value
                         } else {
                           print(
@@ -78,7 +77,11 @@ class DashboardScreen extends ConsumerWidget {
                         return success; // Return true to close modal on success, false otherwise
                       },
                       // Padding is handled inside ImportEnvironmentModal now
-                      pagePadding: EdgeInsets.zero,
+                      pagePadding: EdgeInsets.only(
+                        left: 8,
+                        right: 8,
+                        bottom: 60,
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -127,7 +130,11 @@ class DashboardScreen extends ConsumerWidget {
                         return success; // Return true to close modal on success
                       },
                       // Padding is handled inside NewProjectModal now
-                      pagePadding: EdgeInsets.zero,
+                      pagePadding: EdgeInsets.only(
+                        left: 8,
+                        right: 8,
+                        bottom: 45,
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -139,7 +146,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 8.0),
             const Divider(), // Add divider
             const SizedBox(height: 16.0), // Add space after divider
             // Section Title
@@ -156,10 +163,9 @@ class DashboardScreen extends ConsumerWidget {
             // --- NEW: Recent Activity Section ---
             Text(
               'Recent Activity',
-              style:
-                  Theme.of(
-                    context,
-                  ).textTheme.headlineSmall, // Match Projects title style
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall, // Match Projects title style
             ),
             const SizedBox(height: 8.0),
             // Placeholder for Activity List

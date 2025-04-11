@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import for icons
+import 'package:file_picker/file_picker.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/providers/project_provider.dart';
+import 'package:secure_env_gui/src/providers/core_providers.dart';
 
 // Placeholder state for the modal - allows access from stickyActionBar
 class ImportEnvironmentModalStateContainer {
@@ -40,6 +42,7 @@ class _ImportEnvironmentModalState
   final _descriptionController = TextEditingController();
   String? _selectedFilePath;
   String? _selectedProjectName; // TODO: Populate and manage this state
+  bool _isImporting = false;
 
   // Map to hold the current state instance for access via exposeState
   static final Map<ImportEnvironmentModal, _ImportEnvironmentModalState>
@@ -50,8 +53,8 @@ class _ImportEnvironmentModalState
     super.initState();
     // Store this state instance in the map when the widget is initialized
     _currentStateMap[widget] = this;
-    // TODO: Load initial project list or set default selected project
-    _selectedProjectName = 'dummy-project'; // Placeholder
+
+    // Placeholder
   }
 
   @override
@@ -64,119 +67,105 @@ class _ImportEnvironmentModalState
   }
 
   Future<void> _pickFile() async {
-    // TODO: Implement actual file picking using a package like 'file_picker'.
-    // Add file_picker to pubspec.yaml first.
-    // Example (requires file_picker package):
-    /*
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['env', 'properties', 'xcconfig'],
+        dialogTitle: 'Select Environment File',
       );
+
       if (result != null && result.files.single.path != null) {
         setState(() {
           _selectedFilePath = result.files.single.path;
         });
-      } else {
-        // User canceled the picker
       }
     } catch (e) {
-      // Handle exceptions (e.g. platform permissions)
-      print("Error picking file: $e");
-       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(content: Text('Error picking file: ${e.toString()}')),
-       );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error selecting file: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
-    */
-    print('File picker logic needs implementation.');
-    // Simulate selecting a file for now:
-    setState(() {
-      _selectedFilePath = '/simulated/path/to/your/project.env';
-    });
   }
 
   // Handles validation and calls the core import logic
   Future<bool> _triggerImport() async {
+    if (!_formKey.currentState!.validate()) {
+      return false;
+    }
+
     if (_selectedProjectName == null) {
-      if (context.mounted) {
-        // Check mount status
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a target project.')),
+          const SnackBar(
+            content: Text('Please select a target project'),
+            backgroundColor: Colors.orange,
+          ),
         );
       }
-      return false; // Indicate failure
+      return false;
     }
+
     if (_selectedFilePath == null) {
-      if (context.mounted) {
-        // Check mount status
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a file to import.')),
+          const SnackBar(
+            content: Text('Please select a file to import'),
+            backgroundColor: Colors.orange,
+          ),
         );
       }
-      return false; // Indicate failure
+      return false;
     }
 
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save(); // Ensure onSaved callbacks are triggered
+    setState(() => _isImporting = true);
 
-      final envName = _envNameController.text.trim();
-      final description = _descriptionController.text.trim();
+    try {
+      final project = switch (ref.read(projectsNotifierProvider)) {
+        ProjectStateLoaded(:final projects) => projects.firstWhere(
+            (p) => p.name == _selectedProjectName,
+            orElse: () => throw Exception('Project not found'),
+          ),
+        _ => throw Exception('No project selected'),
+      };
 
-      print('Form is valid. Preparing to import...');
-      print('Target Project: $_selectedProjectName');
-      print('New Env Name: $envName');
-      print('Description: $description');
-      print('File Path: $_selectedFilePath');
+      final environmentService = ref.read(environmentServiceProvider(project));
 
-      try {
-        // --- Core Logic Integration (Placeholder) ---
-        // TODO: 1. Get EnvironmentService instance from Riverpod provider.
-        // final envService = ref.read(environmentServiceProvider); // Make sure ref is available in state
-        // TODO: 2. Call the core service method.
-        // await envService.importEnvironment(
-        //   projectName: _selectedProjectName!,
-        //   envName: envName,
-        //   filePath: _selectedFilePath!,
-        //   description: description.isNotEmpty ? description : null,
-        // );
+      await environmentService.importEnvironment(
+        filePath: _selectedFilePath!,
+        envName: _envNameController.text.trim(),
+        description: _descriptionController.text.trim().isNotEmpty
+            ? _descriptionController.text.trim()
+            : null,
+      );
 
-        // Simulation for now:
-        await Future.delayed(
-          const Duration(milliseconds: 500),
-        ); // Simulate async work
-        print('Import successful (simulated).');
-
-        // TODO: 3. Show success feedback (e.g., SnackBar).
-        if (context.mounted) {
-          // Check mount status
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Environment imported successfully (simulation)!'),
-            ),
-          );
-        }
-
-        return true; // Indicate success to close modal
-      } catch (e) {
-        // TODO: 5. Handle potential errors from the service (show error message).
-        print("Error importing environment: $e");
-        if (context.mounted) {
-          // Check mount status
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error importing: ${e.toString()}')),
-          );
-        }
-        return false; // Indicate failure, keep modal open
-      }
-      // --- End Core Logic Integration ---
-    } else {
-      if (context.mounted) {
-        // Check mount status
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please fix the errors in the form.')),
+          const SnackBar(
+            content: Text('Environment imported successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
-      return false; // Indicate failure (form invalid), keep modal open
+
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error importing environment: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() => _isImporting = false);
+      }
     }
   }
 
@@ -195,104 +184,123 @@ class _ImportEnvironmentModalState
 
     return Padding(
       // Add padding to match the expected WoltModalSheetPage content padding
-      padding: const EdgeInsets.fromLTRB(
-        16,
-        16,
-        16,
-        16,
-      ), // Adjust bottom padding if needed
+      padding: const EdgeInsets.all(16),
       child: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min, // Fit content vertically
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          // crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // --- Project Selector ---
             // TODO: Replace with actual project data fetched from a provider
-            Consumer(
-              builder: (context, ref, child) {
-                final projectListState = ref.watch(projectsNotifierProvider);
-                switch (projectListState) {
-                  case ProjectStateInitial():
-                    return const Center(child: CircularProgressIndicator());
-                  case ProjectStateLoading():
-                    return const Center(child: CircularProgressIndicator());
-                  case ProjectStateError(:final message, :final projects):
-                    //Show Error SnackBar
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(message)),
-                    );
-                    return const Center(child: CircularProgressIndicator());
-                  case ProjectStateLoaded(:final projects):
-                    return DropdownButtonFormField<String>(
-                      value: _selectedProjectName,
-                      items: projects
-                          .map(
-                            (project) => DropdownMenuItem(
-                              value: project.name,
-                              child: Text(project.name),
+            Flexible(
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final projectState = ref.watch(projectsNotifierProvider);
+                  return switch (projectState) {
+                    ProjectStateInitial() => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ProjectStateLoading() => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ProjectStateError(:final message) => Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: Colors.red,
+                              size: 48,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              message,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ProjectStateLoaded(:final projects) => projects.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.folder_off,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No projects available',
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Create a project first to import environments',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
                           )
-                          .toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedProjectName = newValue;
-                        });
-                        print('Selected project: $newValue');
-                      },
-                      decoration: const InputDecoration(
-                        labelText: 'Target Project*',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Please select a target project'
-                          : null,
-                    );
-                }
-
-                // return projectsAsync.when(
-                //   data: (projects) {
-                //     // If current selection is not in the list, reset it
-                //     if (_selectedProjectName != null &&
-                //         !projects.any((p) => p.name == _selectedProjectName)) {
-                //       _selectedProjectName = null;
-                //     }
-
-                //     return DropdownButtonFormField<String>(
-                //       value: _selectedProjectName,
-                //       items: projects
-                //           .map(
-                //             (project) => DropdownMenuItem(
-                //               value: project.name,
-                //               child: Text(project.name),
-                //             ),
-                //           )
-                //           .toList(),
-                //       onChanged: (String? newValue) {
-                //         setState(() {
-                //           _selectedProjectName = newValue;
-                //         });
-                //         print('Selected project: $newValue');
-                //       },
-                //       decoration: const InputDecoration(
-                //         labelText: 'Target Project*',
-                //         border: OutlineInputBorder(),
-                //       ),
-                //       validator: (value) => value == null || value.isEmpty
-                //           ? 'Please select a target project'
-                //           : null,
-                //     );
-                //   },
-                //   loading: () =>
-                //       const Center(child: CircularProgressIndicator()),
-                //   error: (err, stack) => Text(
-                //     'Error loading projects: $err',
-                //     style: TextStyle(
-                //       color: Theme.of(context).colorScheme.error,
-                //     ),
-                //   ),
-                // );
-              },
+                        : DropdownButtonFormField<String>(
+                            value: _selectedProjectName,
+                            itemHeight: 60,
+                            isDense: false,
+                            items: projects.map((project) {
+                              return DropdownMenuItem(
+                                value: project.name,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.folder, size: 20),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(project.name),
+                                          if (project.description != null)
+                                            Text(
+                                              project.description!,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _selectedProjectName = newValue;
+                              });
+                            },
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Target Project*',
+                              border: OutlineInputBorder(),
+                              // prefixIcon: Icon(Icons.folder),
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Please select a target project'
+                                : null,
+                          ),
+                  };
+                },
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -303,6 +311,7 @@ class _ImportEnvironmentModalState
                 labelText: 'New Environment Name*',
                 hintText: 'e.g., staging, production-readonly',
                 border: OutlineInputBorder(), // Add border
+                prefixIcon: Icon(Icons.label),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -326,33 +335,68 @@ class _ImportEnvironmentModalState
                 labelText: 'Description (Optional)',
                 hintText: 'Describe the purpose of this imported environment',
                 border: OutlineInputBorder(), // Add border
+                prefixIcon: Icon(Icons.description),
               ),
               maxLines: 2,
             ),
             const SizedBox(height: 24),
 
             // --- File Picker ---
-            OutlinedButton.icon(
-              icon: const FaIcon(FontAwesomeIcons.folderOpen, size: 16),
-              label: const Text('Select File (.env, .properties, .xcconfig)'),
-              onPressed: _pickFile,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                ), // Adjust padding
-              ),
+            Row(
+              children: [
+                Flexible(
+                  child: OutlinedButton.icon(
+                    icon: const FaIcon(FontAwesomeIcons.folderOpen, size: 16),
+                    label: const Text(
+                        'Select File (.env, .properties, .xcconfig)'),
+                    onPressed: _isImporting ? null : _pickFile,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                      ), // Adjust padding
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             // Display selected file path
-            Text(
-              'Selected: ${_selectedFilePath ?? 'No file selected'}',
-              style: Theme.of(context).textTheme.bodySmall,
-              overflow: TextOverflow.ellipsis,
-            ),
+            if (_selectedFilePath != null)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.file_present, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _selectedFilePath!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 24),
-            // Note: Import/Cancel buttons are typically defined in the
-            // WoltModalSheetPage's stickyActionBar property. They will call
-            // the _triggerImport method via the exposeState().
+
+            // Import Progress
+            if (_isImporting)
+              const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Importing environment...'),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
