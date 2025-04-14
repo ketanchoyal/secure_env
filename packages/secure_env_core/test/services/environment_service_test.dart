@@ -11,7 +11,7 @@ void main() {
   late EnvironmentService environmentService;
   late TestLogger logger;
   late Directory tempDir;
-
+  late Project project;
   setUp(() async {
     tempDir = await Directory.current.createTemp('secure_env_test_');
     logger = TestLogger();
@@ -40,7 +40,7 @@ void main() {
       registryService: registryService,
     );
     // Create test project
-    final project = await projectService.createProject(
+    project = await projectService.createProject(
       name: 'test_project',
       path: path.join(tempDir.path, 'test_project'),
       description: 'Test project',
@@ -56,7 +56,7 @@ void main() {
   });
 
   tearDown(() async {
-    // await tempDir.delete(recursive: true);
+    await projectService.deleteProject(project.path);
   });
 
   group('EnvironmentService', () {
@@ -82,10 +82,12 @@ void main() {
     });
 
     test('saveEnvironment persists environment to disk', () async {
+      final now = DateTime.now();
       final env = Environment(
         name: 'test',
         values: {'KEY': 'value'},
-        lastModified: DateTime.now(),
+        lastModified: now,
+        createdAt: now,
       );
 
       await environmentService.saveEnvironment(env);

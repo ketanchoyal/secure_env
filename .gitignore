@@ -14,6 +14,7 @@ migrate_working_dir/
 *.env
 DerivedData/
 testing_stuff/
+secrets/
 
 # IntelliJ related
 *.iml

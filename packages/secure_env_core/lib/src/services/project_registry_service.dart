@@ -87,7 +87,7 @@ class ProjectRegistryService {
   /// Update the metadata for an existing project.
   Future<ProjectMetadata> updateProjectMetadata(
       ProjectMetadata metadata) async {
-    final existingProject = await getProjectMetadata(metadata.name);
+    final existingProject = await getProjectMetadata(metadata.id);
     if (existingProject == null) {
       throw ValidationException('Project "${metadata.name}" not found');
     }

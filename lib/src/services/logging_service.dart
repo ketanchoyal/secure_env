@@ -13,18 +13,18 @@ class LoggingService implements core.Logger {
   final bool _verbose;
 
   LoggingService({String? prefix, bool verbose = false})
-    : _prefix = prefix,
-      _verbose = verbose,
-      _logger = log.Logger(
-        printer: log.PrettyPrinter(
-          methodCount: 0,
-          errorMethodCount: 8,
-          lineLength: 120,
-          colors: true,
-          printEmojis: true,
-          printTime: true,
-        ),
-      );
+      : _prefix = prefix,
+        _verbose = verbose,
+        _logger = log.Logger(
+          printer: log.PrettyPrinter(
+            methodCount: 0,
+            errorMethodCount: 8,
+            lineLength: 120,
+            colors: true,
+            printEmojis: true,
+            printTime: true,
+          ),
+        );
 
   String _formatMessage(String message) {
     return _prefix != null ? '[$_prefix] $message' : message;
@@ -70,15 +70,15 @@ class LoggingService implements core.Logger {
 
 /// Provider for the logging service
 @riverpod
-LoggingService loggingService(Ref ref) {
+core.Logger logger(Ref ref, [Type? type]) {
   return LoggingService(
-    prefix: 'SecureEnvGUI',
+    prefix: type?.toString() ?? 'SecureEnvGUI',
     verbose: true, // You can make this configurable based on your needs
   );
 }
 
 /// Provider for the Logger interface implementation
-@riverpod
-core.Logger logger(Ref ref) {
-  return ref.watch(loggingServiceProvider);
-}
+// @riverpod
+// core.Logger logger(Ref ref) {
+//   return ref.watch(loggingServiceProvider);
+// }

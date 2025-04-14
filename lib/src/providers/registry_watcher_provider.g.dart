@@ -6,7 +6,7 @@ part of 'registry_watcher_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$registryWatcherHash() => r'53bd00de398c3dc517b7777785481736101b04fa';
+String _$registryWatcherHash() => r'def13837bd2ed590a4635ac8e497852dc5544ee0';
 
 /// See also [RegistryWatcher].
 @ProviderFor(RegistryWatcher)

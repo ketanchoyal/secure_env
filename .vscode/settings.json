@@ -1,3 +1,16 @@
 {
-  "dart.flutterSdkPath": ".fvm/versions/stable"
+  "dart.flutterSdkPath": ".fvm/versions/stable",
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": true,
+    "markdown": true,
+    "scminput": false,
+    "multipleAccounts": true,
+    "yaml": true,
+    "dart": true,
+    "rust": false,
+    "typescript": true,
+    "python": true,
+    "shellscript": true
+  }
 }

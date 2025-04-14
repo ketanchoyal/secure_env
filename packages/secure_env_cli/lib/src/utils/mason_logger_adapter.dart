@@ -15,7 +15,7 @@ class MasonLoggerAdapter implements Logger {
   }
 
   @override
-  void error(String message) {
+  void error(String message, [Object? error, StackTrace? stackTrace]) {
     _logger.err(message);
   }
 

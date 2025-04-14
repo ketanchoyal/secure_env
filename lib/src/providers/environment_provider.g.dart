@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'project_provider.dart';
+part of 'environment_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$projectOperationsHash() => r'4147a5e8295c300e74aa4209acb35f2a0c5477ec';
+String _$environmentOperationsHash() =>
+    r'e0071ad3bfb3167e66cf1897236dd492b110f6f7';
 
-/// See also [ProjectOperations].
-@ProviderFor(ProjectOperations)
-final projectOperationsProvider =
-    NotifierProvider<ProjectOperations, ProjectOperationState>.internal(
-  ProjectOperations.new,
-  name: r'projectOperationsProvider',
+/// See also [EnvironmentOperations].
+@ProviderFor(EnvironmentOperations)
+final environmentOperationsProvider =
+    NotifierProvider<EnvironmentOperations, EnvironmentOperationState>.internal(
+  EnvironmentOperations.new,
+  name: r'environmentOperationsProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$projectOperationsHash,
+      : _$environmentOperationsHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$ProjectOperations = Notifier<ProjectOperationState>;
+typedef _$EnvironmentOperations = Notifier<EnvironmentOperationState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

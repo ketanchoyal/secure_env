@@ -25,6 +25,8 @@ class ProjectOperations extends _$ProjectOperations {
     return const ProjectOperationState.idle();
   }
 
+  Logger get logger => ref.read(loggerProvider(ProjectOperations));
+
   Future<void> createProject({
     required String name,
     required String path,
@@ -39,25 +41,28 @@ class ProjectOperations extends _$ProjectOperations {
             description: description,
             metadata: metadata,
           );
+
+      logger.info('Project created successfully');
       state = const ProjectOperationState.success();
     } catch (e, stack) {
       state = ProjectOperationState.error(
         message: 'Failed to create project: $e',
       );
-      ref.read(loggerProvider).error('Failed to create project: $e');
+      logger.error('Failed to create project: $e');
     }
   }
 
-  Future<void> deleteProject(String name, String path) async {
+  Future<void> deleteProject(String path) async {
     state = const ProjectOperationState.operating();
     try {
-      await ref.read(projectServiceProvider).deleteProject(name);
+      await ref.read(projectServiceProvider).deleteProject(path);
+      logger.info('Project deleted successfully');
       state = const ProjectOperationState.success();
     } catch (e, stack) {
       state = ProjectOperationState.error(
         message: 'Failed to delete project: $e',
       );
-      ref.read(loggerProvider).error('Failed to delete project: $e');
+      logger.error('Failed to delete project: $e');
     }
   }
 
@@ -65,12 +70,13 @@ class ProjectOperations extends _$ProjectOperations {
     state = const ProjectOperationState.operating();
     try {
       await ref.read(projectServiceProvider).updateProject(project);
+      logger.info('Project updated successfully');
       state = const ProjectOperationState.success();
     } catch (e, stack) {
       state = ProjectOperationState.error(
         message: 'Failed to update project: $e',
       );
-      ref.read(loggerProvider).error('Failed to update project: $e');
+      logger.error('Failed to update project: $e');
     }
   }
 }

@@ -8,9 +8,10 @@ abstract class Environment with _$Environment {
   const factory Environment({
     required String name,
     required Map<String, String> values,
-    @Default({}) Map<String, bool> sensitiveKeys,
     String? description,
     DateTime? lastModified,
+    required DateTime createdAt,
+    @Default({}) Map<String, bool> sensitiveKeys,
     @Default({}) Map<String, String> metadata,
   }) = _Environment;
 

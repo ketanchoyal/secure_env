@@ -3,9 +3,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:secure_env_gui/src/providers/project_provider.dart';
+import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
 
 class NewProjectModal extends ConsumerStatefulWidget {
   const NewProjectModal({super.key});
+
+  static void show(BuildContext context, WidgetRef ref) {
+    final modalKey = GlobalKey<NewProjectModalState>();
+    final newProjectModalContent = NewProjectModal(key: modalKey);
+
+    showAppModalSheet(
+      context: context,
+      ref: ref,
+      title: 'Create New Project',
+      pageContent: newProjectModalContent,
+      onPrimaryAction: () async {
+        final state = modalKey.currentState;
+        if (state == null || !state.formKey.currentState!.validate()) {
+          return false;
+        }
+        return await state.saveProject();
+      },
+      primaryActionText: 'Save',
+      pagePadding: const EdgeInsets.only(
+        left: 8,
+        right: 8,
+        bottom: 45,
+      ),
+    );
+  }
 
   @override
   ConsumerState<NewProjectModal> createState() => NewProjectModalState();

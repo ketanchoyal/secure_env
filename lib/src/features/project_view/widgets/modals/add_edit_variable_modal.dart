@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
 
 class AddEditVariableModal extends ConsumerStatefulWidget {
   final String? initialKey;
@@ -13,8 +14,42 @@ class AddEditVariableModal extends ConsumerStatefulWidget {
     super.key,
   });
 
+  static void show(
+    BuildContext context,
+    WidgetRef ref, {
+    String? initialKey,
+    String? initialValue,
+    bool initialIsSensitive = false,
+  }) {
+    final modalKey = GlobalKey<AddEditVariableModalState>();
+    final modalContent = AddEditVariableModal(
+      key: modalKey,
+      initialKey: initialKey,
+      initialValue: initialValue,
+      initialIsSensitive: initialIsSensitive,
+    );
+
+    showAppModalSheet(
+      context: context,
+      ref: ref,
+      title: initialKey == null ? 'Add Variable' : 'Edit Variable',
+      pageContent: modalContent,
+      onPrimaryAction: () async {
+        final state = modalKey.currentState;
+        if (state == null || !state.formKey.currentState!.validate()) {
+          return false;
+        }
+        state.saveVariable();
+        return true;
+      },
+      primaryActionText: initialKey == null ? 'Add' : 'Save',
+      pagePadding: const EdgeInsets.all(16),
+    );
+  }
+
   @override
-  ConsumerState<AddEditVariableModal> createState() => AddEditVariableModalState();
+  ConsumerState<AddEditVariableModal> createState() =>
+      AddEditVariableModalState();
 }
 
 // Make state class public to allow access via GlobalKey
@@ -99,7 +134,9 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
                         icon: Icon(
                           // Show eye-slash if text is obscured (sensitive)
                           // This logic might need adjustment if we allow temporary viewing
-                          _isSensitive ? Icons.visibility_off : Icons.visibility,
+                          _isSensitive
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                         onPressed: () {
                           // This button *could* toggle temporary visibility,
@@ -121,7 +158,8 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
             const SizedBox(height: 16),
             SwitchListTile(
               title: const Text('Sensitive Value'),
-              subtitle: const Text('Hide value in UI after saving'), // TODO: Implement hiding
+              subtitle: const Text(
+                  'Hide value in UI after saving'), // TODO: Implement hiding
               value: _isSensitive,
               onChanged: (bool value) {
                 setState(() {

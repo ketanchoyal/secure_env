@@ -6,42 +6,166 @@ part of 'logging_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$loggingServiceHash() => r'4fe896a9edd95800d9be5ec4118406fbe2c142d8';
+String _$loggerHash() => r'ebe75ec9714ddd6d7e774979cad141cce36638af';
+
+/// Copied from Dart SDK
+class _SystemHash {
+  _SystemHash._();
+
+  static int combine(int hash, int value) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + value);
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+    return hash ^ (hash >> 6);
+  }
+
+  static int finish(int hash) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+    // ignore: parameter_assignments
+    hash = hash ^ (hash >> 11);
+    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
+  }
+}
 
 /// Provider for the logging service
 ///
-/// Copied from [loggingService].
-@ProviderFor(loggingService)
-final loggingServiceProvider = AutoDisposeProvider<LoggingService>.internal(
-  loggingService,
-  name: r'loggingServiceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$loggingServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef LoggingServiceRef = AutoDisposeProviderRef<LoggingService>;
-String _$loggerHash() => r'1b9551f8b37ce6c55e7c457b69b0363f9da7d077';
-
-/// Provider for the Logger interface implementation
-///
 /// Copied from [logger].
 @ProviderFor(logger)
-final loggerProvider = AutoDisposeProvider<core.Logger>.internal(
-  logger,
-  name: r'loggerProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$loggerHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+const loggerProvider = LoggerFamily();
+
+/// Provider for the logging service
+///
+/// Copied from [logger].
+class LoggerFamily extends Family<core.Logger> {
+  /// Provider for the logging service
+  ///
+  /// Copied from [logger].
+  const LoggerFamily();
+
+  /// Provider for the logging service
+  ///
+  /// Copied from [logger].
+  LoggerProvider call([
+    Type? type,
+  ]) {
+    return LoggerProvider(
+      type,
+    );
+  }
+
+  @override
+  LoggerProvider getProviderOverride(
+    covariant LoggerProvider provider,
+  ) {
+    return call(
+      provider.type,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'loggerProvider';
+}
+
+/// Provider for the logging service
+///
+/// Copied from [logger].
+class LoggerProvider extends AutoDisposeProvider<core.Logger> {
+  /// Provider for the logging service
+  ///
+  /// Copied from [logger].
+  LoggerProvider([
+    Type? type,
+  ]) : this._internal(
+          (ref) => logger(
+            ref as LoggerRef,
+            type,
+          ),
+          from: loggerProvider,
+          name: r'loggerProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$loggerHash,
+          dependencies: LoggerFamily._dependencies,
+          allTransitiveDependencies: LoggerFamily._allTransitiveDependencies,
+          type: type,
+        );
+
+  LoggerProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.type,
+  }) : super.internal();
+
+  final Type? type;
+
+  @override
+  Override overrideWith(
+    core.Logger Function(LoggerRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: LoggerProvider._internal(
+        (ref) => create(ref as LoggerRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        type: type,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeProviderElement<core.Logger> createElement() {
+    return _LoggerProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is LoggerProvider && other.type == type;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, type.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef LoggerRef = AutoDisposeProviderRef<core.Logger>;
+mixin LoggerRef on AutoDisposeProviderRef<core.Logger> {
+  /// The parameter `type` of this provider.
+  Type? get type;
+}
+
+class _LoggerProviderElement extends AutoDisposeProviderElement<core.Logger>
+    with LoggerRef {
+  _LoggerProviderElement(super.provider);
+
+  @override
+  Type? get type => (origin as LoggerProvider).type;
+}
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

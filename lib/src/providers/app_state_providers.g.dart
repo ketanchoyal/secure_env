@@ -6,7 +6,7 @@ part of 'app_state_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$projectsNotifierHash() => r'c9d8029e05a0667fddf4f835f09415a78f66be1e';
+String _$projectsNotifierHash() => r'93f306fa1ea4fd99ca5bc214de5f547e4a94dd80';
 
 /// Provider for managing projects state
 ///
@@ -28,23 +28,29 @@ final projectsNotifierProvider =
 
 typedef _$ProjectsNotifier = Notifier<ProjectState>;
 String _$environmentsNotifierHash() =>
-    r'2b82fc919e2fe43dbd4ec338c84cc2bc6bbaa54f';
+    r'4bfecfc3528a0e1c7aebccc390e1a7a2a01f4561';
 
 /// Provider for managing environments state
 ///
+/// This provider is just for fetching environments and not for managing them.
+/// For managing environments, use [EnvironmentNotifier].
+///
 /// Copied from [EnvironmentsNotifier].
 @ProviderFor(EnvironmentsNotifier)
-final environmentsNotifierProvider = AutoDisposeNotifierProvider<
-    EnvironmentsNotifier, EnvironmentState>.internal(
+final environmentsNotifierProvider =
+    NotifierProvider<EnvironmentsNotifier, EnvironmentState>.internal(
   EnvironmentsNotifier.new,
   name: r'environmentsNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
       : _$environmentsNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
+  dependencies: <ProviderOrFamily>[projectsNotifierProvider],
+  allTransitiveDependencies: <ProviderOrFamily>{
+    projectsNotifierProvider,
+    ...?projectsNotifierProvider.allTransitiveDependencies
+  },
 );
 
-typedef _$EnvironmentsNotifier = AutoDisposeNotifier<EnvironmentState>;
+typedef _$EnvironmentsNotifier = Notifier<EnvironmentState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

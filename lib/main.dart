@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:secure_env_gui/src/providers/registry_watcher_provider.dart';
 import 'src/routing/app_router.dart';
 import 'src/theme/app_theme.dart';
+import 'src/routing/app_snackbar.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,12 +23,18 @@ class SecureEnvApp extends ConsumerWidget {
     final router = ref.watch(goRouterProvider);
     ref.watch(registryWatcherProvider);
 
+    // Get the global ScaffoldMessengerKey from the provider
+    final scaffoldMessengerKey = ref.watch(scaffoldMessengerKeyProvider);
+
+    ref.watch(snackbarProvider); // Initialize snackbar provider
+
     return MaterialApp.router(
       title: 'Secure Env',
       theme: AppTheme.lightTheme, // Apply light theme
       darkTheme: AppTheme.darkTheme, // Apply dark theme
       themeMode: ThemeMode.system, // Use system setting (can be changed later)
       routerConfig: router, // Use the GoRouter instance from the provider
+      scaffoldMessengerKey: scaffoldMessengerKey, // Set the global key
     );
   }
 }

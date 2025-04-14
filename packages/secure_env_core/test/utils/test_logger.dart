@@ -15,21 +15,25 @@ class TestLogger implements Logger {
   List<String> get debugLogs => _debugLogs;
   @override
   void info(String message) {
+    print(message);
     _infoLogs.add(message);
   }
 
   @override
-  void error(String message) {
+  void error(String message, [Object? error, StackTrace? stackTrace]) {
+    print(message);
     _errorLogs.add(message);
   }
 
   @override
   void success(String message) {
+    print(message);
     _successLogs.add(message);
   }
 
   @override
   void warn(String message) {
+    print(message);
     _warningLogs.add(message);
   }
 
@@ -42,16 +46,19 @@ class TestLogger implements Logger {
 
   @override
   void write(String message) {
+    print(message);
     info(message);
   }
 
   @override
   void alert(String message) {
+    print(message);
     info(message);
   }
 
   @override
   void debug(String message) {
+    print(message);
     _debugLogs.add(message);
   }
 }

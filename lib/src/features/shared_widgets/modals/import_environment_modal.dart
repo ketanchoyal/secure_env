@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import for icons
 import 'package:file_picker/file_picker.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
+import 'package:secure_env_gui/src/providers/environment_provider.dart';
 import 'package:secure_env_gui/src/providers/project_provider.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
+import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
 
 // Placeholder state for the modal - allows access from stickyActionBar
 class ImportEnvironmentModalStateContainer {
@@ -19,7 +22,31 @@ class ImportEnvironmentModalStateContainer {
 }
 
 class ImportEnvironmentModal extends ConsumerStatefulWidget {
-  const ImportEnvironmentModal({super.key});
+  const ImportEnvironmentModal({super.key, this.selectedProject});
+  final Project? selectedProject;
+
+  static void show(BuildContext context, WidgetRef ref,
+      {Project? selectedProject}) {
+    final importModalContent =
+        ImportEnvironmentModal(selectedProject: selectedProject);
+    showAppModalSheet(
+      context: context,
+      ref: ref,
+      title: 'Import Environment',
+      pageContent: importModalContent,
+      onPrimaryAction: () async {
+        final stateContainer = importModalContent.exposeState();
+        if (stateContainer == null) return false;
+        return await stateContainer.importCallback();
+      },
+      primaryActionText: 'Import',
+      pagePadding: const EdgeInsets.only(
+        left: 8,
+        right: 8,
+        bottom: 60,
+      ),
+    );
+  }
 
   // Method to provide access to the state for external use (like buttons)
   // This is a common pattern when the modal content needs to interact
@@ -35,14 +62,17 @@ class ImportEnvironmentModal extends ConsumerStatefulWidget {
       _ImportEnvironmentModalState();
 }
 
+final _dropdownSelectedProject =
+    StateProvider.autoDispose<Project?>((ref) => null);
+
 class _ImportEnvironmentModalState
     extends ConsumerState<ImportEnvironmentModal> {
   final _formKey = GlobalKey<FormState>();
   final _envNameController = TextEditingController();
   final _descriptionController = TextEditingController();
   String? _selectedFilePath;
-  String? _selectedProjectName; // TODO: Populate and manage this state
   bool _isImporting = false;
+  String? _errorMessage;
 
   // Map to hold the current state instance for access via exposeState
   static final Map<ImportEnvironmentModal, _ImportEnvironmentModalState>
@@ -53,8 +83,16 @@ class _ImportEnvironmentModalState
     super.initState();
     // Store this state instance in the map when the widget is initialized
     _currentStateMap[widget] = this;
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (widget.selectedProject != null) {
+        ref.read(_dropdownSelectedProject.notifier).state =
+            widget.selectedProject;
+      }
+    });
+  }
 
-    // Placeholder
+  void selectProject(Project? project) {
+    ref.read(_dropdownSelectedProject.notifier).state = project;
   }
 
   @override
@@ -94,53 +132,37 @@ class _ImportEnvironmentModalState
   // Handles validation and calls the core import logic
   Future<bool> _triggerImport() async {
     if (!_formKey.currentState!.validate()) {
+      setState(() {
+        _errorMessage = null;
+      });
       return false;
     }
 
-    if (_selectedProjectName == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a target project'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
+    if (ref.read(_dropdownSelectedProject) == null) {
+      setState(() {
+        _errorMessage = 'Please select a target project';
+      });
       return false;
     }
 
     if (_selectedFilePath == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a file to import'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
+      setState(() {
+        _errorMessage = 'Please select a file to import';
+      });
       return false;
     }
 
     setState(() => _isImporting = true);
 
     try {
-      final project = switch (ref.read(projectsNotifierProvider)) {
-        ProjectStateLoaded(:final projects) => projects.firstWhere(
-            (p) => p.name == _selectedProjectName,
-            orElse: () => throw Exception('Project not found'),
-          ),
-        _ => throw Exception('No project selected'),
-      };
-
-      final environmentService = ref.read(environmentServiceProvider(project));
-
-      await environmentService.importEnvironment(
-        filePath: _selectedFilePath!,
-        envName: _envNameController.text.trim(),
-        description: _descriptionController.text.trim().isNotEmpty
-            ? _descriptionController.text.trim()
-            : null,
-      );
+      await ref.read(environmentOperationsProvider.notifier).importEnvironment(
+            projectId: ref.read(_dropdownSelectedProject)!.id,
+            filePath: _selectedFilePath!,
+            name: _envNameController.text.trim(),
+            description: _descriptionController.text.trim().isNotEmpty
+                ? _descriptionController.text.trim()
+                : null,
+          );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -153,14 +175,9 @@ class _ImportEnvironmentModalState
 
       return true;
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error importing environment: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      setState(() {
+        _errorMessage = 'Error importing environment: ${e.toString()}';
+      });
       return false;
     } finally {
       if (mounted) {
@@ -179,8 +196,16 @@ class _ImportEnvironmentModalState
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Replace placeholder project list with actual data from a provider
-    // final projectsAsync = ref.watch(projectListProvider); // Example
+    ref.listen<EnvironmentOperationState>(
+      environmentOperationsProvider,
+      (previous, next) {
+        if (next is EnvironmentOperationError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(next.message)),
+          );
+        }
+      },
+    );
 
     return Padding(
       // Add padding to match the expected WoltModalSheetPage content padding
@@ -188,23 +213,35 @@ class _ImportEnvironmentModalState
       child: Form(
         key: _formKey,
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Fit content vertically
-          // crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Text(
+                  _errorMessage!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            // crossAxisAlignment: CrossAxisAlignment.stretch,
             // --- Project Selector ---
             // TODO: Replace with actual project data fetched from a provider
             Flexible(
               child: Consumer(
                 builder: (context, ref, child) {
                   final projectState = ref.watch(projectsNotifierProvider);
-                  return switch (projectState) {
-                    ProjectStateInitial() => const Center(
+                  return switch (projectState.state) {
+                    NotifierState.initial => const Center(
                         child: CircularProgressIndicator(),
                       ),
-                    ProjectStateLoading() => const Center(
+                    NotifierState.loading => const Center(
                         child: CircularProgressIndicator(),
                       ),
-                    ProjectStateError(:final message) => Center(
+                    NotifierState.error => Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -215,7 +252,8 @@ class _ImportEnvironmentModalState
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              message,
+                              projectState.errorMessage ??
+                                  'Error loading projects',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
@@ -224,7 +262,7 @@ class _ImportEnvironmentModalState
                           ],
                         ),
                       ),
-                    ProjectStateLoaded(:final projects) => projects.isEmpty
+                    NotifierState.loaded => projectState.projects.isEmpty
                         ? Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -248,55 +286,61 @@ class _ImportEnvironmentModalState
                               ],
                             ),
                           )
-                        : DropdownButtonFormField<String>(
-                            value: _selectedProjectName,
-                            itemHeight: 60,
-                            isDense: false,
-                            items: projects.map((project) {
-                              return DropdownMenuItem(
-                                value: project.name,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.folder, size: 20),
-                                    const SizedBox(width: 8),
-                                    Flexible(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(project.name),
-                                          if (project.description != null)
-                                            Text(
-                                              project.description!,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                        : AbsorbPointer(
+                            absorbing: widget.selectedProject != null,
+                            child: DropdownButtonFormField<Project>(
+                              value: ref.watch(_dropdownSelectedProject),
+                              itemHeight: 60,
+                              isDense: false,
+                              items: widget.selectedProject == null
+                                  ? projectState.projects.map((project) {
+                                      return DropdownMenuItem(
+                                        value: project,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.folder, size: 20),
+                                            const SizedBox(width: 8),
+                                            Flexible(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(project.name),
+                                                  if (project.description !=
+                                                      null)
+                                                    Text(
+                                                      project.description!,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                ],
+                                              ),
                                             ),
-                                        ],
+                                          ],
+                                        ),
+                                      );
+                                    }).toList()
+                                  : [
+                                      DropdownMenuItem(
+                                        value: widget.selectedProject,
+                                        child:
+                                            Text(widget.selectedProject!.name),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                _selectedProjectName = newValue;
-                              });
-                            },
-                            isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Target Project*',
-                              border: OutlineInputBorder(),
-                              // prefixIcon: Icon(Icons.folder),
+                                    ],
+                              onChanged: selectProject,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Target Project*',
+                                border: OutlineInputBorder(),
+                                // prefixIcon: Icon(Icons.folder),
+                              ),
                             ),
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Please select a target project'
-                                : null,
                           ),
                   };
                 },

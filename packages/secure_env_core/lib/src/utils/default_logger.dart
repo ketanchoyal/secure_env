@@ -5,7 +5,7 @@ class DefaultLogger implements Logger {
   static const bool kReleaseMode = bool.fromEnvironment('dart.vm.product');
 
   @override
-  void error(String message) {
+  void error(String message, [Object? error, StackTrace? stackTrace]) {
     print('ERROR: $message');
   }
 

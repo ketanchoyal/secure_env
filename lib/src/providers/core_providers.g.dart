@@ -6,7 +6,7 @@ part of 'core_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$registryServiceHash() => r'423bbdf1e8736c3b9f915db8dacf04035a5cae28';
+String _$registryServiceHash() => r'04d18196aa6075ad236b248ed1c1240dcfee620f';
 
 /// Provider for the RegistryService
 ///
@@ -26,7 +26,7 @@ final registryServiceProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef RegistryServiceRef = AutoDisposeProviderRef<ProjectRegistryService>;
-String _$projectServiceHash() => r'7396adad416f7d1fba67ccae03f5d5b5194f8ac3';
+String _$projectServiceHash() => r'1ed99943ed14fd71f3a1d23441fc5adf1787b3d5';
 
 /// Provider for the ProjectService
 ///
@@ -46,7 +46,7 @@ final projectServiceProvider = AutoDisposeProvider<ProjectService>.internal(
 // ignore: unused_element
 typedef ProjectServiceRef = AutoDisposeProviderRef<ProjectService>;
 String _$environmentServiceHash() =>
-    r'7541f8c326825dc8bc211a65886b7e6d8d8fc5a2';
+    r'3e5845707b71054f93f2b83bd8a7e2515af9ac1d';
 
 /// Copied from Dart SDK
 class _SystemHash {

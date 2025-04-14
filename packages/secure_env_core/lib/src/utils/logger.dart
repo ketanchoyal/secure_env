@@ -4,7 +4,7 @@ abstract class Logger {
   void info(String message);
 
   /// Log an error message
-  void error(String message);
+  void error(String message, [Object? error, StackTrace? stackTrace]);
 
   /// Log a success message
   void success(String message);

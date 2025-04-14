@@ -77,12 +77,14 @@ class EnvironmentService {
     Map<String, bool>? sensitiveKeys,
   }) async {
     // Create environment
+    final now = DateTime.now();
     final env = Environment(
       name: name,
       description: description,
       values: initialValues ?? {},
       sensitiveKeys: sensitiveKeys ?? {},
-      lastModified: DateTime.now(),
+      lastModified: now,
+      createdAt: now,
     );
 
     // Save environment
@@ -197,9 +199,14 @@ class EnvironmentService {
   /// This method:
   /// 1. Saves sensitive values using SecureStorageService
   /// 2. Saves non-sensitive values and metadata to JSON
+  ///
+  /// It will update the environment if it already exists.
+  /// If the environment does not exist, it will create a new one.
   Future<void> saveEnvironment(Environment env) async {
     final envDir = getProjectEnvDir();
-    await Directory(envDir).create(recursive: true);
+    if (!await Directory(envDir).exists()) {
+      await Directory(envDir).create(recursive: true);
+    }
 
     // Store sensitive values securely
     for (final key in env.sensitiveKeys.keys) {
@@ -234,6 +241,7 @@ class EnvironmentService {
         File(path.join(envTypeDir, '${_sanitizeName(env.name)}.json'));
     final safeEnv = env.copyWith(
       values: safeValues,
+      lastModified: DateTime.now(),
       metadata: {
         ...env.metadata,
         'originalName': env.name,
@@ -340,6 +348,11 @@ class EnvironmentService {
       }
     }
 
+    // Sort environments by createdAt date`
+    environments.sort(
+      (a, b) => a.createdAt.compareTo(b.createdAt),
+    );
+
     return environments;
   }
 
@@ -392,6 +405,38 @@ class EnvironmentService {
         ),
       );
     }
+  }
+
+  /// Deletes a value from an environment
+  ///
+  /// Returns the updated environment
+  Future<Environment> removeValue({
+    required String key,
+    required String envName,
+  }) async {
+    final env = await loadEnvironment(
+      name: envName,
+    );
+
+    if (env == null) {
+      throw ValidationException('Environment $envName not found');
+    }
+
+    final values = Map<String, String>.from(env.values);
+    values.remove(key);
+
+    final sensitiveKeys = Map<String, bool>.from(env.sensitiveKeys);
+    sensitiveKeys.remove(key);
+
+    final updatedEnv = env.copyWith(
+      values: values,
+      sensitiveKeys: sensitiveKeys,
+      lastModified: DateTime.now(),
+    );
+
+    await saveEnvironment(updatedEnv);
+
+    return updatedEnv;
   }
 
   /// Set a value in an environment

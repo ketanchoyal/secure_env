@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 import 'package:path/path.dart' as path;
@@ -20,6 +21,8 @@ class RegistryWatcher extends _$RegistryWatcher {
     return false;
   }
 
+  Logger get logger => ref.read(loggerProvider(RegistryWatcher));
+
   void _startWatching() {
     _timer?.cancel();
     _timer = Timer.periodic(_checkInterval, (_) => _checkRegistry());
@@ -37,23 +40,23 @@ class RegistryWatcher extends _$RegistryWatcher {
           final directory =
               Directory('${project.basePath}${path.separator}.secure_env');
           if (!await directory.exists()) {
-            ref.read(loggerProvider).warn(
-                  'Found invalid project "${project.name}" at "${project.basePath}". Attempting to clean up...',
-                );
+            logger.warn(
+              'Found invalid project "${project.name}" at "${project.basePath}". Attempting to clean up...',
+            );
             await registry.unregisterProject(project.id);
-            ref.read(loggerProvider).info(
-                  'Successfully cleaned up invalid project "${project.name}"',
-                );
+            logger.info(
+              'Successfully cleaned up invalid project "${project.name}"',
+            );
             state = true;
           }
         } catch (deleteError) {
-          ref.read(loggerProvider).error(
-                'Failed to clean up invalid project "${project.name}": $deleteError',
-              );
+          logger.error(
+            'Failed to clean up invalid project "${project.name}": $deleteError',
+          );
         }
       }
     } catch (e) {
-      ref.read(loggerProvider).error('Error checking registry: $e');
+      logger.error('Error checking registry: $e');
     }
   }
 

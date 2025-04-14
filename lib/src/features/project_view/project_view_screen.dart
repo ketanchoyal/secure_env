@@ -1,87 +1,159 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import FontAwesome
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:secure_env_core/secure_env_core.dart';
+import 'package:secure_env_gui/src/features/shared_widgets/modals/create_environment_modal.dart';
+import 'package:secure_env_gui/src/providers/app_state_providers.dart';
+import 'package:secure_env_gui/src/providers/environment_provider.dart';
+import 'package:secure_env_gui/src/features/shared_widgets/modals/import_environment_modal.dart';
 
-import '../../routing/app_router.dart'; // Import for GoRouter access
-import 'widgets/environment_detail_view.dart'; // Import the new widget
-
-// TODO: Import environment widgets once created
+import 'widgets/environment_detail_view.dart';
+import 'widgets/empty_state.dart';
 
 class ProjectViewScreen extends ConsumerStatefulWidget {
-  // TODO: Pass actual project identifier (e.g., projectName)
-  final String projectName;
+  final String projectId;
 
-  const ProjectViewScreen({super.key, required this.projectName});
+  const ProjectViewScreen({super.key, required this.projectId});
 
   @override
   ConsumerState<ProjectViewScreen> createState() => _ProjectViewScreenState();
 }
 
-class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen> with SingleTickerProviderStateMixin {
-  // TODO: Fetch actual environments for the project
-  final List<String> _environments = ['Development', 'Staging', 'Production'];
-  late TabController _tabController;
+class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
+    with TickerProviderStateMixin {
+  TabController? _tabController;
+  List<Environment> _environments = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _environments.length, vsync: this);
+    // Removed ref.listen from initState. Use it in build instead, as per Riverpod docs.
+  }
+
+  void _showImportEnvironmentModal(BuildContext context, WidgetRef ref) {
+    final project = ref
+        .watch(projectsNotifierProvider.notifier)
+        .projectFromId(widget.projectId);
+    if (project != null) {
+      ImportEnvironmentModal.show(context, ref, selectedProject: project);
+    }
+  }
+
+  void _showNewEnvironmentModal() {
+    final project = ref
+        .watch(projectsNotifierProvider.notifier)
+        .projectFromId(widget.projectId);
+    if (project != null) {
+      CreateEnvironmentModal.show(
+        context,
+        ref,
+        project.id,
+      );
+    }
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Listen for environment operation state changes to show snackbars
+    ref.listen<EnvironmentOperationState>(
+      environmentOperationsProvider,
+      (previous, next) {
+        if (next is EnvironmentOperationSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Environment operation successful')),
+          );
+        } else if (next is EnvironmentOperationError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(next.message)),
+          );
+        }
+      },
+    );
+
+    // Watch the current project and environments
+    final project =
+        ref.watch(projectsNotifierProvider.notifier).selectedProject;
+
+    final environmentState = ref.watch(environmentsNotifierProvider);
+
+    final environments = switch (environmentState) {
+      EnvironmentStateInitial() => [],
+      EnvironmentStateLoaded(:final environments) => environments,
+      EnvironmentStateLoading(:final environments) => environments,
+      EnvironmentStateError(:final environments) => environments ?? [],
+    };
+
+    // Update TabController if environments changed
+    if (_tabController == null ||
+        environments.length != _tabController!.length) {
+      final oldIndex = _tabController?.index ?? 0;
+      _tabController?.dispose();
+      _tabController = TabController(
+        length: environments.length,
+        vsync: this,
+      );
+      // Optionally select last tab if added
+      if (environments.length > _environments.length) {
+        _tabController!.index = environments.length - 1;
+      } else if (oldIndex < environments.length) {
+        _tabController!.index = oldIndex;
+      }
+      _environments = List<Environment>.from(environments);
+    }
+
+    if (project == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Project: ${widget.projectName}'), // Display project name
-        leading: BackButton(
-          // Use contextless back navigation
-          onPressed: () => ref.read(goRouterProvider).pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.plus, size: 20), // Add Environment Icon
-            tooltip: 'Add Environment',
-            onPressed: () {
-              // TODO: Implement Add Environment action
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add Environment (TODO)')),
-              );
-            },
-          ),
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.penToSquare, size: 20), // Edit Project Icon
-            tooltip: 'Edit Project Settings',
-            onPressed: () {
-              // TODO: Implement Edit Project Settings action
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit Project (TODO)')),
-              );
-            },
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true, // Allow scrolling if many environments
-          tabs: _environments.map((env) => Tab(text: env)).toList(),
-        ),
+        title: Text(project.name),
+        actions: environments.isEmpty
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(Icons.file_upload),
+                  onPressed: () => _showImportEnvironmentModal(context, ref),
+                ),
+                IconButton(
+                  icon: const Icon(FontAwesomeIcons.plus),
+                  onPressed: _showNewEnvironmentModal,
+                  tooltip: 'New Environment',
+                ),
+              ],
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: _environments.map((env) {
-          // Use the EnvironmentDetailView for each tab
-          return EnvironmentDetailView(
-            projectName: widget.projectName,
-            environmentName: env,
-          );
-        }).toList(),
-      ),
-      // TODO: Consider adding a FloatingActionButton for quick actions
+      body: environments.isEmpty
+          ? ProjectViewEmptyState(
+              onCreate: _showNewEnvironmentModal,
+              onImport: () => _showImportEnvironmentModal(context, ref),
+            )
+          : Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  tabs: environments.map((env) => Tab(text: env.name)).toList(),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: environments.map((env) {
+                      return EnvironmentDetailView(
+                        projectName: project.name,
+                        environmentName: env.name,
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

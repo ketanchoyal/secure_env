@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:meta/meta.dart';
-import 'package:path/path.dart' as Path;
+import 'package:path/path.dart' show separator;
 import 'package:secure_env_core/src/exceptions/exceptions.dart';
 import 'package:secure_env_core/src/utils/logger.dart';
 import 'package:secure_env_core/src/models/models.dart';
@@ -168,7 +168,7 @@ class ProjectService {
         : path.split(Platform.pathSeparator).last;
 
     // Create project directory structure
-    final secureEnvPath = '$path${Path.separator}.secure_env';
+    final secureEnvPath = '$path$separator.secure_env';
 
     // Validate project path and name
     await _validateProjectPath(secureEnvPath);
@@ -326,13 +326,11 @@ class ProjectService {
     }
 
     // Remove project directory
-    final secureEnvPath = Platform.isWindows
-        ? '${project.path}.secure_env'
-        : '${project.path}/.secure_env';
-    final projectPath = Platform.isWindows
-        ? '$secureEnvPath\${project.name}'
-        : '$secureEnvPath/${project.name}';
-    final projectDir = Directory(projectPath);
+    final secureEnvPath = '${project.path}$separator.secure_env';
+    // final projectPath = Platform.isWindows
+    //     ? '$secureEnvPath\${project.name}'
+    //     : '$secureEnvPath/${project.name}';
+    final projectDir = Directory(secureEnvPath);
     if (projectDir.existsSync()) {
       await projectDir.delete(recursive: true);
     }
@@ -347,6 +345,6 @@ class ProjectService {
     // Unregister project from central registry
     await registryService.unregisterProject(project.id);
 
-    logger.info('Deleted project at "$path" at path "$path"');
+    logger.info('Deleted project at path "$path"');
   }
 }

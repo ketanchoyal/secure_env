@@ -28,8 +28,14 @@ class DashboardScreen extends ConsumerWidget {
                     decoration: InputDecoration(
                       hintText: 'Search Projects...',
                       prefixIcon: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: FaIcon(FontAwesomeIcons.magnifyingGlass),
+                        padding: EdgeInsets.symmetric(
+                          vertical: 12.0,
+                          horizontal: 14.0,
+                        ),
+                        child: FaIcon(
+                          FontAwesomeIcons.magnifyingGlass,
+                          size: 20,
+                        ),
                       ),
                       border: OutlineInputBorder(),
                     ),
@@ -37,112 +43,19 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 const SizedBox(width: 16.0), // Spacing
                 // Import Environment Button
-                ElevatedButton.icon(
-                  icon: const FaIcon(FontAwesomeIcons.fileImport, size: 16),
-                  label: const Text('Import Env'),
-                  onPressed: () {
-                    // Create an instance of the modal to access its state later
-                    final importModalContent =
-                        ImportEnvironmentModal(); // No key needed if using exposeState
-
-                    showAppModalSheet(
-                      context: context,
-                      ref: ref,
-                      title: 'Import Environment from File',
-                      pageContent: importModalContent,
-                      primaryActionText: 'Import',
-                      // Define the primary action using the modal instance's exposeState method
-                      onPrimaryAction: () async {
-                        final stateContainer = importModalContent.exposeState();
-                        bool success = false;
-                        if (stateContainer != null) {
-                          success = await stateContainer
-                              .importCallback(); // Await the async call
-                          // Modal closure is now handled by the helper based on return value
-                        } else {
-                          print(
-                            "Error: Could not access ImportEnvironmentModal state via exposeState().",
-                          );
-                          if (context.mounted) {
-                            // Check if context is valid
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Internal error: Could not initiate import.',
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                        return success; // Return true to close modal on success, false otherwise
-                      },
-                      // Padding is handled inside ImportEnvironmentModal now
-                      pagePadding: EdgeInsets.only(
-                        left: 8,
-                        right: 8,
-                        bottom: 60,
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ), // Adjust padding
-                  ),
+                FloatingActionButton.extended(
+                  label: const Text('Import Environment'),
+                  backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                  icon: const Icon(Icons.file_upload),
+                  onPressed: () => _showImportEnvironmentModal(context, ref),
                 ),
                 const SizedBox(width: 8.0), // Spacing between buttons
                 // New Project Button
-                ElevatedButton.icon(
-                  icon: const FaIcon(
-                    FontAwesomeIcons.plus,
-                    size: 16,
-                  ), // Smaller icon
+                FloatingActionButton.extended(
+                  heroTag: '1',
                   label: const Text('New Project'),
-                  onPressed: () {
-                    // Key to access the modal's state
-                    final GlobalKey<NewProjectModalState> newProjectModalKey =
-                        GlobalKey<NewProjectModalState>();
-                    // Create instance with key outside the builder
-                    final newProjectModalContent = NewProjectModal(
-                      key: newProjectModalKey,
-                    );
-
-                    showAppModalSheet(
-                      context: context,
-                      ref: ref, // Pass ref
-                      title: 'Create New Project',
-                      pageContent:
-                          newProjectModalContent, // Pass the modal content widget
-                      primaryActionText: 'Save',
-                      // Define the primary action logic here
-                      onPrimaryAction: () async {
-                        final state = newProjectModalKey.currentState;
-                        bool success = false;
-                        // Validate and save using the modal's internal state and methods
-                        if (state != null &&
-                            state.formKey.currentState!.validate()) {
-                          success =
-                              await state.saveProject(); // Await the async call
-                          // Modal closure is now handled by the helper based on return value
-                          // ref.read(goRouterProvider).pop(); // No longer needed here
-                        }
-                        return success; // Return true to close modal on success
-                      },
-                      // Padding is handled inside NewProjectModal now
-                      pagePadding: EdgeInsets.only(
-                        left: 8,
-                        right: 8,
-                        bottom: 45,
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ), // Adjust padding
-                  ),
+                  onPressed: () => _showNewProjectModal(context, ref),
+                  icon: const Icon(Icons.add),
                 ),
               ],
             ),
@@ -208,5 +121,13 @@ class DashboardScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _showImportEnvironmentModal(BuildContext context, WidgetRef ref) {
+    ImportEnvironmentModal.show(context, ref);
+  }
+
+  void _showNewProjectModal(BuildContext context, WidgetRef ref) {
+    NewProjectModal.show(context, ref);
   }
 }

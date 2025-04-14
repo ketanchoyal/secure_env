@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -65,8 +66,7 @@ class AppSettings {
       isVerboseLogging: json['isVerboseLogging'] as bool? ?? false,
       lastProjectPath: json['lastProjectPath'] as String?,
       lastEnvironmentName: json['lastEnvironmentName'] as String?,
-      recentProjects:
-          (json['recentProjects'] as List?)
+      recentProjects: (json['recentProjects'] as List?)
               ?.map((e) => RecentProject.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -119,6 +119,8 @@ class SettingsNotifier extends _$SettingsNotifier {
     return const AppSettings();
   }
 
+  Logger get logger => ref.read(loggerProvider(SettingsNotifier));
+
   Future<void> _loadSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -128,7 +130,7 @@ class SettingsNotifier extends _$SettingsNotifier {
         state = settings;
       }
     } catch (e, stack) {
-      ref.read(loggerProvider).error('Failed to load settings: $e');
+      logger.error('Failed to load settings: $e');
     }
   }
 
@@ -137,7 +139,7 @@ class SettingsNotifier extends _$SettingsNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_settingsKey, jsonEncode(state.toJson()));
     } catch (e, stack) {
-      ref.read(loggerProvider).error('Failed to save settings: $e');
+      logger.error('Failed to save settings: $e');
     }
   }
 
@@ -168,10 +170,9 @@ class SettingsNotifier extends _$SettingsNotifier {
       lastAccessed: DateTime.now(),
     );
 
-    final updatedProjects =
-        List<RecentProject>.from(state.recentProjects)
-          ..removeWhere((p) => p.name == name)
-          ..insert(0, recentProject);
+    final updatedProjects = List<RecentProject>.from(state.recentProjects)
+      ..removeWhere((p) => p.name == name)
+      ..insert(0, recentProject);
 
     // Keep only the 10 most recent projects
     if (updatedProjects.length > 10) {

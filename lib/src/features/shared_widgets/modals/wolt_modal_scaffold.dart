@@ -24,6 +24,7 @@ void showAppModalSheet({
   required WidgetRef ref,
   required String title,
   required Widget pageContent,
+  bool barrierDismissible = true,
   required Future<bool> Function()?
       onPrimaryAction, // Make async, return bool to control pop
   String primaryActionText = 'Save',
@@ -38,6 +39,7 @@ void showAppModalSheet({
 }) {
   WoltModalSheet.show<void>(
     context: context,
+    barrierDismissible: barrierDismissible,
     // Use a Consumer to react to the isPrimaryActionEnabledProvider
     pageListBuilder: (modalSheetContext) {
       // Use a WoltModalSheetPage ancestor to properly access Theme data

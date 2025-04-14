@@ -26,7 +26,7 @@ void main() {
   });
 
   tearDown(() async {
-    await tempDir.delete(recursive: true);
+    // await tempDir.delete(recursive: true);
   });
 
   group('ProjectService', () {
@@ -47,6 +47,8 @@ void main() {
       expect(project.metadata, equals({'key': 'value'}));
       expect(project.status, equals(ProjectStatus.active));
       expect(project.environments, isEmpty);
+
+      await projectService.deleteProject(project.path);
     });
     test(
         'createProjectFromCurrentDirectory creates new project with correct values',
@@ -66,7 +68,9 @@ void main() {
       expect(project.environments, isEmpty);
       Directory(project.path).deleteSync(recursive: true);
     });
+    // });
 
+    // group('ProjectService - 1', () {
     test('getProject returns null for non-existent project', () async {
       final project = await projectService.getProject(tempDir.path);
       expect(project, isNull);
@@ -158,7 +162,7 @@ void main() {
       test('createProject throws on invalid project name', () {
         expect(
           () => projectService.createProject(
-            name: 'test project',
+            name: 'test %project',
             path: path.join(tempDir.path, 'test_project'),
           ),
           throwsA(isA<ValidationException>()),

@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:go_router/go_router.dart';
+import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/project_view/project_view_screen.dart';
 import '../features/shared_widgets/main_layout.dart'; // Import MainLayout
 
 // Global navigator key
-final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 // Define route paths
 class AppRoutes {
   static const String dashboard = '/';
-  static const String projectView = '/project/:projectName'; // Use path parameter
+  static const String projectView = '/project/:projectId'; // Use path parameter
 
-  static String projectViewPath(String projectName) => '/project/${Uri.encodeComponent(projectName)}';
+  static String projectViewPath(String projectId) =>
+      '/project/${Uri.encodeComponent(projectId)}';
 }
 
 // Riverpod provider for the GoRouter instance
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    navigatorKey: rootNavigatorKey, // Assign the navigator key
+    navigatorKey: _rootNavigatorKey, // Assign the navigator key
     initialLocation: AppRoutes.dashboard,
     // TODO: Add observers for logging/analytics if needed
     // observers: [],
@@ -29,7 +31,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       // ShellRoute wraps pages that share the MainLayout UI (NavigationRail)
       ShellRoute(
-        navigatorKey: GlobalKey<NavigatorState>(debugLabel: 'shell'), // Optional key for shell navigator
+        navigatorKey: GlobalKey<NavigatorState>(
+            debugLabel: 'shell'), // Optional key for shell navigator
         builder: (context, state, child) {
           return MainLayout(child: child); // Use MainLayout as the shell
         },
@@ -44,13 +47,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               // Project View route nested under dashboard to keep shell
               GoRoute(
-                path: 'project/:projectName', // Path relative to dashboard '/'
+                path: AppRoutes.projectView, // Path relative to dashboard '/'
                 name: AppRoutes.projectView, // Name remains the same
                 pageBuilder: (context, state) {
-                  final projectName = state.pathParameters['projectName']!;
+                  final projectIdParam = state.pathParameters['projectId']!;
+                  final projectId = Uri.decodeComponent(projectIdParam);
                   return NoTransitionPage(
                     child: ProjectViewScreen(
-                      projectName: Uri.decodeComponent(projectName),
+                      projectId: projectId,
                     ),
                   );
                 },

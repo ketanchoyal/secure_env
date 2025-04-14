@@ -20,7 +20,7 @@ class TestLogger implements Logger {
   }
 
   @override
-  void error(String message) {
+  void error(String message, [Object? error, StackTrace? stackTrace]) {
     _errorLogs.add(message);
   }
 

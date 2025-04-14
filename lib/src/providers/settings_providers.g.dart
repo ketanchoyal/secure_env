@@ -24,7 +24,7 @@ final themeProvider = AutoDisposeProvider<ThemeData>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ThemeRef = AutoDisposeProviderRef<ThemeData>;
-String _$settingsNotifierHash() => r'ba714c1d75a992485c617582dac18626bdfacd70';
+String _$settingsNotifierHash() => r'21ffd1b9553862037b7677eaadb98a776392b24d';
 
 /// Provider for managing app settings
 ///
