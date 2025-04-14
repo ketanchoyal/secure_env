@@ -82,7 +82,7 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
 
     final environmentState = ref.watch(environmentsNotifierProvider);
 
-    final environments = switch (environmentState) {
+    final List<Environment> environments = switch (environmentState) {
       EnvironmentStateInitial() => [],
       EnvironmentStateLoaded(:final environments) => environments,
       EnvironmentStateLoading(:final environments) => environments,
@@ -146,8 +146,7 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
                     controller: _tabController,
                     children: environments.map((env) {
                       return EnvironmentDetailView(
-                        projectName: project.name,
-                        environmentName: env.name,
+                        environment: env,
                       );
                     }).toList(),
                   ),

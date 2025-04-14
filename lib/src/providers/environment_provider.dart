@@ -31,7 +31,7 @@ class EnvironmentOperations extends _$EnvironmentOperations {
   Logger get logger => ref.read(loggerProvider(EnvironmentOperations));
 
   Project? get project =>
-      ref.watch(projectsNotifierProvider.notifier).selectedProject;
+      ref.read(projectsNotifierProvider.notifier).selectedProject;
 
   EnvironmentService get environmentService {
     if (project == null) {
@@ -41,7 +41,6 @@ class EnvironmentOperations extends _$EnvironmentOperations {
   }
 
   Future<void> createEnvironment({
-    required String projectId,
     required String name,
     String? description,
     Map<String, String>? values,
@@ -71,7 +70,6 @@ class EnvironmentOperations extends _$EnvironmentOperations {
   }
 
   Future<void> deleteEnvironment({
-    required String projectId,
     required String name,
   }) async {
     state = const EnvironmentOperationState.inProgress();
@@ -99,6 +97,15 @@ class EnvironmentOperations extends _$EnvironmentOperations {
     state = const EnvironmentOperationState.inProgress();
     try {
       checkForSpacesInName(name);
+      late final EnvironmentService environmentService;
+      if (projectId == project!.id) {
+        environmentService = this.environmentService;
+      } else {
+        final project = ref
+            .read(projectsNotifierProvider.notifier)
+            .projectFromId(projectId);
+        environmentService = ref.read(environmentServiceProvider(project!));
+      }
       await environmentService.importEnvironment(
         filePath: filePath,
         envName: name,
@@ -117,7 +124,6 @@ class EnvironmentOperations extends _$EnvironmentOperations {
   }
 
   Future<void> updateEnvironment({
-    required String projectId,
     required String name,
     required Map<String, String> values,
     required Map<String, bool> sensitiveKeys,
@@ -152,7 +158,6 @@ class EnvironmentOperations extends _$EnvironmentOperations {
   }
 
   Future<void> removeEnvironmentValue({
-    required String projectId,
     required String envName,
     required String key,
   }) async {

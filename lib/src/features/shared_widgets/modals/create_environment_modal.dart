@@ -98,7 +98,6 @@ class _CreateEnvironmentModalState
       }
 
       await ref.read(environmentOperationsProvider.notifier).createEnvironment(
-            projectId: widget.projectId,
             name: name,
             description: description.isNotEmpty ? description : null,
             values: values,

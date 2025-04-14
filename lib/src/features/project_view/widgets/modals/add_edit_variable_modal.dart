@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
+import 'package:secure_env_gui/src/providers/app_state_providers.dart';
+import 'package:secure_env_gui/src/providers/environment_provider.dart';
 
 class AddEditVariableModal extends ConsumerStatefulWidget {
   final String? initialKey;
   final String? initialValue;
   final bool initialIsSensitive;
+  final Environment environment;
 
   const AddEditVariableModal({
+    required this.environment,
     this.initialKey,
     this.initialValue,
     this.initialIsSensitive = false,
@@ -17,6 +22,7 @@ class AddEditVariableModal extends ConsumerStatefulWidget {
   static void show(
     BuildContext context,
     WidgetRef ref, {
+    required Environment environment,
     String? initialKey,
     String? initialValue,
     bool initialIsSensitive = false,
@@ -24,6 +30,7 @@ class AddEditVariableModal extends ConsumerStatefulWidget {
     final modalKey = GlobalKey<AddEditVariableModalState>();
     final modalContent = AddEditVariableModal(
       key: modalKey,
+      environment: environment,
       initialKey: initialKey,
       initialValue: initialValue,
       initialIsSensitive: initialIsSensitive,
@@ -74,15 +81,38 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
     super.dispose();
   }
 
-  // Method to be called by the modal's save button
-  void saveVariable() {
-    // TODO: Implement actual saving logic (e.g., update provider state)
-    print('Saving Variable:');
-    print('  Key: ${_keyController.text}');
-    print('  Value: ${_valueController.text}');
-    print('  Sensitive: $_isSensitive');
-    // Usually you'd call a provider method here:
-    // ref.read(variablesProvider(widget.projectName, widget.environmentName).notifier).addOrUpdateVariable(...);
+  // Save or update a variable in the selected environment
+  Future<void> saveVariable() async {
+    // Get the current environment from EnvironmentsNotifier's state
+    final env = widget.environment;
+
+    final newKey = _keyController.text.trim();
+    final newValue = _valueController.text;
+    final isSensitive = _isSensitive;
+
+    // Clone maps for immutability
+    final updatedValues = Map<String, String>.from(env.values);
+    final updatedSensitive = Map<String, bool>.from(env.sensitiveKeys);
+    updatedValues[newKey] = newValue;
+    updatedSensitive[newKey] = isSensitive;
+
+    await ref.read(environmentOperationsProvider.notifier).updateEnvironment(
+          name: widget.environment.name,
+          values: updatedValues,
+          sensitiveKeys: updatedSensitive,
+        );
+  }
+
+  // Remove a variable from the selected environment
+  Future<void> deleteVariable() async {
+    final env = widget.environment;
+    final key = _keyController.text.trim();
+    await ref
+        .read(environmentOperationsProvider.notifier)
+        .removeEnvironmentValue(
+          envName: env.name,
+          key: key,
+        );
   }
 
   // Public getter for the form key to allow validation from outside
@@ -123,11 +153,10 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _valueController,
-              obscureText: _isSensitive, // Obscure if sensitive
               decoration: InputDecoration(
                 labelText: 'Variable Value',
                 hintText: 'Enter the value',
-                border: const OutlineInputBorder(),
+                border: OutlineInputBorder(),
                 // Add visibility toggle only if sensitive
                 suffixIcon: _isSensitive
                     ? IconButton(
@@ -146,6 +175,10 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
                       )
                     : null,
               ),
+              obscureText: _isSensitive, // Obscure if sensitive
+              maxLines: _isSensitive
+                  ? 1
+                  : 3, // Fix: Obscured fields cannot be multiline
               validator: (value) {
                 // Value can be empty, but not null if needed by logic
                 if (value == null) {
@@ -153,7 +186,6 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
                 }
                 return null;
               },
-              maxLines: 3, // Allow multi-line values
             ),
             const SizedBox(height: 16),
             SwitchListTile(
