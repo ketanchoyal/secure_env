@@ -6,6 +6,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart'; // Import WoltModalShee
 
 import '../../../routing/app_router.dart'; // Import for GoRouter
 import 'modals/add_edit_variable_modal.dart'; // Import the modal widget
+import 'package:secure_env_gui/src/providers/environment_provider.dart'; // Import environmentOperationsProvider
 
 // TODO: Import VariableListItem widget once created
 
@@ -19,455 +20,425 @@ class EnvironmentDetailView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Fetch environment details and variables using a provider
-    // final environment = ref.watch(environmentProvider(projectName, environmentName));
-    // final variables = environment.variables; // Example
-
-    // Use environment.values instead of dummy variables
     final variables = environment.values;
     final sensitiveKeys = environment.sensitiveKeys;
+    final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Variables for "${environment.name}" Environment',
-                style: Theme.of(context).textTheme.titleLarge,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 950),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                border: Border.all(color: theme.dividerColor.withOpacity(0.10)),
               ),
-              ElevatedButton.icon(
-                icon: const FaIcon(FontAwesomeIcons.plus, size: 16),
-                label: const Text('Add Variable'),
-                onPressed: () {
-                  // Key to access the modal's state
-                  final GlobalKey<AddEditVariableModalState> modalKey =
-                      GlobalKey<
-                          AddEditVariableModalState>(); // Use State type here
-
-                  WoltModalSheet.show<void>(
-                    context: context,
-                    pageListBuilder: (modalSheetContext) {
-                      final addVariableModal = AddEditVariableModal(
-                        key: modalKey,
-                        environment: environment,
-                      );
-                      return [
-                        WoltModalSheetPage(
-                          hasSabGradient: false, // Avoid gradient overlap
-                          isTopBarLayerAlwaysVisible: true,
-                          topBarTitle: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            // Use theme's titleLarge for consistency
-                            child: Text(
-                              'Add New Variable',
-                              style: Theme.of(
-                                modalSheetContext,
-                              ).textTheme.titleLarge,
-                            ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            environment.name,
+                            style: theme.textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
-                          // NEW: Sticky action bar with Cancel/Save
-                          stickyActionBar: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: ref.read(goRouterProvider).pop,
-                                    child: const Text('Cancel'),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      // Access state via key.currentState
-                                      final state = modalKey.currentState;
-                                      if (state != null &&
-                                          state.formKey.currentState!
-                                              .validate()) {
-                                        state.saveVariable();
-                                        ref
-                                            .read(goRouterProvider)
-                                            .pop(); // Close modal
-                                      }
-                                    },
-                                    child: const Text(
-                                      'Add',
-                                    ), // Changed from 'Save'
-                                  ),
-                                ),
-                              ],
+                          if (environment.description != null &&
+                              environment.description!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                environment.description!,
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(color: Colors.grey[600]),
+                              ),
                             ),
-                          ),
-                          // Adjust child padding to avoid sticky bar
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                            child: SingleChildScrollView(
-                              child: addVariableModal,
-                            ),
-                          ),
-                        ),
-                      ];
-                    },
-                    // Optional: customize modal appearance
-                    modalTypeBuilder: (context) {
-                      final size = MediaQuery.of(context).size.width;
-                      if (size < 768) {
-                        return WoltModalType.bottomSheet();
-                      } else {
-                        return WoltModalType.dialog();
-                      }
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(),
-          const SizedBox(height: 24), // Increased spacing
-          // Section Header for Variables
-          Text(
-            'Environment Variables',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium, // Use appropriate style
-          ),
-          const SizedBox(height: 12), // Spacing below header
-          // Use DataTable for a more desktop-friendly layout
-          Expanded(
-            child: variables.isEmpty
-                ? const Center(
-                    child: Text('No variables defined for this environment.'),
-                  )
-                // Use SingleChildScrollView to ensure DataTable is scrollable if needed
-                : SingleChildScrollView(
-                    child: DataTable(
-                      // Style the heading row
-                      headingTextStyle: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                      // Add a border for visual structure
-                      border: TableBorder.all(
-                        color: Theme.of(context).dividerColor,
-                        width: 1,
-                        borderRadius: BorderRadius.circular(8),
+                        ],
                       ),
-                      columns: const [
-                        DataColumn(label: Text('Key')),
-                        DataColumn(label: Text('Value')),
-                        DataColumn(label: Text('Sensitive')),
-                        DataColumn(label: Text('Actions')),
-                      ],
-                      rows: variables.entries.map((entry) {
-                        final key = entry.key;
-                        final value = entry.value;
-                        // TODO: Get sensitivity flag from real data
-                        final isSensitive = sensitiveKeys[key] ?? false;
-
-                        // We still need state for the visibility toggle per row.
-                        // Using a StatefulWidget/StateProvider per row is overkill here.
-                        // A simple approach is to manage visibility state locally within the build,
-                        // but this means state resets on rebuild. For now, we'll use a
-                        // simple bool, acknowledging this limitation until real state management.
-                        // For a DataTable, a better approach might involve a separate state management
-                        // mechanism outside the build method if persistent toggle state is crucial.
-
-                        // This is a placeholder - need a stateful way to handle this toggle per row.
-                        // A Map<String, bool> in the parent widget or a Riverpod provider could work.
-                        bool showSensitive = false; // TEMPORARY STATE
-
-                        return DataRow(
-                          // Add hover effect
-                          color: WidgetStateProperty.resolveWith<Color?>((
-                            Set<WidgetState> states,
-                          ) {
-                            if (states.contains(WidgetState.hovered)) {
-                              return Theme.of(
-                                context,
-                              ).colorScheme.primary.withOpacity(0.08);
-                            }
-                            return null; // Use default value for other states
-                          }),
-                          cells: [
-                            // Key Cell
-                            DataCell(Text(key)),
-                            // Value Cell (with visibility toggle if sensitive)
-                            DataCell(
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      isSensitive
-                                          ? (showSensitive ? value : '********')
-                                          : value,
-                                      overflow: TextOverflow.ellipsis,
+                      ElevatedButton.icon(
+                        icon: const FaIcon(FontAwesomeIcons.plus, size: 16),
+                        label: const Text('Add Variable'),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 14),
+                          textStyle: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w600),
+                        ),
+                        onPressed: () {
+                          final modalKey =
+                              GlobalKey<AddEditVariableModalState>();
+                          WoltModalSheet.show<void>(
+                            context: context,
+                            pageListBuilder: (modalSheetContext) {
+                              final addVariableModal = AddEditVariableModal(
+                                key: modalKey,
+                                environment: environment,
+                              );
+                              return [
+                                WoltModalSheetPage(
+                                  hasSabGradient: false,
+                                  isTopBarLayerAlwaysVisible: true,
+                                  topBarTitle: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Text('Add New Variable',
+                                        style: theme.textTheme.titleLarge),
+                                  ),
+                                  stickyActionBar: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: OutlinedButton(
+                                            onPressed:
+                                                Navigator.of(context).pop,
+                                            child: const Text('Cancel'),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              final state =
+                                                  modalKey.currentState;
+                                              if (state != null &&
+                                                  state.formKey.currentState!
+                                                      .validate()) {
+                                                state.saveVariable();
+                                                Navigator.of(context).pop();
+                                              }
+                                            },
+                                            child: const Text('Add'),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  if (isSensitive)
-                                    IconButton(
-                                      icon: Icon(
-                                        showSensitive
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                        size: 18,
-                                      ),
-                                      tooltip: showSensitive ? 'Hide' : 'Show',
-                                      // TODO: Implement stateful toggle for showSensitive
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Row-specific visibility toggle needs stateful implementation (TODO)',
-                                            ),
-                                          ),
-                                        );
-                                        // setState(() => showSensitive = !showSensitive); // Won't work here
-                                      },
-                                      splashRadius: 18,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            // Sensitive Cell (displaying status)
-                            DataCell(
-                              Center(
-                                child: Icon(
-                                  isSensitive
-                                      ? Icons.check_circle
-                                      : Icons.cancel,
-                                  color: isSensitive
-                                      ? Theme.of(
-                                          context,
-                                        ).colorScheme.primary
-                                      : Theme.of(
-                                          context,
-                                        ).disabledColor,
-                                  size: 18,
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        16, 16, 16, 96),
+                                    child: SingleChildScrollView(
+                                        child: addVariableModal),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            // Actions Cell (Edit/Delete buttons)
-                            DataCell(
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.edit,
-                                      size: 18,
-                                    ),
-                                    tooltip: 'Edit Variable',
-                                    onPressed: () {
-                                      // --- EDIT MODAL LOGIC (Copied from VariableListItem) ---
-                                      final GlobalKey<AddEditVariableModalState>
-                                          modalKey = GlobalKey<
-                                              AddEditVariableModalState>();
-                                      WoltModalSheet.show<void>(
-                                        context: context,
-                                        pageListBuilder: (
-                                          modalSheetContext,
-                                        ) {
-                                          final editVariableModal =
-                                              AddEditVariableModal(
-                                            key: modalKey,
-                                            environment: environment,
-                                            initialKey: key,
-                                            initialValue: value,
-                                            initialIsSensitive: isSensitive,
-                                          );
-                                          return [
-                                            WoltModalSheetPage(
-                                              hasSabGradient: false,
-                                              // Use theme's titleLarge for consistency
-                                              topBarTitle: Padding(
-                                                padding: const EdgeInsets.all(
-                                                  16.0,
-                                                ),
-                                                child: Text(
-                                                  'Edit Variable: $key',
-                                                  style: Theme.of(
-                                                    modalSheetContext,
-                                                  ).textTheme.titleLarge,
-                                                ),
-                                              ),
-                                              isTopBarLayerAlwaysVisible: true,
-                                              // Remove trailingNavBarWidget (Close button)
-                                              // Replace stickyActionBar with full-width Cancel/Save
-                                              stickyActionBar: Padding(
-                                                padding: const EdgeInsets.all(
-                                                  16.0,
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: OutlinedButton(
-                                                        onPressed: ref
-                                                            .read(
-                                                                goRouterProvider)
-                                                            .pop,
-                                                        child: const Text(
-                                                            'Cancel'),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(
-                                                      width: 16,
-                                                    ),
-                                                    Expanded(
-                                                      child: ElevatedButton(
-                                                        onPressed: () {
-                                                          final state = modalKey
-                                                              .currentState;
-                                                          if (state != null &&
-                                                              state.formKey
-                                                                  .currentState!
-                                                                  .validate()) {
-                                                            state
-                                                                .saveVariable();
-                                                            ref
-                                                                .read(
-                                                                  goRouterProvider,
-                                                                )
-                                                                .pop();
-                                                          }
-                                                        },
-                                                        child: const Text(
-                                                          'Save Changes',
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              // Adjust child padding structure
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.fromLTRB(
-                                                  16,
-                                                  16,
-                                                  16,
-                                                  96,
-                                                ),
-                                                child: SingleChildScrollView(
-                                                  child: editVariableModal,
-                                                ),
-                                              ),
-                                            ),
-                                          ];
-                                        },
-                                        modalTypeBuilder: (context) {
-                                          final size = MediaQuery.of(
-                                            context,
-                                          ).size.width;
-                                          if (size < 768) {
-                                            return WoltModalType.bottomSheet();
-                                          } else {
-                                            return WoltModalType.dialog();
-                                          }
-                                        },
-                                      );
-                                      // --- END EDIT MODAL LOGIC ---
-                                    },
-                                    splashRadius: 18,
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.delete,
-                                      size: 18,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.error,
-                                    ),
-                                    tooltip: 'Delete Variable',
-                                    onPressed: () async {
-                                      // --- DELETE DIALOG LOGIC (Copied from VariableListItem) ---
-                                      final confirmDelete =
-                                          await showDialog<bool>(
-                                        context: context,
-                                        builder: (
-                                          BuildContext dialogContext,
-                                        ) {
-                                          return AlertDialog(
-                                            title: const Text(
-                                              'Confirm Deletion',
-                                            ),
-                                            content: Text(
-                                              'Are you sure you want to delete the variable "$key"?',
-                                            ),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                child: const Text(
-                                                  'Cancel',
-                                                ),
-                                                onPressed: () {
-                                                  Navigator.of(
-                                                    dialogContext,
-                                                  ).pop(false);
-                                                },
-                                              ),
-                                              TextButton(
-                                                style: TextButton.styleFrom(
-                                                  foregroundColor: Theme.of(
-                                                    dialogContext,
-                                                  ).colorScheme.error,
-                                                ),
-                                                child: const Text(
-                                                  'Delete',
-                                                ),
-                                                onPressed: () {
-                                                  Navigator.of(
-                                                    dialogContext,
-                                                  ).pop(true);
-                                                },
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                      if (confirmDelete == true) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Variable "$key" deleted (TODO)',
-                                            ),
-                                            backgroundColor: Theme.of(
-                                              context,
-                                            ).colorScheme.error,
-                                          ),
-                                        );
-                                      }
-                                      // --- END DELETE DIALOG LOGIC ---
-                                    },
-                                    splashRadius: 18,
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(), // Convert map entries to a list of DataRows
+                              ];
+                            },
+                            modalTypeBuilder: (context) {
+                              final size = MediaQuery.of(context).size.width;
+                              if (size < 768) {
+                                return WoltModalType.bottomSheet();
+                              } else {
+                                return WoltModalType.dialog();
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      const Icon(Icons.code,
+                          size: 18, color: Colors.blueAccent),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Environment Variables',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blueAccent,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Variable Table/List
+            Expanded(
+              child: Card(
+                margin: EdgeInsets.zero,
+                elevation: 2,
+                shape: const RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(16)),
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: variables.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.inbox_rounded,
+                                  size: 48, color: Colors.grey[400]),
+                              const SizedBox(height: 12),
+                              Text('No variables found.',
+                                  style: TextStyle(
+                                      color: Colors.grey[600], fontSize: 16)),
+                              const SizedBox(height: 4),
+                              Text(
+                                  'Click "Add Variable" to create your first one!',
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 14)),
+                            ],
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: variables.length,
+                          separatorBuilder: (context, i) => Divider(
+                              height: 1,
+                              color: theme.dividerColor.withOpacity(0.08)),
+                          itemBuilder: (context, i) {
+                            final key = variables.keys.elementAt(i);
+                            final value = variables[key] ?? '';
+                            final isSensitive = sensitiveKeys[key] ?? false;
+                            return _DesktopVariableRow(
+                              env: environment,
+                              keyName: key,
+                              value: value,
+                              isSensitive: isSensitive,
+                              ref: ref,
+                            );
+                          },
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Modern desktop-style variable row
+class _DesktopVariableRow extends StatefulWidget {
+  final Environment env;
+  final String keyName;
+  final String value;
+  final bool isSensitive;
+  final WidgetRef ref;
+
+  const _DesktopVariableRow({
+    required this.env,
+    required this.keyName,
+    required this.value,
+    required this.isSensitive,
+    required this.ref,
+  });
+
+  @override
+  State<_DesktopVariableRow> createState() => _DesktopVariableRowState();
+}
+
+class _DesktopVariableRowState extends State<_DesktopVariableRow> {
+  bool _obscure = true;
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: _hover ? theme.colorScheme.primary.withOpacity(0.04) : null,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          children: [
+            // Key
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              constraints: const BoxConstraints(minWidth: 220, maxWidth: 340),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                widget.keyName,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontFamily: 'RobotoMono',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: theme.colorScheme.onSurface,
+                  letterSpacing: 0.2,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
+              ),
+            ),
+            // Value
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.isSensitive
+                          ? (_obscure ? '••••••••••••••••' : widget.value)
+                          : widget.value,
+                      style: TextStyle(
+                        fontFamily: 'RobotoMono',
+                        color: widget.isSensitive
+                            ? Colors.grey[700]
+                            : Colors.white,
+                        fontSize: 15,
+                        letterSpacing: 1.1,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-          ),
-        ],
+                  if (widget.isSensitive)
+                    IconButton(
+                      icon: Icon(
+                          _obscure ? Icons.visibility : Icons.visibility_off,
+                          size: 18,
+                          color: Colors.grey[600]),
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                      tooltip: _obscure ? 'Show Value' : 'Hide Value',
+                    ),
+                ],
+              ),
+            ),
+            // Sensitive Icon
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: widget.isSensitive
+                  ? const Icon(Icons.lock_rounded,
+                      color: Colors.amber, size: 18)
+                  : const Icon(Icons.check_circle_rounded,
+                      color: Colors.green, size: 16),
+            ),
+            // Actions
+            IconButton(
+              icon: const Icon(Icons.edit_rounded, color: Colors.blueAccent),
+              tooltip: 'Edit',
+              onPressed: () {
+                final modalKey = GlobalKey<AddEditVariableModalState>();
+                WoltModalSheet.show<void>(
+                  context: context,
+                  pageListBuilder: (modalSheetContext) {
+                    final editVariableModal = AddEditVariableModal(
+                      key: modalKey,
+                      environment: widget.env,
+                      initialKey: widget.keyName,
+                      initialValue: widget.value,
+                      initialIsSensitive: widget.isSensitive,
+                    );
+                    return [
+                      WoltModalSheetPage(
+                        hasSabGradient: false,
+                        isTopBarLayerAlwaysVisible: true,
+                        topBarTitle: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text('Edit Variable',
+                              style: theme.textTheme.titleLarge),
+                        ),
+                        stickyActionBar: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: Navigator.of(context).pop,
+                                  child: const Text('Cancel'),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    final state = modalKey.currentState;
+                                    if (state != null &&
+                                        state.formKey.currentState!
+                                            .validate()) {
+                                      state.saveVariable();
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                  child: const Text('Save'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                          child:
+                              SingleChildScrollView(child: editVariableModal),
+                        ),
+                      ),
+                    ];
+                  },
+                  modalTypeBuilder: (context) {
+                    final size = MediaQuery.of(context).size.width;
+                    if (size < 768) {
+                      return WoltModalType.bottomSheet();
+                    } else {
+                      return WoltModalType.dialog();
+                    }
+                  },
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded,
+                  color: Colors.redAccent),
+              tooltip: 'Delete',
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Delete Variable'),
+                    content: Text(
+                        'Are you sure you want to delete "${widget.keyName}"?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        child: const Text('Delete',
+                            style: TextStyle(color: Colors.redAccent)),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  await widget.ref
+                      .read(environmentOperationsProvider.notifier)
+                      .removeEnvironmentValue(
+                        envName: widget.env.name,
+                        key: widget.keyName,
+                      );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Deleted "${widget.keyName}"')),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

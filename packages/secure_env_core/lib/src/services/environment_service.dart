@@ -27,7 +27,8 @@ class EnvironmentService {
               encryptionService: encryptionService ?? EncryptionService()
                 ..initialize('env-manager'),
               logger: logger ?? DefaultLogger(),
-              storageDirectory: 'secrets',
+              storageDirectory:
+                  path.join(project.path, '.secure_env', 'secrets'),
             );
 
   /// Create an EnvironmentService for a specific project
@@ -76,9 +77,13 @@ class EnvironmentService {
     Map<String, String>? initialValues,
     Map<String, bool>? sensitiveKeys,
   }) async {
-    // Create environment
+    if (project.environments.contains(name)) {
+      throw ValidationException('Environment $name already exists');
+    }
+    late final Environment env;
+
     final now = DateTime.now();
-    final env = Environment(
+    env = Environment(
       name: name,
       description: description,
       values: initialValues ?? {},
@@ -86,6 +91,8 @@ class EnvironmentService {
       lastModified: now,
       createdAt: now,
     );
+
+    // Create environment
 
     // Save environment
     await saveEnvironment(env);

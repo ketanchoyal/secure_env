@@ -47,6 +47,16 @@ class _CreateEnvironmentModalState
   final _descriptionController = TextEditingController();
   final List<_KeyValuePair> _keyValuePairs = [];
   bool _isCreating = false;
+  Environment? _selectedTemplate;
+
+  @override
+  void initState() {
+    super.initState();
+    // Optionally preload environments if not loaded
+    Future.microtask(() {
+      ref.read(environmentsNotifierProvider.notifier).loadEnvironments();
+    });
+  }
 
   @override
   void dispose() {
@@ -100,8 +110,8 @@ class _CreateEnvironmentModalState
       await ref.read(environmentOperationsProvider.notifier).createEnvironment(
             name: name,
             description: description.isNotEmpty ? description : null,
-            values: values,
-            sensitiveKeys: sensitiveKeys,
+            values: values.isNotEmpty ? values : null,
+            sensitiveKeys: sensitiveKeys.isNotEmpty ? sensitiveKeys : null,
           );
 
       if (mounted) {
@@ -132,6 +142,11 @@ class _CreateEnvironmentModalState
 
   @override
   Widget build(BuildContext context) {
+    final envState = ref.watch(environmentsNotifierProvider);
+    final environments = envState is EnvironmentStateLoaded
+        ? envState.environments
+        : <Environment>[];
+
     return Form(
       key: _formKey,
       child: Column(
@@ -159,7 +174,42 @@ class _CreateEnvironmentModalState
             autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           const SizedBox(height: 16),
-
+          // Template Picker
+          DropdownButtonFormField<Environment>(
+            value: _selectedTemplate,
+            decoration: const InputDecoration(
+              labelText: 'Template (optional)',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.copy_all),
+            ),
+            items: [
+              DropdownMenuItem<Environment>(
+                value: null,
+                child: Text('None'),
+              ),
+              ...environments.map((env) => DropdownMenuItem(
+                    value: env,
+                    child: Text(env.name),
+                  )),
+            ],
+            onChanged: (env) {
+              setState(() {
+                _selectedTemplate = env;
+                // Optionally prefill key/values from template
+                if (env != null) {
+                  _keyValuePairs.clear();
+                  env.values.forEach((k, v) {
+                    _keyValuePairs.add(_KeyValuePair(
+                      keyController: TextEditingController(text: k),
+                      valueController: TextEditingController(text: v),
+                      isSensitive: env.sensitiveKeys[k] ?? false,
+                    ));
+                  });
+                }
+              });
+            },
+          ),
+          const SizedBox(height: 16),
           // Description
           TextFormField(
             controller: _descriptionController,
@@ -217,9 +267,16 @@ class _CreateEnvironmentModalState
 }
 
 class _KeyValuePair {
-  final keyController = TextEditingController();
-  final valueController = TextEditingController();
-  bool isSensitive = false;
+  final TextEditingController keyController;
+  final TextEditingController valueController;
+  bool isSensitive;
+
+  _KeyValuePair({
+    TextEditingController? keyController,
+    TextEditingController? valueController,
+    this.isSensitive = false,
+  })  : keyController = keyController ?? TextEditingController(),
+        valueController = valueController ?? TextEditingController();
 }
 
 class _KeyValuePairWidget extends StatelessWidget {
