@@ -1,6 +1,7 @@
 library secure_env_core.services;
 
 export 'encryption_service.dart';
+export 'environment_export_service.dart';
 export 'environment_service.dart';
 export 'format/env.dart';
 export 'format/properties.dart';

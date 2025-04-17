@@ -179,6 +179,34 @@ class EnvironmentOperations extends _$EnvironmentOperations {
     }
   }
 
+  /// Updates the export configuration for an environment and saves it.
+  Future<void> updateExportConfig({
+    required String name,
+    required ExportConfig exportConfig,
+  }) async {
+    state = const EnvironmentOperationState.inProgress();
+    try {
+      final existingEnvironment =
+          await environmentService.loadEnvironment(name: name);
+      if (existingEnvironment == null) {
+        throw ExceptionForProviders('Environment not found');
+      }
+      final updatedEnvironment = existingEnvironment.copyWith(
+        exportConfig: exportConfig,
+        lastModified: DateTime.now(),
+      );
+      await environmentService.saveEnvironment(updatedEnvironment);
+      logger.info('Export configuration saved successfully');
+      state = const EnvironmentOperationState.success();
+    } on ExceptionForProviders catch (e) {
+      state = EnvironmentOperationState.error(e.message);
+      logger.error('Failed to save export config: $e', e.error, e.stackTrace);
+    } catch (e) {
+      state = EnvironmentOperationState.error('Failed to save export config: $e');
+      logger.error('Failed to save export config: $e');
+    }
+  }
+
   void checkForSpacesInName(
     String name,
   ) {

@@ -120,7 +120,7 @@ void showAppModalSheet({
           // Main Content Area
           child: Padding(
             padding: pagePadding,
-            child: SingleChildScrollView(child: pageContent),
+            child: pageContent,
           ),
         ),
       ];
