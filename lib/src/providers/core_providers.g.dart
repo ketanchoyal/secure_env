@@ -211,7 +211,7 @@ class _EnvironmentServiceProviderElement
   Project get project => (origin as EnvironmentServiceProvider).project;
 }
 
-String _$encryptionServiceHash() => r'35a23d4e9239075898a43f54cbe8d62e02f503d5';
+String _$encryptionServiceHash() => r'0b1d3703b1e130056377c0ac40ab6c5cb707d82a';
 
 /// Provider for the SecureStorageService
 /// Provider for the EncryptionService
@@ -232,24 +232,141 @@ final encryptionServiceProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef EncryptionServiceRef = AutoDisposeProviderRef<EncryptionService>;
-String _$xConfigServiceHash() => r'20eefb8c6bfb1b3cccae070800f6490095fff501';
+String _$environmentExportServiceHash() =>
+    r'049eff3232e5b2e87567f3787dba235c33a4c2cb';
 
-/// Provider for the XConfigService
-///
-/// Copied from [xConfigService].
-@ProviderFor(xConfigService)
-final xConfigServiceProvider = AutoDisposeProvider<XConfigService>.internal(
-  xConfigService,
-  name: r'xConfigServiceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$xConfigServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+/// See also [environmentExportService].
+@ProviderFor(environmentExportService)
+const environmentExportServiceProvider = EnvironmentExportServiceFamily();
+
+/// See also [environmentExportService].
+class EnvironmentExportServiceFamily extends Family<EnvironmentExportService> {
+  /// See also [environmentExportService].
+  const EnvironmentExportServiceFamily();
+
+  /// See also [environmentExportService].
+  EnvironmentExportServiceProvider call(
+    ExportConfig exportConfig,
+  ) {
+    return EnvironmentExportServiceProvider(
+      exportConfig,
+    );
+  }
+
+  @override
+  EnvironmentExportServiceProvider getProviderOverride(
+    covariant EnvironmentExportServiceProvider provider,
+  ) {
+    return call(
+      provider.exportConfig,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'environmentExportServiceProvider';
+}
+
+/// See also [environmentExportService].
+class EnvironmentExportServiceProvider
+    extends AutoDisposeProvider<EnvironmentExportService> {
+  /// See also [environmentExportService].
+  EnvironmentExportServiceProvider(
+    ExportConfig exportConfig,
+  ) : this._internal(
+          (ref) => environmentExportService(
+            ref as EnvironmentExportServiceRef,
+            exportConfig,
+          ),
+          from: environmentExportServiceProvider,
+          name: r'environmentExportServiceProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$environmentExportServiceHash,
+          dependencies: EnvironmentExportServiceFamily._dependencies,
+          allTransitiveDependencies:
+              EnvironmentExportServiceFamily._allTransitiveDependencies,
+          exportConfig: exportConfig,
+        );
+
+  EnvironmentExportServiceProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.exportConfig,
+  }) : super.internal();
+
+  final ExportConfig exportConfig;
+
+  @override
+  Override overrideWith(
+    EnvironmentExportService Function(EnvironmentExportServiceRef provider)
+        create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: EnvironmentExportServiceProvider._internal(
+        (ref) => create(ref as EnvironmentExportServiceRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        exportConfig: exportConfig,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeProviderElement<EnvironmentExportService> createElement() {
+    return _EnvironmentExportServiceProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EnvironmentExportServiceProvider &&
+        other.exportConfig == exportConfig;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, exportConfig.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef XConfigServiceRef = AutoDisposeProviderRef<XConfigService>;
+mixin EnvironmentExportServiceRef
+    on AutoDisposeProviderRef<EnvironmentExportService> {
+  /// The parameter `exportConfig` of this provider.
+  ExportConfig get exportConfig;
+}
+
+class _EnvironmentExportServiceProviderElement
+    extends AutoDisposeProviderElement<EnvironmentExportService>
+    with EnvironmentExportServiceRef {
+  _EnvironmentExportServiceProviderElement(super.provider);
+
+  @override
+  ExportConfig get exportConfig =>
+      (origin as EnvironmentExportServiceProvider).exportConfig;
+}
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

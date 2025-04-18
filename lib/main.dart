@@ -1,3 +1,4 @@
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:secure_env_gui/src/providers/registry_watcher_provider.dart';
@@ -12,6 +13,15 @@ void main() {
       child: SecureEnvApp(),
     ),
   );
+
+  doWhenWindowReady(() {
+    const initialSize = Size(1000, 800);
+    appWindow.minSize = initialSize;
+    appWindow.size = initialSize;
+    appWindow.title = 'Secure Env';
+    appWindow.alignment = Alignment.center;
+    appWindow.show();
+  });
 }
 
 class SecureEnvApp extends ConsumerWidget {
@@ -30,6 +40,42 @@ class SecureEnvApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'Secure Env',
+      builder: (context, child) => Material(
+        color: Colors.transparent,
+        child: Column(
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onPanStart: (details) {
+                appWindow.startDragging();
+              },
+              onDoubleTap: () => appWindow.maximizeOrRestore(),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 6),
+                      // color: Theme.of(context).colorScheme.surface,
+                      child: Text(
+                        'Secure Env',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(
+              height: 1,
+            ),
+            // const SizedBox(height: 20),
+            Expanded(
+              child: child!,
+            ),
+          ],
+        ),
+      ), // Add title bar box
       theme: AppTheme.lightTheme, // Apply light theme
       darkTheme: AppTheme.darkTheme, // Apply dark theme
       themeMode: ThemeMode.system, // Use system setting (can be changed later)

@@ -25,16 +25,22 @@ class ExportConfigModal extends StatefulWidget {
       onPrimaryAction: () async {
         final state = modalKey.currentState;
         if (state == null) return false;
-        if (state.exportXcconfig && state.xcconfigFileNameController.text.trim().isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a filename for .xcconfig')));
+        if (state.exportXcconfig &&
+            state.xcconfigFileNameController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Please enter a filename for .xcconfig')));
           return false;
         }
-        if (state.exportEnv && state.envFileNameController.text.trim().isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a filename for .env')));
+        if (state.exportEnv &&
+            state.envFileNameController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Please enter a filename for .env')));
           return false;
         }
-        if (state.exportProperties && state.propertiesFileNameController.text.trim().isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a filename for .properties')));
+        if (state.exportProperties &&
+            state.propertiesFileNameController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Please enter a filename for .properties')));
           return false;
         }
         final config = ExportConfig(
@@ -92,26 +98,29 @@ class ExportConfigModalState extends State<ExportConfigModal> {
     exportXcconfig = widget.initialConfig.exportXcconfig;
     xcconfigPathController = TextEditingController(
       text: exportXcconfig && widget.initialConfig.xcconfigPath.isNotEmpty
-        ? p.dirname(widget.initialConfig.xcconfigPath)
-        : widget.initialConfig.xcconfigPath,
+          ? p.dirname(widget.initialConfig.xcconfigPath)
+          : widget.initialConfig.xcconfigPath,
     );
-    xcconfigFileNameController = TextEditingController(text: widget.initialConfig.xcconfigFileName);
+    xcconfigFileNameController =
+        TextEditingController(text: widget.initialConfig.xcconfigFileName);
 
     exportEnv = widget.initialConfig.exportEnv;
     envPathController = TextEditingController(
       text: exportEnv && widget.initialConfig.envPath.isNotEmpty
-        ? p.dirname(widget.initialConfig.envPath)
-        : widget.initialConfig.envPath,
+          ? p.dirname(widget.initialConfig.envPath)
+          : widget.initialConfig.envPath,
     );
-    envFileNameController = TextEditingController(text: widget.initialConfig.envFileName);
+    envFileNameController =
+        TextEditingController(text: widget.initialConfig.envFileName);
 
     exportProperties = widget.initialConfig.exportProperties;
     propertiesPathController = TextEditingController(
       text: exportProperties && widget.initialConfig.propertiesPath.isNotEmpty
-        ? p.dirname(widget.initialConfig.propertiesPath)
-        : widget.initialConfig.propertiesPath,
+          ? p.dirname(widget.initialConfig.propertiesPath)
+          : widget.initialConfig.propertiesPath,
     );
-    propertiesFileNameController = TextEditingController(text: widget.initialConfig.propertiesFileName);
+    propertiesFileNameController =
+        TextEditingController(text: widget.initialConfig.propertiesFileName);
   }
 
   @override
@@ -139,9 +148,13 @@ class ExportConfigModalState extends State<ExportConfigModal> {
           value: exportXcconfig,
           onChanged: (v) => setState(() => exportXcconfig = v ?? false),
         ),
-        if (exportXcconfig)
-          Padding(
-            padding: const EdgeInsets.only(left: 24, bottom: 16),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeInOut,
+          child: Container(
+            height: exportXcconfig ? null : 0,
+            padding:
+                const EdgeInsets.only(left: 15, bottom: 16, top: 10, right: 15),
             child: Column(
               children: [
                 TextFormField(
@@ -151,7 +164,8 @@ class ExportConfigModalState extends State<ExportConfigModal> {
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.folder_open),
                       onPressed: () async {
-                        final paths = await FilePicker.platform.pickFileAndDirectoryPaths(
+                        final paths =
+                            await FilePicker.platform.pickFileAndDirectoryPaths(
                           type: FileType.custom,
                           allowedExtensions: ['xcconfig'],
                         );
@@ -182,14 +196,20 @@ class ExportConfigModalState extends State<ExportConfigModal> {
               ],
             ),
           ),
+        ),
         CheckboxListTile(
           title: const Text('.env'),
           value: exportEnv,
           onChanged: (v) => setState(() => exportEnv = v ?? false),
         ),
-        if (exportEnv)
-          Padding(
-            padding: const EdgeInsets.only(left: 24, bottom: 16),
+        // if (exportEnv)
+        AnimatedSize(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeInOut,
+          child: Container(
+            height: exportEnv ? null : 0,
+            padding:
+                const EdgeInsets.only(left: 15, bottom: 16, top: 10, right: 15),
             child: Column(
               children: [
                 TextFormField(
@@ -199,7 +219,8 @@ class ExportConfigModalState extends State<ExportConfigModal> {
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.folder_open),
                       onPressed: () async {
-                        final paths = await FilePicker.platform.pickFileAndDirectoryPaths(
+                        final paths =
+                            await FilePicker.platform.pickFileAndDirectoryPaths(
                           type: FileType.custom,
                           allowedExtensions: ['env'],
                         );
@@ -230,14 +251,19 @@ class ExportConfigModalState extends State<ExportConfigModal> {
               ],
             ),
           ),
+        ),
         CheckboxListTile(
           title: const Text('.properties'),
           value: exportProperties,
           onChanged: (v) => setState(() => exportProperties = v ?? false),
         ),
-        if (exportProperties)
-          Padding(
-            padding: const EdgeInsets.only(left: 24, bottom: 16),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeInOut,
+          child: Container(
+            height: exportProperties ? null : 0,
+            padding:
+                const EdgeInsets.only(left: 15, bottom: 16, top: 10, right: 15),
             child: Column(
               children: [
                 TextFormField(
@@ -247,7 +273,8 @@ class ExportConfigModalState extends State<ExportConfigModal> {
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.folder_open),
                       onPressed: () async {
-                        final paths = await FilePicker.platform.pickFileAndDirectoryPaths(
+                        final paths =
+                            await FilePicker.platform.pickFileAndDirectoryPaths(
                           type: FileType.custom,
                           allowedExtensions: ['properties'],
                         );
@@ -278,6 +305,7 @@ class ExportConfigModalState extends State<ExportConfigModal> {
               ],
             ),
           ),
+        ),
       ],
     );
   }

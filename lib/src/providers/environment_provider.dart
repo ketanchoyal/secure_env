@@ -48,7 +48,7 @@ class EnvironmentOperations extends _$EnvironmentOperations {
   }) async {
     state = const EnvironmentOperationState.inProgress();
     try {
-      checkForSpacesInName(name);
+      _checkForSpacesInName(name);
       await environmentService.createEnvironment(
         name: name,
         description: description,
@@ -96,7 +96,7 @@ class EnvironmentOperations extends _$EnvironmentOperations {
   }) async {
     state = const EnvironmentOperationState.inProgress();
     try {
-      checkForSpacesInName(name);
+      _checkForSpacesInName(name);
       late final EnvironmentService environmentService;
       if (projectId == project!.id) {
         environmentService = this.environmentService;
@@ -202,12 +202,41 @@ class EnvironmentOperations extends _$EnvironmentOperations {
       state = EnvironmentOperationState.error(e.message);
       logger.error('Failed to save export config: $e', e.error, e.stackTrace);
     } catch (e) {
-      state = EnvironmentOperationState.error('Failed to save export config: $e');
+      state =
+          EnvironmentOperationState.error('Failed to save export config: $e');
       logger.error('Failed to save export config: $e');
     }
   }
 
-  void checkForSpacesInName(
+  // TODO: Remove encryption logic, does not make sense since we are going to store whole environment in a secured place
+
+  Future<void> exportEnvironment({
+    required String name,
+  }) async {
+    state = const EnvironmentOperationState.inProgress();
+    try {
+      final environment = await environmentService.loadEnvironment(name: name);
+      if (environment == null) {
+        throw ExceptionForProviders(
+            'Trying to update an environment that does not exist, something went wrong');
+      }
+
+      await ref
+          .read(environmentExportServiceProvider(environment.exportConfig))
+          .export(environment.values);
+      logger.info('Environment exported successfully');
+      state = const EnvironmentOperationState.success();
+    } on ExceptionForProviders catch (e) {
+      state = EnvironmentOperationState.error(e.message);
+      logger.error('Failed to export environment: $e', e.error, e.stackTrace);
+    } catch (e) {
+      state =
+          EnvironmentOperationState.error('Failed to export environment: $e');
+      logger.error('Failed to export environment: $e');
+    }
+  }
+
+  void _checkForSpacesInName(
     String name,
   ) {
     if (name.contains(' ')) {

@@ -52,12 +52,13 @@ EnvironmentService environmentService(Ref ref, Project project) {
 
 /// Provider for the EncryptionService
 @riverpod
-EncryptionService encryptionService(EncryptionServiceRef ref) {
+EncryptionService encryptionService(Ref ref) {
   return EncryptionService();
 }
 
-/// Provider for the XConfigService
 @riverpod
-XConfigService xConfigService(XConfigServiceRef ref) {
-  return XConfigService();
+EnvironmentExportService environmentExportService(
+    Ref ref, ExportConfig exportConfig) {
+  final logger = ref.watch(loggerProvider(EnvironmentExportService));
+  return EnvironmentExportService(exportConfig, logger: logger);
 }
