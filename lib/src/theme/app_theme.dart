@@ -1,5 +1,6 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Polished iOS-inspired FlexColorScheme theme
 class AppTheme {
@@ -58,6 +59,8 @@ class AppTheme {
     useMaterial3: true,
     surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
     blendLevel: 6,
+    appBarStyle: FlexAppBarStyle.background,
+    transparentStatusBar: true,
     appBarElevation: 0.5,
     subThemesData: const FlexSubThemesData(
       blendOnLevel: 10,
@@ -82,7 +85,6 @@ class AppTheme {
       // Removed unsupported tabBarItemRadius
     ),
     visualDensity: FlexColorScheme.comfortablePlatformDensity,
-    fontFamily: 'SF Pro Display',
   ).copyWith(
     inputDecorationTheme: _getIOSInputDecorationTheme(
         FlexThemeData.light(scheme: _scheme).colorScheme),
@@ -94,11 +96,9 @@ class AppTheme {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
+      backgroundColor: null, // Let FlexColorScheme blend app bar
       elevation: 0.5,
       iconTheme: IconThemeData(color: Color(0xFF007AFF)),
-      titleTextStyle: TextStyle(
-          color: Color(0xFF1C1C1E), fontSize: 20, fontWeight: FontWeight.w600),
     ),
   );
 
@@ -108,6 +108,7 @@ class AppTheme {
         surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffoldVariantDialog,
         blendLevel: 12,
         useMaterial3ErrorColors: true,
+        appBarStyle: FlexAppBarStyle.background,
         transparentStatusBar: true,
         appBarElevation: 0.5,
         subThemesData: const FlexSubThemesData(
@@ -133,7 +134,6 @@ class AppTheme {
           // Removed unsupported tabBarItemRadius
         ),
         visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        fontFamily: 'SF Pro Display',
       ).copyWith(
         inputDecorationTheme: _getIOSInputDecorationTheme(
             FlexThemeData.dark(scheme: _scheme).colorScheme),
@@ -145,13 +145,9 @@ class AppTheme {
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF2C2C2E),
+          backgroundColor: null, // Let FlexColorScheme blend app bar
           elevation: 0.5,
           iconTheme: IconThemeData(color: Color(0xFF0A84FF)),
-          titleTextStyle: TextStyle(
-              color: Color(0xFFF2F2F7),
-              fontSize: 20,
-              fontWeight: FontWeight.w600),
         ),
       );
 }

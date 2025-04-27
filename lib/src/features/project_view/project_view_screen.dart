@@ -4,7 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/create_environment_modal.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
-import 'package:secure_env_gui/src/providers/environment_provider.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/import_environment_modal.dart';
 
 import 'widgets/environment_detail_view.dart';
@@ -60,51 +59,64 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Listen for environment operation state changes to show snackbars
-    ref.listen<EnvironmentOperationState>(
-      environmentOperationsProvider,
-      (previous, next) {
-        if (next is EnvironmentOperationSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Environment operation successful')),
-          );
-        } else if (next is EnvironmentOperationError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(next.message)),
-          );
-        }
-      },
-    );
-
     // Watch the current project and environments
     final project =
         ref.watch(projectsNotifierProvider.notifier).selectedProject;
 
     final environmentState = ref.watch(environmentsNotifierProvider);
 
-    final List<Environment> environments = switch (environmentState) {
-      EnvironmentStateInitial() => [],
-      EnvironmentStateLoaded(:final environments) => environments,
-      EnvironmentStateLoading(:final environments) => environments,
-      EnvironmentStateError(:final environments) => environments ?? [],
-    };
+    final List<Environment> environments = environmentState.environments;
+
+    // --- COMMON VARIABLES SECTION ---
+    // Compute variables common to all environments
+    Map<String, String> commonVariables = {};
+    if (environments.isNotEmpty) {
+      Set<String> allKeys = {};
+      for (var env in environments) {
+        allKeys.addAll(env.values.keys);
+      }
+      for (final key in allKeys) {
+        final value = environments.first.values[key];
+        final allSame = environments.every((env) => env.values[key] == value);
+        if (allSame && value != null) {
+          commonVariables[key] = value;
+        }
+      }
+    }
+
+    // Create a pseudo-environment for common variables if any
+    List<Environment> displayEnvironments = List.from(environments);
+    final bool hasCommonVariables = commonVariables.isNotEmpty;
+
+    if (hasCommonVariables) {
+      displayEnvironments.insert(
+        0,
+        Environment(
+          createdAt: DateTime.now(),
+          name: 'Common',
+          description: 'Variables shared across all environments',
+          values: commonVariables,
+          sensitiveKeys: {},
+        ),
+      );
+    }
 
     // Update TabController if environments changed
     if (_tabController == null ||
-        environments.length != _tabController!.length) {
+        displayEnvironments.length != _tabController!.length) {
       final oldIndex = _tabController?.index ?? 0;
       _tabController?.dispose();
       _tabController = TabController(
-        length: environments.length,
+        length: displayEnvironments.length,
         vsync: this,
       );
       // Optionally select last tab if added
-      if (environments.length > _environments.length) {
-        _tabController!.index = environments.length - 1;
-      } else if (oldIndex < environments.length) {
+      if (displayEnvironments.length > _environments.length) {
+        _tabController!.index = displayEnvironments.length - 1;
+      } else if (oldIndex < displayEnvironments.length) {
         _tabController!.index = oldIndex;
       }
-      _environments = List<Environment>.from(environments);
+      _environments = List<Environment>.from(displayEnvironments);
     }
 
     if (project == null) {
@@ -139,12 +151,41 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
               children: [
                 TabBar(
                   controller: _tabController,
-                  tabs: environments.map((env) => Tab(text: env.name)).toList(),
+                  tabs: displayEnvironments.map((env) {
+                    // Add a different style for the Common tab
+                    return Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (env.name == 'Common')
+                            Padding(
+                              padding: const EdgeInsets.only(right: 6.0),
+                              child: Icon(
+                                Icons.share,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          Text(
+                            env.name,
+                            style: env.name == 'Common'
+                                ? TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  )
+                                : null,
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 ),
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
-                    children: environments.map((env) {
+                    children: displayEnvironments.map((env) {
+                      // Pass all real environments (excluding Common) to the detail view
                       return EnvironmentDetailView(
                         environment: env,
                       );

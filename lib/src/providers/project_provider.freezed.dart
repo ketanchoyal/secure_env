@@ -59,48 +59,138 @@ class ProjectOperationIdle implements ProjectOperationState {
 /// @nodoc
 
 class ProjectOperationInProgress implements ProjectOperationState {
-  const ProjectOperationInProgress();
+  const ProjectOperationInProgress([this.message]);
+
+  final String? message;
+
+  /// Create a copy of ProjectOperationState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $ProjectOperationInProgressCopyWith<ProjectOperationInProgress>
+      get copyWith =>
+          _$ProjectOperationInProgressCopyWithImpl<ProjectOperationInProgress>(
+              this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is ProjectOperationInProgress);
+            other is ProjectOperationInProgress &&
+            (identical(other.message, message) || other.message == message));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, message);
 
   @override
   String toString() {
-    return 'ProjectOperationState.operating()';
+    return 'ProjectOperationState.inProgress(message: $message)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $ProjectOperationInProgressCopyWith<$Res>
+    implements $ProjectOperationStateCopyWith<$Res> {
+  factory $ProjectOperationInProgressCopyWith(ProjectOperationInProgress value,
+          $Res Function(ProjectOperationInProgress) _then) =
+      _$ProjectOperationInProgressCopyWithImpl;
+  @useResult
+  $Res call({String? message});
+}
+
+/// @nodoc
+class _$ProjectOperationInProgressCopyWithImpl<$Res>
+    implements $ProjectOperationInProgressCopyWith<$Res> {
+  _$ProjectOperationInProgressCopyWithImpl(this._self, this._then);
+
+  final ProjectOperationInProgress _self;
+  final $Res Function(ProjectOperationInProgress) _then;
+
+  /// Create a copy of ProjectOperationState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? message = freezed,
+  }) {
+    return _then(ProjectOperationInProgress(
+      freezed == message
+          ? _self.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
   }
 }
 
 /// @nodoc
 
 class ProjectOperationSuccess implements ProjectOperationState {
-  const ProjectOperationSuccess();
+  const ProjectOperationSuccess(this.message);
+
+  final String message;
+
+  /// Create a copy of ProjectOperationState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $ProjectOperationSuccessCopyWith<ProjectOperationSuccess> get copyWith =>
+      _$ProjectOperationSuccessCopyWithImpl<ProjectOperationSuccess>(
+          this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is ProjectOperationSuccess);
+        (other.runtimeType == runtimeType &&
+            other is ProjectOperationSuccess &&
+            (identical(other.message, message) || other.message == message));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, message);
 
   @override
   String toString() {
-    return 'ProjectOperationState.success()';
+    return 'ProjectOperationState.success(message: $message)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $ProjectOperationSuccessCopyWith<$Res>
+    implements $ProjectOperationStateCopyWith<$Res> {
+  factory $ProjectOperationSuccessCopyWith(ProjectOperationSuccess value,
+          $Res Function(ProjectOperationSuccess) _then) =
+      _$ProjectOperationSuccessCopyWithImpl;
+  @useResult
+  $Res call({String message});
+}
+
+/// @nodoc
+class _$ProjectOperationSuccessCopyWithImpl<$Res>
+    implements $ProjectOperationSuccessCopyWith<$Res> {
+  _$ProjectOperationSuccessCopyWithImpl(this._self, this._then);
+
+  final ProjectOperationSuccess _self;
+  final $Res Function(ProjectOperationSuccess) _then;
+
+  /// Create a copy of ProjectOperationState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? message = null,
+  }) {
+    return _then(ProjectOperationSuccess(
+      null == message
+          ? _self.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
   }
 }
 
 /// @nodoc
 
 class ProjectOperationError implements ProjectOperationState {
-  const ProjectOperationError({required this.message});
+  const ProjectOperationError(this.message);
 
   final String message;
 
@@ -154,7 +244,7 @@ class _$ProjectOperationErrorCopyWithImpl<$Res>
     Object? message = null,
   }) {
     return _then(ProjectOperationError(
-      message: null == message
+      null == message
           ? _self.message
           : message // ignore: cast_nullable_to_non_nullable
               as String,

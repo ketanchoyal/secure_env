@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
-import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/providers/environment_provider.dart';
 
 class AddEditVariableModal extends ConsumerStatefulWidget {
@@ -26,6 +25,7 @@ class AddEditVariableModal extends ConsumerStatefulWidget {
     String? initialKey,
     String? initialValue,
     bool initialIsSensitive = false,
+    List<Environment>? allEnvironments,
   }) {
     final modalKey = GlobalKey<AddEditVariableModalState>();
     final modalContent = AddEditVariableModal(
@@ -36,10 +36,15 @@ class AddEditVariableModal extends ConsumerStatefulWidget {
       initialIsSensitive: initialIsSensitive,
     );
 
+    final isComm = environment.name == 'Common';
+
     showAppModalSheet(
       context: context,
       ref: ref,
-      title: initialKey == null ? 'Add Variable' : 'Edit Variable',
+      subtitle: isComm
+          ? 'This variable will affect all environments.'
+          : 'This variable will only affect the selected environment.',
+      title: initialKey == null ? 'Add New Variable' : 'Edit Variable',
       pageContent: modalContent,
       onPrimaryAction: () async {
         final state = modalKey.currentState;
@@ -50,7 +55,12 @@ class AddEditVariableModal extends ConsumerStatefulWidget {
         return true;
       },
       primaryActionText: initialKey == null ? 'Add' : 'Save',
-      pagePadding: const EdgeInsets.all(16),
+      pagePadding: const EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: 70,
+      ),
     );
   }
 
@@ -81,26 +91,33 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
     super.dispose();
   }
 
-  // Save or update a variable in the selected environment
+  // Save or update a variable in the selected environment(s)
   Future<void> saveVariable() async {
-    // Get the current environment from EnvironmentsNotifier's state
-    final env = widget.environment;
-
     final newKey = _keyController.text.trim();
     final newValue = _valueController.text;
     final isSensitive = _isSensitive;
 
-    // Clone maps for immutability
-    final updatedValues = Map<String, String>.from(env.values);
-    final updatedSensitive = Map<String, bool>.from(env.sensitiveKeys);
-    updatedValues[newKey] = newValue;
-    updatedSensitive[newKey] = isSensitive;
-
-    await ref.read(environmentOperationsProvider.notifier).updateEnvironment(
-          name: widget.environment.name,
-          values: updatedValues,
-          sensitiveKeys: updatedSensitive,
-        );
+    // If this is the Common environment, update all real environments
+    if (widget.environment.name == 'Common') {
+      await ref
+          .read(environmentOperationsProvider.notifier)
+          .addVariableToAllEnvironment(
+            key: newKey,
+            value: newValue,
+          );
+    } else {
+      // Single environment update (default)
+      final env = widget.environment;
+      final updatedValues = Map<String, String>.from(env.values);
+      final updatedSensitive = Map<String, bool>.from(env.sensitiveKeys);
+      updatedValues[newKey] = newValue;
+      updatedSensitive[newKey] = isSensitive;
+      await ref.read(environmentOperationsProvider.notifier).addVariable(
+            name: env.name,
+            key: newKey,
+            value: newValue,
+          );
+    }
   }
 
   // Remove a variable from the selected environment

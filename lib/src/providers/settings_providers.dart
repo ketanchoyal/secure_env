@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
+import 'package:secure_env_gui/src/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'settings_providers.g.dart';
@@ -10,59 +12,67 @@ part 'settings_providers.g.dart';
 /// State class for managing app settings
 @immutable
 class AppSettings {
-  final bool isDarkMode;
+  final ThemeMode themeMode;
   final bool isVerboseLogging;
   final String? lastProjectPath;
   final String? lastEnvironmentName;
   final List<RecentProject> recentProjects;
   final bool autoSave;
   final Duration autoSaveInterval;
+  final String fontFamily;
 
   const AppSettings({
-    this.isDarkMode = false,
+    this.themeMode = ThemeMode.system,
     this.isVerboseLogging = false,
     this.lastProjectPath,
     this.lastEnvironmentName,
     this.recentProjects = const [],
     this.autoSave = true,
     this.autoSaveInterval = const Duration(minutes: 5),
+    this.fontFamily = 'ABeeZee',
   });
 
   AppSettings copyWith({
-    bool? isDarkMode,
+    ThemeMode? themeMode,
     bool? isVerboseLogging,
     String? lastProjectPath,
     String? lastEnvironmentName,
     List<RecentProject>? recentProjects,
     bool? autoSave,
     Duration? autoSaveInterval,
+    String? fontFamily,
   }) {
     return AppSettings(
-      isDarkMode: isDarkMode ?? this.isDarkMode,
+      themeMode: themeMode ?? this.themeMode,
       isVerboseLogging: isVerboseLogging ?? this.isVerboseLogging,
       lastProjectPath: lastProjectPath ?? this.lastProjectPath,
       lastEnvironmentName: lastEnvironmentName ?? this.lastEnvironmentName,
       recentProjects: recentProjects ?? this.recentProjects,
       autoSave: autoSave ?? this.autoSave,
       autoSaveInterval: autoSaveInterval ?? this.autoSaveInterval,
+      fontFamily: fontFamily ?? this.fontFamily,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'isDarkMode': isDarkMode,
+      'themeMode': themeMode.name,
       'isVerboseLogging': isVerboseLogging,
       'lastProjectPath': lastProjectPath,
       'lastEnvironmentName': lastEnvironmentName,
       'recentProjects': recentProjects.map((p) => p.toJson()).toList(),
       'autoSave': autoSave,
       'autoSaveInterval': autoSaveInterval.inMinutes,
+      'fontFamily': fontFamily,
     };
   }
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
     return AppSettings(
-      isDarkMode: json['isDarkMode'] as bool? ?? false,
+      themeMode: ThemeMode.values.firstWhere(
+        (mode) => mode.name == json['themeMode'],
+        orElse: () => ThemeMode.system,
+      ),
       isVerboseLogging: json['isVerboseLogging'] as bool? ?? false,
       lastProjectPath: json['lastProjectPath'] as String?,
       lastEnvironmentName: json['lastEnvironmentName'] as String?,
@@ -74,6 +84,7 @@ class AppSettings {
       autoSaveInterval: Duration(
         minutes: json['autoSaveInterval'] as int? ?? 5,
       ),
+      fontFamily: json['fontFamily'] as String? ?? 'ABeeZee',
     );
   }
 }
@@ -143,8 +154,8 @@ class SettingsNotifier extends _$SettingsNotifier {
     }
   }
 
-  void toggleDarkMode() {
-    state = state.copyWith(isDarkMode: !state.isDarkMode);
+  void toggleDarkMode(ThemeMode themeMode) {
+    state = state.copyWith(themeMode: themeMode);
     _saveSettings();
   }
 
@@ -200,17 +211,9 @@ class SettingsNotifier extends _$SettingsNotifier {
     state = state.copyWith(autoSaveInterval: interval);
     _saveSettings();
   }
-}
 
-/// Provider for the app's theme data
-@riverpod
-ThemeData theme(ThemeRef ref) {
-  final settings = ref.watch(settingsNotifierProvider);
-  return ThemeData(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.deepPurple,
-      brightness: settings.isDarkMode ? Brightness.dark : Brightness.light,
-    ),
-    useMaterial3: true,
-  );
+  void setFontFamily(String family) {
+    state = state.copyWith(fontFamily: family);
+    _saveSettings();
+  }
 }

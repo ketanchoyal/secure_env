@@ -8,6 +8,7 @@ import '../../../routing/app_router.dart'; // Import for GoRouter
 import 'modals/add_edit_variable_modal.dart'; // Import the modal widget
 import 'modals/export_config_modal.dart'; // Import ExportConfigModal
 import 'package:secure_env_gui/src/providers/environment_provider.dart'; // Import environmentOperationsProvider
+import 'package:secure_env_gui/src/features/settings/settings_screen.dart'; // Import SettingsScreen
 
 // TODO: Import VariableListItem widget once created
 
@@ -24,6 +25,7 @@ class EnvironmentDetailView extends ConsumerWidget {
     final variables = environment.values;
     final sensitiveKeys = environment.sensitiveKeys;
     final theme = Theme.of(context);
+    final isCommon = environment.name == 'Common';
 
     return Center(
       child: ConstrainedBox(
@@ -81,272 +83,189 @@ class EnvironmentDetailView extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Flexible(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isNarrow = constraints.maxWidth < 400;
-                        if (isNarrow) {
-                          // Stack vertically on narrow screens
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              ElevatedButton.icon(
-                                icon: const FaIcon(FontAwesomeIcons.plus,
-                                    size: 16),
-                                label: const Text('Add Variable'),
-                                style: ElevatedButton.styleFrom(
-                                  fixedSize: const Size(180, 40),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 18, vertical: 14),
-                                  textStyle: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                onPressed: () {
-                                  final modalKey =
-                                      GlobalKey<AddEditVariableModalState>();
-                                  WoltModalSheet.show<void>(
-                                    context: context,
-                                    pageListBuilder: (modalSheetContext) {
-                                      final addVariableModal =
-                                          AddEditVariableModal(
-                                        key: modalKey,
-                                        environment: environment,
-                                      );
-                                      return [
-                                        WoltModalSheetPage(
-                                          hasSabGradient: false,
-                                          isTopBarLayerAlwaysVisible: true,
-                                          topBarTitle: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Text('Add New Variable',
-                                                style:
-                                                    theme.textTheme.titleLarge),
-                                          ),
-                                          stickyActionBar: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Row(
-                                              children: [
-                                                Expanded(
-                                                  child: OutlinedButton(
-                                                    onPressed:
-                                                        Navigator.of(context)
-                                                            .pop,
-                                                    child: const Text('Cancel'),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 16),
-                                                Expanded(
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      final state =
-                                                          modalKey.currentState;
-                                                      if (state != null &&
-                                                          state.formKey
-                                                              .currentState!
-                                                              .validate()) {
-                                                        state.saveVariable();
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      }
-                                                    },
-                                                    child: const Text('Add'),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                                16, 16, 16, 96),
-                                            child: SingleChildScrollView(
-                                                child: addVariableModal),
-                                          ),
-                                        ),
-                                      ];
-                                    },
-                                    modalTypeBuilder: (context) {
-                                      final size =
-                                          MediaQuery.of(context).size.width;
-                                      if (size < 768) {
-                                        return WoltModalType.bottomSheet();
-                                      } else {
-                                        return WoltModalType.dialog();
-                                      }
-                                    },
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 8),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.upload_file),
-                                label: const Text('Export Variables'),
-                                onPressed: () async {
-                                  final config = environment.exportConfig;
-                                  if (!(config.exportXcconfig ||
-                                      config.exportEnv ||
-                                      config.exportProperties)) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text('No export configuration set')),
-                                    );
-                                    return;
-                                  }
-                                  await EnvironmentExportService(config)
-                                      .export(environment.values);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Export completed')),
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 8),
-                              IconButton(
-                                icon: const Icon(Icons.settings),
-                                tooltip: 'Export Settings',
-                                onPressed: () => ExportConfigModal.show(
-                                  context, ref,
-                                  envName: environment.name,
-                                  initialConfig: environment.exportConfig,
-                                ),
-                              ),
-                            ],
-                          );
-                        } else {
-                          // Place side by side on wide screens
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ElevatedButton.icon(
-                                icon: const FaIcon(FontAwesomeIcons.plus,
-                                    size: 16),
-                                label: const Text('Add Variable'),
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 18, vertical: 14),
-                                  textStyle: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                                onPressed: () {
-                                  final modalKey =
-                                      GlobalKey<AddEditVariableModalState>();
-                                  WoltModalSheet.show<void>(
-                                    context: context,
-                                    pageListBuilder: (modalSheetContext) {
-                                      final addVariableModal =
-                                          AddEditVariableModal(
-                                        key: modalKey,
-                                        environment: environment,
-                                      );
-                                      return [
-                                        WoltModalSheetPage(
-                                          hasSabGradient: false,
-                                          isTopBarLayerAlwaysVisible: true,
-                                          topBarTitle: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Text('Add New Variable',
-                                                style:
-                                                    theme.textTheme.titleLarge),
-                                          ),
-                                          stickyActionBar: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Row(
-                                              children: [
-                                                Expanded(
-                                                  child: OutlinedButton(
-                                                    onPressed:
-                                                        Navigator.of(context)
-                                                            .pop,
-                                                    child: const Text('Cancel'),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 16),
-                                                Expanded(
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      final state =
-                                                          modalKey.currentState;
-                                                      if (state != null &&
-                                                          state.formKey
-                                                              .currentState!
-                                                              .validate()) {
-                                                        state.saveVariable();
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      }
-                                                    },
-                                                    child: const Text('Add'),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                                16, 16, 16, 96),
-                                            child: SingleChildScrollView(
-                                                child: addVariableModal),
-                                          ),
-                                        ),
-                                      ];
-                                    },
-                                    modalTypeBuilder: (context) {
-                                      final size =
-                                          MediaQuery.of(context).size.width;
-                                      if (size < 768) {
-                                        return WoltModalType.bottomSheet();
-                                      } else {
-                                        return WoltModalType.dialog();
-                                      }
-                                    },
-                                  );
-                                },
-                              ),
-                              const SizedBox(width: 12),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.upload_file),
-                                label: const Text('Export Variables'),
-                                onPressed: () async {
-                                  final config = environment.exportConfig;
-                                  if (!(config.exportXcconfig ||
-                                      config.exportEnv ||
-                                      config.exportProperties)) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text('No export configuration set')),
-                                    );
-                                    return;
-                                  }
-                                  await EnvironmentExportService(config)
-                                      .export(environment.values);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Export completed')),
-                                  );
-                                },
-                              ),
-                              const SizedBox(width: 12),
-                              IconButton(
-                                icon: const Icon(Icons.settings),
-                                tooltip: 'Export Settings',
-                                onPressed: () => ExportConfigModal.show(
-                                  context, ref,
-                                  envName: environment.name,
-                                  initialConfig: environment.exportConfig,
-                                ),
-                              ),
-                            ],
-                          );
-                        }
+                  if (isCommon)
+                    ElevatedButton.icon(
+                      icon: const FaIcon(FontAwesomeIcons.plus, size: 16),
+                      label: const Text('Add Variable'),
+                      style: ElevatedButton.styleFrom(
+                        // fixedSize: const Size(180, 40),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 14),
+                        textStyle: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () {
+                        AddEditVariableModal.show(context, ref,
+                            environment: environment);
                       },
                     ),
-                  ),
+                  if (!isCommon)
+                    Flexible(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 400;
+                          if (isNarrow) {
+                            // Stack vertically on narrow screens
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                ElevatedButton.icon(
+                                  icon: const FaIcon(FontAwesomeIcons.plus,
+                                      size: 16),
+                                  label: const Text('Add Variable'),
+                                  style: ElevatedButton.styleFrom(
+                                    // fixedSize: const Size(180, 40),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 18, vertical: 14),
+                                    textStyle: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    AddEditVariableModal.show(context, ref,
+                                        environment: environment);
+                                  },
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    ElevatedButton.icon(
+                                      icon: const Icon(Icons.upload_file),
+                                      label: const Text('Export'),
+                                      style: ElevatedButton.styleFrom(
+                                        // fixedSize: const Size(180, 40),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8)),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 18, vertical: 14),
+                                        textStyle: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      onPressed: () async {
+                                        final config = environment.exportConfig;
+                                        if (!(config.exportXcconfig ||
+                                            config.exportEnv ||
+                                            config.exportProperties)) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    'No export configuration set')),
+                                          );
+                                          return;
+                                        }
+                                        await ref
+                                            .read(environmentOperationsProvider
+                                                .notifier)
+                                            .exportEnvironment(
+                                              name: environment.name,
+                                            );
+                                      },
+                                    ),
+                                    // const SizedBox(height: 8),
+                                    IconButton(
+                                      icon: const Icon(Icons.settings),
+                                      tooltip: 'Export Settingsss',
+                                      onPressed: () => ExportConfigModal.show(
+                                        context,
+                                        ref,
+                                        envName: environment.name,
+                                        initialConfig: environment.exportConfig,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          } else {
+                            // Place side by side on wide screens
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ElevatedButton.icon(
+                                  icon: const FaIcon(FontAwesomeIcons.plus,
+                                      size: 16),
+                                  label: const Text('Variable'),
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 18, vertical: 14),
+                                    textStyle: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  onPressed: () {
+                                    AddEditVariableModal.show(
+                                      context,
+                                      ref,
+                                      environment: environment,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(width: 12),
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.upload_file),
+                                  label: const Text('Export'),
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 18, vertical: 14),
+                                    textStyle: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  onPressed: () async {
+                                    final config = environment.exportConfig;
+                                    if (!(config.exportXcconfig ||
+                                        config.exportEnv ||
+                                        config.exportProperties)) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'No export configuration set')),
+                                      );
+                                      return;
+                                    }
+                                    await ref
+                                        .read(environmentOperationsProvider
+                                            .notifier)
+                                        .exportEnvironment(
+                                          name: environment.name,
+                                        );
+                                  },
+                                ),
+                                const SizedBox(width: 12),
+                                IconButton(
+                                  icon: const Icon(Icons.settings),
+                                  tooltip: 'Export Settings',
+                                  onPressed: () => ExportConfigModal.show(
+                                    context,
+                                    ref,
+                                    envName: environment.name,
+                                    initialConfig: environment.exportConfig,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                        },
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -356,31 +275,46 @@ class EnvironmentDetailView extends ConsumerWidget {
                 margin: EdgeInsets.zero,
                 elevation: 2,
                 shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(16)),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: variables.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.inbox_rounded, size: 48, color: Colors.grey[400]),
+                              Icon(Icons.inbox_rounded,
+                                  size: 48, color: Colors.grey[400]),
                               const SizedBox(height: 12),
-                              Text('No variables found.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                              Text('No variables found.',
+                                  style: TextStyle(
+                                      color: Colors.grey[600], fontSize: 16)),
                               const SizedBox(height: 4),
-                              Text('Click "Add Variable" to create your first one!', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                              Text(
+                                  'Click "Add Variable" to create your first one!',
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 14)),
                             ],
                           ),
                         )
                       : ListView.separated(
                           itemCount: variables.length,
-                          separatorBuilder: (context, i) => Divider(height: 1, color: theme.dividerColor.withOpacity(0.08)),
+                          separatorBuilder: (context, i) => Divider(
+                              height: 1,
+                              color: theme.dividerColor.withOpacity(0.08)),
                           itemBuilder: (context, i) {
                             final key = variables.keys.elementAt(i);
                             final value = variables[key] ?? '';
                             final isSensitive = sensitiveKeys[key] ?? false;
-                            return _DesktopVariableRow(env: environment, keyName: key, value: value, isSensitive: isSensitive, ref: ref);
+                            return _DesktopVariableRow(
+                                env: environment,
+                                keyName: key,
+                                value: value,
+                                isSensitive: isSensitive,
+                                ref: ref);
                           },
                         ),
                 ),
@@ -444,7 +378,6 @@ class _DesktopVariableRowState extends State<_DesktopVariableRow> {
               child: Text(
                 widget.keyName,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  fontFamily: 'RobotoMono',
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                   color: theme.colorScheme.onSurface,
@@ -465,7 +398,6 @@ class _DesktopVariableRowState extends State<_DesktopVariableRow> {
                           ? (_obscure ? '••••••••••••••••' : widget.value)
                           : widget.value,
                       style: TextStyle(
-                        fontFamily: 'RobotoMono',
                         color: widget.isSensitive
                             ? Colors.grey[700]
                             : Colors.white,
@@ -599,9 +531,6 @@ class _DesktopVariableRowState extends State<_DesktopVariableRow> {
                         envName: widget.env.name,
                         key: widget.keyName,
                       );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Deleted "${widget.keyName}"')),
-                  );
                 }
               },
             ),

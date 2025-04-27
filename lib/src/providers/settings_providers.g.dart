@@ -6,25 +6,7 @@ part of 'settings_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$themeHash() => r'cf4000e0d3a0f2160da9c964b71a320615533807';
-
-/// Provider for the app's theme data
-///
-/// Copied from [theme].
-@ProviderFor(theme)
-final themeProvider = AutoDisposeProvider<ThemeData>.internal(
-  theme,
-  name: r'themeProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$themeHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ThemeRef = AutoDisposeProviderRef<ThemeData>;
-String _$settingsNotifierHash() => r'21ffd1b9553862037b7677eaadb98a776392b24d';
+String _$settingsNotifierHash() => r'7295dfa8f0cb2c59b1969885ad42710d8fb9a907';
 
 /// Provider for managing app settings
 ///

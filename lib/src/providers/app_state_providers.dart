@@ -22,22 +22,6 @@ enum NotifierState {
 /// Union type for project states
 @freezed
 abstract class ProjectState with _$ProjectState {
-  // const factory ProjectState.initial() = ProjectStateInitial;
-
-  // const factory ProjectState.loading({
-  //   @Default([]) List<Project> projects,
-  //   Project? selectedProject,
-  // }) = ProjectStateLoading;
-  // const factory ProjectState.loaded({
-  //   required List<Project> projects,
-  //   Project? selectedProject,
-  // }) = ProjectStateLoaded;
-  // const factory ProjectState.error({
-  //   required String message,
-  //   List<Project>? projects,
-  //   Project? selectedProject,
-  // }) = ProjectStateError;
-
   const ProjectState._();
 
   const factory ProjectState({
@@ -83,7 +67,7 @@ abstract class ProjectState with _$ProjectState {
   }) {
     return ProjectState(
       state: NotifierState.error,
-      projects: projects ?? [],
+      projects: projects ?? this.projects,
       selectedProject: selectedProject ?? this.selectedProject,
       errorMessage: message,
       isEditing: false,
@@ -107,27 +91,45 @@ abstract class ProjectState with _$ProjectState {
 
 /// Union type for environment states
 @freezed
-sealed class EnvironmentState with _$EnvironmentState {
-  const factory EnvironmentState.initial() = EnvironmentStateInitial;
-  const factory EnvironmentState.loading({
+abstract class EnvironmentState with _$EnvironmentState {
+  const EnvironmentState._();
+
+  const factory EnvironmentState({
+    @Default(NotifierState.initial) NotifierState state,
     @Default([]) List<Environment> environments,
-    Environment? selectedEnvironment,
-    @Default({}) Map<String, String> environmentValues,
-    @Default(false) bool isEditing,
-  }) = EnvironmentStateLoading;
-  const factory EnvironmentState.loaded({
+    String? errorMessage,
+  }) = _EnvironmentState;
+
+  factory EnvironmentState.initial() =>
+      const EnvironmentState(state: NotifierState.initial);
+
+  EnvironmentState loading({
+    List<Environment>? environments,
+  }) =>
+      EnvironmentState(
+        state: NotifierState.loading,
+        environments: environments ?? this.environments,
+        errorMessage: null,
+      );
+
+  EnvironmentState loaded({
     required List<Environment> environments,
-    Environment? selectedEnvironment,
-    @Default({}) Map<String, String> environmentValues,
-    @Default(false) bool isEditing,
-  }) = EnvironmentStateLoaded;
-  const factory EnvironmentState.error({
+  }) =>
+      EnvironmentState(
+        state: NotifierState.loaded,
+        environments: environments,
+        errorMessage: null,
+      );
+
+  EnvironmentState error({
     required String message,
     List<Environment>? environments,
-    Environment? selectedEnvironment,
-    Map<String, String>? environmentValues,
-    bool? isEditing,
-  }) = EnvironmentStateError;
+  }) =>
+      EnvironmentState(
+        state: NotifierState.error,
+        environments: environments ?? this.environments,
+        errorMessage: message,
+      );
 }
 
 /// Provider for managing projects state
@@ -170,23 +172,6 @@ class ProjectsNotifier extends _$ProjectsNotifier {
   }
 
   Future<void> loadProjects() async {
-    // if (state is ProjectStateLoading) {
-    //   //do nothing
-    // } else if (state is ProjectStateLoaded) {
-    //   // ignore: no_leading_underscores_for_local_identifiers
-    //   final _state = state as ProjectStateLoaded;
-    //   state = ProjectState.loading(
-    //     projects: _state.projects,
-    //     selectedProject: _state.selectedProject,
-    //   );
-    // } else if (state is ProjectStateError) {
-    //   // ignore: no_leading_underscores_for_local_identifiers
-    //   final _state = state as ProjectStateError;
-    //   state = ProjectState.loading(
-    //     projects: _state.projects ?? [],
-    //     selectedProject: _state.selectedProject,
-    //   );
-    // }
     state = state.loading();
     try {
       final projectService = ref.read(projectServiceProvider);
@@ -252,18 +237,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
     if (projectId == null) {
       return;
     }
-    if (state is EnvironmentStateLoaded) {
-      // ignore: no_leading_underscores_for_local_identifiers
-      final _state = state as EnvironmentStateLoaded;
-      state = EnvironmentState.loading(
-        environments: _state.environments,
-        selectedEnvironment: _state.selectedEnvironment,
-        environmentValues: _state.environmentValues,
-        isEditing: _state.isEditing,
-      );
-    } else {
-      state = EnvironmentState.loading();
-    }
+    state = state.loading();
     try {
       final project = ref
           .watch(projectsNotifierProvider.notifier)
@@ -271,158 +245,15 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
 
       final environmentService = ref.read(environmentServiceProvider(project!));
       final environments = await environmentService.listEnvironments();
-      state = EnvironmentState.loaded(
+      state = state.loaded(
         environments: environments,
-        selectedEnvironment: switch (state) {
-          EnvironmentStateLoaded(:final selectedEnvironment) =>
-            selectedEnvironment,
-          EnvironmentStateError(:final selectedEnvironment) =>
-            selectedEnvironment,
-          _ => null,
-        },
-        environmentValues: switch (state) {
-          EnvironmentStateLoaded(:final environmentValues) => environmentValues,
-          EnvironmentStateError(:final environmentValues) =>
-            environmentValues ?? {},
-          _ => {},
-        },
-        isEditing: switch (state) {
-          EnvironmentStateLoaded(:final isEditing) => isEditing,
-          EnvironmentStateError(:final isEditing) => isEditing ?? false,
-          _ => false,
-        },
       );
       logger.info('${environments.length} Environments loaded');
     } catch (e, stack) {
-      state = EnvironmentState.error(
+      state = state.error(
         message: 'Failed to load environments: $e',
-        environments: switch (state) {
-          EnvironmentStateLoaded(:final environments) => environments,
-          EnvironmentStateError(:final environments) => environments,
-          _ => [],
-        },
-        selectedEnvironment: switch (state) {
-          EnvironmentStateLoaded(:final selectedEnvironment) =>
-            selectedEnvironment,
-          EnvironmentStateError(:final selectedEnvironment) =>
-            selectedEnvironment,
-          _ => null,
-        },
-        environmentValues: switch (state) {
-          EnvironmentStateLoaded(:final environmentValues) => environmentValues,
-          EnvironmentStateError(:final environmentValues) => environmentValues,
-          _ => {},
-        },
-        isEditing: switch (state) {
-          EnvironmentStateLoaded(:final isEditing) => isEditing,
-          EnvironmentStateError(:final isEditing) => isEditing,
-          _ => false,
-        },
       );
       logger.error('Failed to load environments: $e', e, stack);
     }
   }
-
-  void selectEnvironment(String name) {
-    if (state is EnvironmentStateLoaded) {
-      final loaded = state as EnvironmentStateLoaded;
-      final selectedEnvironment = loaded.environments.firstWhere(
-        (e) => e.name == name,
-        orElse: () => throw Exception('Environment not found: $name'),
-      );
-      state = EnvironmentState.loaded(
-        environments: loaded.environments,
-        selectedEnvironment: selectedEnvironment,
-        environmentValues: Map<String, String>.from(selectedEnvironment.values),
-        isEditing: loaded.isEditing,
-      );
-    } else if (state is EnvironmentStateError) {
-      final error = state as EnvironmentStateError;
-      if (error.environments != null) {
-        state = EnvironmentState.error(
-          message: error.message,
-          environments: error.environments,
-          selectedEnvironment: error.environments!.firstWhere(
-            (e) => e.name == name,
-            orElse: () => throw Exception('Environment not found: $name'),
-          ),
-          environmentValues: Map<String, String>.from(
-            error.environments!
-                .firstWhere(
-                  (e) => e.name == name,
-                  orElse: () => throw Exception('Environment not found: $name'),
-                )
-                .values,
-          ),
-          isEditing: error.isEditing,
-        );
-      }
-    }
-  }
-
-  void toggleEditing() {
-    state = switch (state) {
-      EnvironmentStateLoaded(
-        :final environments,
-        :final selectedEnvironment,
-        :final environmentValues,
-        :final isEditing,
-      ) =>
-        EnvironmentState.loaded(
-          environments: environments,
-          selectedEnvironment: selectedEnvironment,
-          environmentValues: environmentValues,
-          isEditing: !isEditing,
-        ),
-      EnvironmentStateError(
-        :final message,
-        :final environments,
-        :final selectedEnvironment,
-        :final environmentValues,
-        :final isEditing,
-      ) =>
-        EnvironmentState.error(
-          message: message,
-          environments: environments,
-          selectedEnvironment: selectedEnvironment,
-          environmentValues: environmentValues,
-          isEditing: !(isEditing ?? false),
-        ),
-      _ => state,
-    };
-  }
 }
-
-// @Riverpod(keepAlive: true, dependencies: [currentProjectSelectorProvider])
-// Project? currentProject(Ref ref) {
-//   ref.watch(projectsNotifierProvider);
-//   return null;
-// }
-
-// /// Provider for the current project based on projectId
-// @Riverpod(keepAlive: true)
-// void currentProjectSelector(Ref ref, String projectId) {
-//   final projectState = ref.watch(projectsNotifierProvider);
-
-//   final project = switch (projectState) {
-//     ProjectStateLoaded(:final projects) => projects.firstWhere(
-//         (p) => p.id == projectId,
-//         orElse: () => throw Exception('Project not found'),
-//       ),
-//     _ => null,
-//   };
-//   currentProjectProvider.overrideWithValue(project);
-// }
-
-/// Provider for the current project's environments
-// @riverpod
-// List<Environment> currentProjectEnvironments(Ref ref, String projectId) {
-//   final environmentState = ref.watch(environmentsNotifierProvider(projectId));
-
-//   return switch (environmentState) {
-//     EnvironmentStateInitial() => [],
-//     EnvironmentStateLoaded(:final environments) => environments,
-//     EnvironmentStateLoading(:final environments) => environments,
-//     EnvironmentStateError(:final environments) => environments ?? [],
-//   };
-// }

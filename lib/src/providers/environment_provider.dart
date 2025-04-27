@@ -4,6 +4,7 @@ import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/providers/exception_for_providers.dart';
+import 'package:secure_env_gui/src/routing/app_snackbar.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 
 part 'environment_provider.freezed.dart';
@@ -13,9 +14,9 @@ part 'environment_provider.g.dart';
 @freezed
 sealed class EnvironmentOperationState with _$EnvironmentOperationState {
   const factory EnvironmentOperationState.idle() = EnvironmentOperationIdle;
-  const factory EnvironmentOperationState.inProgress() =
+  const factory EnvironmentOperationState.inProgress([String? message]) =
       EnvironmentOperationInProgress;
-  const factory EnvironmentOperationState.success() =
+  const factory EnvironmentOperationState.success(String message) =
       EnvironmentOperationSuccess;
   const factory EnvironmentOperationState.error(String message) =
       EnvironmentOperationError;
@@ -25,6 +26,29 @@ sealed class EnvironmentOperationState with _$EnvironmentOperationState {
 class EnvironmentOperations extends _$EnvironmentOperations {
   @override
   EnvironmentOperationState build() {
+    listenSelf((previous, next) {
+      if (next is EnvironmentOperationSuccess) {
+        ref.read(snackbarProvider).showSnackbar(
+              message: next.message,
+              duration: const Duration(seconds: 2),
+              action: null,
+            );
+      }
+      if (next is EnvironmentOperationError) {
+        ref.read(snackbarProvider).showSnackbar(
+              message: next.message,
+              duration: const Duration(seconds: 2),
+              action: null,
+            );
+      }
+      if (next is EnvironmentOperationInProgress && next.message != null) {
+        ref.read(snackbarProvider).showSnackbar(
+              message: next.message!,
+              duration: const Duration(seconds: 2),
+              action: null,
+            );
+      }
+    });
     return const EnvironmentOperationState.idle();
   }
 
@@ -58,7 +82,8 @@ class EnvironmentOperations extends _$EnvironmentOperations {
 
       logger.info('Environment created successfully');
 
-      state = const EnvironmentOperationState.success();
+      state = const EnvironmentOperationState.success(
+          'Environment created successfully');
     } on ExceptionForProviders catch (e) {
       state = EnvironmentOperationState.error(e.message);
       logger.error('Failed to import environment: $e', e.error, e.stackTrace);
@@ -76,15 +101,15 @@ class EnvironmentOperations extends _$EnvironmentOperations {
     try {
       await environmentService.deleteEnvironment(name: name);
 
-      state = const EnvironmentOperationState.success();
-      logger.info('Environment deleted successfully');
+      state = EnvironmentOperationState.success(
+          'Environment $name deleted successfully');
+      logger.info('Environment $name deleted successfully');
     } on ExceptionForProviders catch (e) {
       state = EnvironmentOperationState.error(e.message);
-      logger.error('Failed to import environment: $e', e.error, e.stackTrace);
-    } catch (e) {
-      state =
-          EnvironmentOperationState.error('Failed to delete environment: $e');
-      logger.error('Failed to delete environment: $e');
+      logger.error('Failed to delete environment: $e', e.error, e.stackTrace);
+    } catch (e, s) {
+      state = EnvironmentOperationState.error('Failed to delete environment');
+      logger.error('Failed to delete environment: $e', e, s);
     }
   }
 
@@ -112,48 +137,64 @@ class EnvironmentOperations extends _$EnvironmentOperations {
         description: description,
       );
       logger.info('Environment imported successfully');
-      state = const EnvironmentOperationState.success();
+      state = EnvironmentOperationState.success(
+          'Environment $name imported successfully');
     } on ExceptionForProviders catch (e) {
       state = EnvironmentOperationState.error(e.message);
       logger.error('Failed to import environment: $e', e.error, e.stackTrace);
-    } catch (e) {
-      state =
-          EnvironmentOperationState.error('An unexpected error occurred: $e');
-      logger.error('An unexpected error occurred: $e');
+    } catch (e, s) {
+      state = EnvironmentOperationState.error('An unexpected error occurred');
+      logger.error('An unexpected error occurred: $e', e, s);
     }
   }
 
-  Future<void> updateEnvironment({
-    required String name,
-    required Map<String, String> values,
-    required Map<String, bool> sensitiveKeys,
+  Future<void> addVariableToAllEnvironment({
+    required String key,
+    required String value,
   }) async {
     state = const EnvironmentOperationState.inProgress();
     try {
-      final existingEnvironment =
-          await environmentService.loadEnvironment(name: name);
-      if (existingEnvironment == null) {
-        throw ExceptionForProviders(
-            'Trying to update an environment that does not exist, something went wrong');
+      final allEnvironments = project?.environments ?? [];
+      for (final name in allEnvironments) {
+        await environmentService.setValue(
+          key: key,
+          value: value,
+          envName: name,
+        );
+        logger.info('Environment $name updated successfully');
       }
 
-      final updatedEnvironment = existingEnvironment.copyWith(
-        values: values,
-        sensitiveKeys: sensitiveKeys,
-        lastModified: DateTime.now(),
-      );
-
-      await environmentService.saveEnvironment(updatedEnvironment);
-      logger.info('Environment updated successfully');
-
-      state = const EnvironmentOperationState.success();
+      state = EnvironmentOperationState.success(
+          'All environments updated successfully');
     } on ExceptionForProviders catch (e) {
       state = EnvironmentOperationState.error(e.message);
-      logger.error('Failed to import environment: $e', e.error, e.stackTrace);
-    } catch (e) {
+      logger.error(
+          'Failed to update all environments: $e', e.error, e.stackTrace);
+    } catch (e, s) {
       state =
-          EnvironmentOperationState.error('Failed to update environment: $e');
-      logger.error('Failed to update environment: $e');
+          EnvironmentOperationState.error('Failed to update all environments');
+      logger.error('Failed to update all environments: $e', e, s);
+    }
+  }
+
+  Future<void> addVariable({
+    required String name,
+    required String key,
+    required String value,
+  }) async {
+    state = const EnvironmentOperationState.inProgress();
+    try {
+      await environmentService.setValue(key: key, value: value, envName: name);
+      logger.info('Environment updated successfully');
+
+      state = EnvironmentOperationState.success(
+          'Environment $name updated successfully');
+    } on ExceptionForProviders catch (e) {
+      state = EnvironmentOperationState.error(e.message);
+      logger.error('Failed to update environment: $e', e.error, e.stackTrace);
+    } catch (e, s) {
+      state = EnvironmentOperationState.error('Failed to update environment');
+      logger.error('Failed to update environment: $e', e, s);
     }
   }
 
@@ -167,11 +208,13 @@ class EnvironmentOperations extends _$EnvironmentOperations {
         envName: envName,
         key: key,
       );
-      logger.info('Environment removed successfully');
-      state = const EnvironmentOperationState.success();
+      logger.info('Environment $key from $envName removed successfully');
+      state = EnvironmentOperationState.success(
+          'Environment $key from $envName removed successfully');
     } on ExceptionForProviders catch (e) {
       state = EnvironmentOperationState.error(e.message);
-      logger.error('Failed to import environment: $e', e.error, e.stackTrace);
+      logger.error(
+          'Failed to remove environment value: $e', e.error, e.stackTrace);
     } catch (e) {
       state = EnvironmentOperationState.error(
           'Failed to remove environment value: $e');
@@ -197,7 +240,8 @@ class EnvironmentOperations extends _$EnvironmentOperations {
       );
       await environmentService.saveEnvironment(updatedEnvironment);
       logger.info('Export configuration saved successfully');
-      state = const EnvironmentOperationState.success();
+      state = EnvironmentOperationState.success(
+          'Export configuration saved successfully');
     } on ExceptionForProviders catch (e) {
       state = EnvironmentOperationState.error(e.message);
       logger.error('Failed to save export config: $e', e.error, e.stackTrace);
@@ -225,7 +269,8 @@ class EnvironmentOperations extends _$EnvironmentOperations {
           .read(environmentExportServiceProvider(environment.exportConfig))
           .export(environment.values);
       logger.info('Environment exported successfully');
-      state = const EnvironmentOperationState.success();
+      state = EnvironmentOperationState.success(
+          'Environment $name exported successfully');
     } on ExceptionForProviders catch (e) {
       state = EnvironmentOperationState.error(e.message);
       logger.error('Failed to export environment: $e', e.error, e.stackTrace);

@@ -60,42 +60,132 @@ class EnvironmentOperationIdle implements EnvironmentOperationState {
 /// @nodoc
 
 class EnvironmentOperationInProgress implements EnvironmentOperationState {
-  const EnvironmentOperationInProgress();
+  const EnvironmentOperationInProgress([this.message]);
+
+  final String? message;
+
+  /// Create a copy of EnvironmentOperationState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $EnvironmentOperationInProgressCopyWith<EnvironmentOperationInProgress>
+      get copyWith => _$EnvironmentOperationInProgressCopyWithImpl<
+          EnvironmentOperationInProgress>(this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is EnvironmentOperationInProgress);
+            other is EnvironmentOperationInProgress &&
+            (identical(other.message, message) || other.message == message));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, message);
 
   @override
   String toString() {
-    return 'EnvironmentOperationState.inProgress()';
+    return 'EnvironmentOperationState.inProgress(message: $message)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $EnvironmentOperationInProgressCopyWith<$Res>
+    implements $EnvironmentOperationStateCopyWith<$Res> {
+  factory $EnvironmentOperationInProgressCopyWith(
+          EnvironmentOperationInProgress value,
+          $Res Function(EnvironmentOperationInProgress) _then) =
+      _$EnvironmentOperationInProgressCopyWithImpl;
+  @useResult
+  $Res call({String? message});
+}
+
+/// @nodoc
+class _$EnvironmentOperationInProgressCopyWithImpl<$Res>
+    implements $EnvironmentOperationInProgressCopyWith<$Res> {
+  _$EnvironmentOperationInProgressCopyWithImpl(this._self, this._then);
+
+  final EnvironmentOperationInProgress _self;
+  final $Res Function(EnvironmentOperationInProgress) _then;
+
+  /// Create a copy of EnvironmentOperationState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? message = freezed,
+  }) {
+    return _then(EnvironmentOperationInProgress(
+      freezed == message
+          ? _self.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
   }
 }
 
 /// @nodoc
 
 class EnvironmentOperationSuccess implements EnvironmentOperationState {
-  const EnvironmentOperationSuccess();
+  const EnvironmentOperationSuccess(this.message);
+
+  final String message;
+
+  /// Create a copy of EnvironmentOperationState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $EnvironmentOperationSuccessCopyWith<EnvironmentOperationSuccess>
+      get copyWith => _$EnvironmentOperationSuccessCopyWithImpl<
+          EnvironmentOperationSuccess>(this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is EnvironmentOperationSuccess);
+            other is EnvironmentOperationSuccess &&
+            (identical(other.message, message) || other.message == message));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, message);
 
   @override
   String toString() {
-    return 'EnvironmentOperationState.success()';
+    return 'EnvironmentOperationState.success(message: $message)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $EnvironmentOperationSuccessCopyWith<$Res>
+    implements $EnvironmentOperationStateCopyWith<$Res> {
+  factory $EnvironmentOperationSuccessCopyWith(
+          EnvironmentOperationSuccess value,
+          $Res Function(EnvironmentOperationSuccess) _then) =
+      _$EnvironmentOperationSuccessCopyWithImpl;
+  @useResult
+  $Res call({String message});
+}
+
+/// @nodoc
+class _$EnvironmentOperationSuccessCopyWithImpl<$Res>
+    implements $EnvironmentOperationSuccessCopyWith<$Res> {
+  _$EnvironmentOperationSuccessCopyWithImpl(this._self, this._then);
+
+  final EnvironmentOperationSuccess _self;
+  final $Res Function(EnvironmentOperationSuccess) _then;
+
+  /// Create a copy of EnvironmentOperationState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? message = null,
+  }) {
+    return _then(EnvironmentOperationSuccess(
+      null == message
+          ? _self.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
   }
 }
 

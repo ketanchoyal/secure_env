@@ -90,62 +90,39 @@ class _CreateEnvironmentModalState
 
     setState(() => _isCreating = true);
 
-    try {
-      final name = _nameController.text.trim();
-      final description = _descriptionController.text.trim();
+    final name = _nameController.text.trim();
+    final description = _descriptionController.text.trim();
 
-      // Create maps for values and sensitive keys
-      final values = <String, String>{};
-      final sensitiveKeys = <String, bool>{};
+    // Create maps for values and sensitive keys
+    final values = <String, String>{};
+    final sensitiveKeys = <String, bool>{};
 
-      for (final pair in _keyValuePairs) {
-        final key = pair.keyController.text.trim();
-        final value = pair.valueController.text.trim();
-        if (key.isNotEmpty && value.isNotEmpty) {
-          values[key] = value;
-          sensitiveKeys[key] = pair.isSensitive;
-        }
-      }
-
-      await ref.read(environmentOperationsProvider.notifier).createEnvironment(
-            name: name,
-            description: description.isNotEmpty ? description : null,
-            values: values.isNotEmpty ? values : null,
-            sensitiveKeys: sensitiveKeys.isNotEmpty ? sensitiveKeys : null,
-          );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Environment "$name" created successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-      return true;
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error creating environment: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-      return false;
-    } finally {
-      if (mounted) {
-        setState(() => _isCreating = false);
+    for (final pair in _keyValuePairs) {
+      final key = pair.keyController.text.trim();
+      final value = pair.valueController.text.trim();
+      if (key.isNotEmpty && value.isNotEmpty) {
+        values[key] = value;
+        sensitiveKeys[key] = pair.isSensitive;
       }
     }
+
+    await ref.read(environmentOperationsProvider.notifier).createEnvironment(
+          name: name,
+          description: description.isNotEmpty ? description : null,
+          values: values.isNotEmpty ? values : null,
+          sensitiveKeys: sensitiveKeys.isNotEmpty ? sensitiveKeys : null,
+        );
+
+    if (mounted) {
+      setState(() => _isCreating = false);
+    }
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
-    final envState = ref.watch(environmentsNotifierProvider);
-    final environments = envState is EnvironmentStateLoaded
-        ? envState.environments
-        : <Environment>[];
+    final environmentState = ref.watch(environmentsNotifierProvider);
+    final environments = environmentState.environments;
 
     return Form(
       key: _formKey,

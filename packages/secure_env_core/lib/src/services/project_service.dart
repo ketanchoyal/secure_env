@@ -31,16 +31,14 @@ class ProjectService {
   // }
   /// Get the path to a project's configuration file
   String _getProjectConfigPath(String basePath) {
-    return Platform.isWindows
-        ? '$basePath.secure_envconfig.json'
-        : '$basePath/.secure_env/config.json';
+    return '$basePath${Platform.pathSeparator}.secure_env${Platform.pathSeparator}config.json';
   }
 
   /// Validate project path
   Future<void> _validateProjectPath(String path) async {
     //path will always have .secure_env so remove it
-    final originalPath = path.replaceFirst(
-        Platform.isWindows ? '.secure_env' : '/.secure_env', '');
+    final originalPath =
+        path.replaceFirst('${Platform.pathSeparator}.secure_env', '');
     if (originalPath.isEmpty) {
       throw ValidationException('Project path cannot be empty');
     }
@@ -205,7 +203,7 @@ class ProjectService {
     return await getProject(currentPath);
   }
 
-  /// Get a project by name
+  /// Get a project by path
   Future<Project?> getProject(String path) async {
     try {
       final configPath = _getProjectConfigPath(path);
@@ -219,6 +217,28 @@ class ProjectService {
       return Project.fromJson(projectJson);
     } catch (e) {
       logger.error('Failed to get project at "$path": $e');
+      return null;
+    }
+  }
+
+  /// Get a project by id
+  Future<Project?> getProjectById(String id) async {
+    try {
+      final projectMetaData = await registryService.getProjectMetadata(id);
+      if (projectMetaData == null) {
+        return null;
+      }
+      final configPath = _getProjectConfigPath(projectMetaData.basePath);
+      final configFile = File(configPath);
+      if (!await configFile.exists()) {
+        return null;
+      }
+
+      final content = await configFile.readAsString();
+      final projectJson = jsonDecode(content) as Map<String, dynamic>;
+      return Project.fromJson(projectJson);
+    } catch (e, stack) {
+      logger.error('Failed to get project "$id": $e', e, stack);
       return null;
     }
   }

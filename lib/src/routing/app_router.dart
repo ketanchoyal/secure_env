@@ -5,6 +5,7 @@ import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/project_view/project_view_screen.dart';
+import '../features/settings/settings_screen.dart';
 import '../features/shared_widgets/main_layout.dart'; // Import MainLayout
 
 // Global navigator key
@@ -14,6 +15,7 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 class AppRoutes {
   static const String dashboard = '/';
   static const String projectView = '/project/:projectId'; // Use path parameter
+  static const String settings = '/settings';
 
   static String projectViewPath(String projectId) =>
       '/project/${Uri.encodeComponent(projectId)}';
@@ -32,7 +34,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // ShellRoute wraps pages that share the MainLayout UI (NavigationRail)
       ShellRoute(
         navigatorKey: GlobalKey<NavigatorState>(
-            debugLabel: 'shell'), // Optional key for shell navigator
+          debugLabel: 'shell',
+        ), // Optional key for shell navigator
         builder: (context, state, child) {
           return MainLayout(child: child); // Use MainLayout as the shell
         },
@@ -59,16 +62,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   );
                 },
               ),
+              GoRoute(
+                path: AppRoutes.settings,
+                name: AppRoutes.settings,
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: SettingsScreen(),
+                ),
+              ),
             ],
           ),
-          // TODO: Add Settings route within the shell
-          // GoRoute(
-          //   path: AppRoutes.settings,
-          //   name: AppRoutes.settings,
-          //   pageBuilder: (context, state) => const NoTransitionPage(
-          //     child: SettingsScreen(), // Replace with actual SettingsScreen
-          //   ),
-          // ),
         ],
       ),
       // TODO: Add routes outside the shell if needed (e.g., Login Screen)

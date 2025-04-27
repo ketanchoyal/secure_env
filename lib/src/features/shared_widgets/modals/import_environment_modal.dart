@@ -196,17 +196,6 @@ class _ImportEnvironmentModalState
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<EnvironmentOperationState>(
-      environmentOperationsProvider,
-      (previous, next) {
-        if (next is EnvironmentOperationError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(next.message)),
-          );
-        }
-      },
-    );
-
     return Padding(
       // Add padding to match the expected WoltModalSheetPage content padding
       padding: const EdgeInsets.all(16),

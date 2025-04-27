@@ -60,8 +60,6 @@ class ExportConfigModal extends StatefulWidget {
               name: envName,
               exportConfig: config,
             );
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Settings saved')));
         return true;
       },
       pagePadding:

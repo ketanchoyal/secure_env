@@ -69,6 +69,7 @@ class ProjectListItem extends ConsumerWidget {
 
   Future<void> _showRenameDialog(BuildContext context, WidgetRef ref) async {
     final controller = TextEditingController(text: project.name);
+    final router = ref.read(goRouterProvider);
 
     return showDialog(
       context: context,
@@ -91,26 +92,13 @@ class ProjectListItem extends ConsumerWidget {
             onPressed: () async {
               final newName = controller.text.trim();
               if (newName.isNotEmpty && newName != project.name) {
-                try {
-                  await ref
-                      .read(projectOperationsProvider.notifier)
-                      .updateProject(
-                        project.copyWith(name: newName),
-                      );
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Project renamed successfully')),
+                await ref
+                    .read(projectOperationsProvider.notifier)
+                    .renameProject(
+                      project.id,
+                      newName,
                     );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error renaming project: $e')),
-                    );
-                  }
-                }
+                router.pop(); // Close the dialog
               }
             },
             child: const Text('Rename'),
@@ -121,6 +109,7 @@ class ProjectListItem extends ConsumerWidget {
   }
 
   Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref) async {
+    final router = ref.read(goRouterProvider);
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -134,26 +123,10 @@ class ProjectListItem extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () async {
-              try {
-                await ref
-                    .read(projectOperationsProvider.notifier)
-                    .deleteProject(
-                      project.path,
-                    );
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Project deleted successfully')),
+              await ref.read(projectOperationsProvider.notifier).deleteProject(
+                    project.path,
                   );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error deleting project: $e')),
-                  );
-                }
-              }
+              router.pop(); // Close the dialog
             },
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,

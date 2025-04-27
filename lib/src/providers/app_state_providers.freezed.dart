@@ -281,59 +281,116 @@ class __$ProjectStateCopyWithImpl<$Res>
 
 /// @nodoc
 mixin _$EnvironmentState {
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is EnvironmentState);
-  }
+  NotifierState get state;
+  List<Environment> get environments;
+  Map<String, String> get environmentValues;
+  String? get errorMessage;
 
-  @override
-  int get hashCode => runtimeType.hashCode;
-
-  @override
-  String toString() {
-    return 'EnvironmentState()';
-  }
-}
-
-/// @nodoc
-class $EnvironmentStateCopyWith<$Res> {
-  $EnvironmentStateCopyWith(
-      EnvironmentState _, $Res Function(EnvironmentState) __);
-}
-
-/// @nodoc
-
-class EnvironmentStateInitial implements EnvironmentState {
-  const EnvironmentStateInitial();
+  /// Create a copy of EnvironmentState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $EnvironmentStateCopyWith<EnvironmentState> get copyWith =>
+      _$EnvironmentStateCopyWithImpl<EnvironmentState>(
+          this as EnvironmentState, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is EnvironmentStateInitial);
+        (other.runtimeType == runtimeType &&
+            other is EnvironmentState &&
+            (identical(other.state, state) || other.state == state) &&
+            const DeepCollectionEquality()
+                .equals(other.environments, environments) &&
+            const DeepCollectionEquality()
+                .equals(other.environmentValues, environmentValues) &&
+            (identical(other.errorMessage, errorMessage) ||
+                other.errorMessage == errorMessage));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(
+      runtimeType,
+      state,
+      const DeepCollectionEquality().hash(environments),
+      const DeepCollectionEquality().hash(environmentValues),
+      errorMessage);
 
   @override
   String toString() {
-    return 'EnvironmentState.initial()';
+    return 'EnvironmentState(state: $state, environments: $environments, environmentValues: $environmentValues, errorMessage: $errorMessage)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $EnvironmentStateCopyWith<$Res> {
+  factory $EnvironmentStateCopyWith(
+          EnvironmentState value, $Res Function(EnvironmentState) _then) =
+      _$EnvironmentStateCopyWithImpl;
+  @useResult
+  $Res call(
+      {NotifierState state,
+      List<Environment> environments,
+      Map<String, String> environmentValues,
+      String? errorMessage});
+}
+
+/// @nodoc
+class _$EnvironmentStateCopyWithImpl<$Res>
+    implements $EnvironmentStateCopyWith<$Res> {
+  _$EnvironmentStateCopyWithImpl(this._self, this._then);
+
+  final EnvironmentState _self;
+  final $Res Function(EnvironmentState) _then;
+
+  /// Create a copy of EnvironmentState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? state = null,
+    Object? environments = null,
+    Object? environmentValues = null,
+    Object? errorMessage = freezed,
+  }) {
+    return _then(_self.copyWith(
+      state: null == state
+          ? _self.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as NotifierState,
+      environments: null == environments
+          ? _self.environments
+          : environments // ignore: cast_nullable_to_non_nullable
+              as List<Environment>,
+      environmentValues: null == environmentValues
+          ? _self.environmentValues
+          : environmentValues // ignore: cast_nullable_to_non_nullable
+              as Map<String, String>,
+      errorMessage: freezed == errorMessage
+          ? _self.errorMessage
+          : errorMessage // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
   }
 }
 
 /// @nodoc
 
-class EnvironmentStateLoading implements EnvironmentState {
-  const EnvironmentStateLoading(
-      {final List<Environment> environments = const [],
-      this.selectedEnvironment,
+class _EnvironmentState extends EnvironmentState {
+  const _EnvironmentState(
+      {this.state = NotifierState.initial,
+      final List<Environment> environments = const [],
       final Map<String, String> environmentValues = const {},
-      this.isEditing = false})
+      this.errorMessage})
       : _environments = environments,
-        _environmentValues = environmentValues;
+        _environmentValues = environmentValues,
+        super._();
 
+  @override
+  @JsonKey()
+  final NotifierState state;
   final List<Environment> _environments;
+  @override
   @JsonKey()
   List<Environment> get environments {
     if (_environments is EqualUnmodifiableListView) return _environments;
@@ -341,8 +398,8 @@ class EnvironmentStateLoading implements EnvironmentState {
     return EqualUnmodifiableListView(_environments);
   }
 
-  final Environment? selectedEnvironment;
   final Map<String, String> _environmentValues;
+  @override
   @JsonKey()
   Map<String, String> get environmentValues {
     if (_environmentValues is EqualUnmodifiableMapView)
@@ -351,395 +408,96 @@ class EnvironmentStateLoading implements EnvironmentState {
     return EqualUnmodifiableMapView(_environmentValues);
   }
 
-  @JsonKey()
-  final bool isEditing;
+  @override
+  final String? errorMessage;
 
   /// Create a copy of EnvironmentState
   /// with the given fields replaced by the non-null parameter values.
+  @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  $EnvironmentStateLoadingCopyWith<EnvironmentStateLoading> get copyWith =>
-      _$EnvironmentStateLoadingCopyWithImpl<EnvironmentStateLoading>(
-          this, _$identity);
+  _$EnvironmentStateCopyWith<_EnvironmentState> get copyWith =>
+      __$EnvironmentStateCopyWithImpl<_EnvironmentState>(this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is EnvironmentStateLoading &&
+            other is _EnvironmentState &&
+            (identical(other.state, state) || other.state == state) &&
             const DeepCollectionEquality()
                 .equals(other._environments, _environments) &&
-            (identical(other.selectedEnvironment, selectedEnvironment) ||
-                other.selectedEnvironment == selectedEnvironment) &&
             const DeepCollectionEquality()
                 .equals(other._environmentValues, _environmentValues) &&
-            (identical(other.isEditing, isEditing) ||
-                other.isEditing == isEditing));
+            (identical(other.errorMessage, errorMessage) ||
+                other.errorMessage == errorMessage));
   }
 
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      state,
       const DeepCollectionEquality().hash(_environments),
-      selectedEnvironment,
       const DeepCollectionEquality().hash(_environmentValues),
-      isEditing);
+      errorMessage);
 
   @override
   String toString() {
-    return 'EnvironmentState.loading(environments: $environments, selectedEnvironment: $selectedEnvironment, environmentValues: $environmentValues, isEditing: $isEditing)';
+    return 'EnvironmentState(state: $state, environments: $environments, environmentValues: $environmentValues, errorMessage: $errorMessage)';
   }
 }
 
 /// @nodoc
-abstract mixin class $EnvironmentStateLoadingCopyWith<$Res>
+abstract mixin class _$EnvironmentStateCopyWith<$Res>
     implements $EnvironmentStateCopyWith<$Res> {
-  factory $EnvironmentStateLoadingCopyWith(EnvironmentStateLoading value,
-          $Res Function(EnvironmentStateLoading) _then) =
-      _$EnvironmentStateLoadingCopyWithImpl;
+  factory _$EnvironmentStateCopyWith(
+          _EnvironmentState value, $Res Function(_EnvironmentState) _then) =
+      __$EnvironmentStateCopyWithImpl;
+  @override
   @useResult
   $Res call(
-      {List<Environment> environments,
-      Environment? selectedEnvironment,
+      {NotifierState state,
+      List<Environment> environments,
       Map<String, String> environmentValues,
-      bool isEditing});
-
-  $EnvironmentCopyWith<$Res>? get selectedEnvironment;
+      String? errorMessage});
 }
 
 /// @nodoc
-class _$EnvironmentStateLoadingCopyWithImpl<$Res>
-    implements $EnvironmentStateLoadingCopyWith<$Res> {
-  _$EnvironmentStateLoadingCopyWithImpl(this._self, this._then);
+class __$EnvironmentStateCopyWithImpl<$Res>
+    implements _$EnvironmentStateCopyWith<$Res> {
+  __$EnvironmentStateCopyWithImpl(this._self, this._then);
 
-  final EnvironmentStateLoading _self;
-  final $Res Function(EnvironmentStateLoading) _then;
+  final _EnvironmentState _self;
+  final $Res Function(_EnvironmentState) _then;
 
   /// Create a copy of EnvironmentState
   /// with the given fields replaced by the non-null parameter values.
+  @override
   @pragma('vm:prefer-inline')
   $Res call({
+    Object? state = null,
     Object? environments = null,
-    Object? selectedEnvironment = freezed,
     Object? environmentValues = null,
-    Object? isEditing = null,
+    Object? errorMessage = freezed,
   }) {
-    return _then(EnvironmentStateLoading(
+    return _then(_EnvironmentState(
+      state: null == state
+          ? _self.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as NotifierState,
       environments: null == environments
           ? _self._environments
           : environments // ignore: cast_nullable_to_non_nullable
               as List<Environment>,
-      selectedEnvironment: freezed == selectedEnvironment
-          ? _self.selectedEnvironment
-          : selectedEnvironment // ignore: cast_nullable_to_non_nullable
-              as Environment?,
       environmentValues: null == environmentValues
           ? _self._environmentValues
           : environmentValues // ignore: cast_nullable_to_non_nullable
               as Map<String, String>,
-      isEditing: null == isEditing
-          ? _self.isEditing
-          : isEditing // ignore: cast_nullable_to_non_nullable
-              as bool,
+      errorMessage: freezed == errorMessage
+          ? _self.errorMessage
+          : errorMessage // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
-  }
-
-  /// Create a copy of EnvironmentState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $EnvironmentCopyWith<$Res>? get selectedEnvironment {
-    if (_self.selectedEnvironment == null) {
-      return null;
-    }
-
-    return $EnvironmentCopyWith<$Res>(_self.selectedEnvironment!, (value) {
-      return _then(_self.copyWith(selectedEnvironment: value));
-    });
-  }
-}
-
-/// @nodoc
-
-class EnvironmentStateLoaded implements EnvironmentState {
-  const EnvironmentStateLoaded(
-      {required final List<Environment> environments,
-      this.selectedEnvironment,
-      final Map<String, String> environmentValues = const {},
-      this.isEditing = false})
-      : _environments = environments,
-        _environmentValues = environmentValues;
-
-  final List<Environment> _environments;
-  List<Environment> get environments {
-    if (_environments is EqualUnmodifiableListView) return _environments;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_environments);
-  }
-
-  final Environment? selectedEnvironment;
-  final Map<String, String> _environmentValues;
-  @JsonKey()
-  Map<String, String> get environmentValues {
-    if (_environmentValues is EqualUnmodifiableMapView)
-      return _environmentValues;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(_environmentValues);
-  }
-
-  @JsonKey()
-  final bool isEditing;
-
-  /// Create a copy of EnvironmentState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @pragma('vm:prefer-inline')
-  $EnvironmentStateLoadedCopyWith<EnvironmentStateLoaded> get copyWith =>
-      _$EnvironmentStateLoadedCopyWithImpl<EnvironmentStateLoaded>(
-          this, _$identity);
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is EnvironmentStateLoaded &&
-            const DeepCollectionEquality()
-                .equals(other._environments, _environments) &&
-            (identical(other.selectedEnvironment, selectedEnvironment) ||
-                other.selectedEnvironment == selectedEnvironment) &&
-            const DeepCollectionEquality()
-                .equals(other._environmentValues, _environmentValues) &&
-            (identical(other.isEditing, isEditing) ||
-                other.isEditing == isEditing));
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      const DeepCollectionEquality().hash(_environments),
-      selectedEnvironment,
-      const DeepCollectionEquality().hash(_environmentValues),
-      isEditing);
-
-  @override
-  String toString() {
-    return 'EnvironmentState.loaded(environments: $environments, selectedEnvironment: $selectedEnvironment, environmentValues: $environmentValues, isEditing: $isEditing)';
-  }
-}
-
-/// @nodoc
-abstract mixin class $EnvironmentStateLoadedCopyWith<$Res>
-    implements $EnvironmentStateCopyWith<$Res> {
-  factory $EnvironmentStateLoadedCopyWith(EnvironmentStateLoaded value,
-          $Res Function(EnvironmentStateLoaded) _then) =
-      _$EnvironmentStateLoadedCopyWithImpl;
-  @useResult
-  $Res call(
-      {List<Environment> environments,
-      Environment? selectedEnvironment,
-      Map<String, String> environmentValues,
-      bool isEditing});
-
-  $EnvironmentCopyWith<$Res>? get selectedEnvironment;
-}
-
-/// @nodoc
-class _$EnvironmentStateLoadedCopyWithImpl<$Res>
-    implements $EnvironmentStateLoadedCopyWith<$Res> {
-  _$EnvironmentStateLoadedCopyWithImpl(this._self, this._then);
-
-  final EnvironmentStateLoaded _self;
-  final $Res Function(EnvironmentStateLoaded) _then;
-
-  /// Create a copy of EnvironmentState
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  $Res call({
-    Object? environments = null,
-    Object? selectedEnvironment = freezed,
-    Object? environmentValues = null,
-    Object? isEditing = null,
-  }) {
-    return _then(EnvironmentStateLoaded(
-      environments: null == environments
-          ? _self._environments
-          : environments // ignore: cast_nullable_to_non_nullable
-              as List<Environment>,
-      selectedEnvironment: freezed == selectedEnvironment
-          ? _self.selectedEnvironment
-          : selectedEnvironment // ignore: cast_nullable_to_non_nullable
-              as Environment?,
-      environmentValues: null == environmentValues
-          ? _self._environmentValues
-          : environmentValues // ignore: cast_nullable_to_non_nullable
-              as Map<String, String>,
-      isEditing: null == isEditing
-          ? _self.isEditing
-          : isEditing // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ));
-  }
-
-  /// Create a copy of EnvironmentState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $EnvironmentCopyWith<$Res>? get selectedEnvironment {
-    if (_self.selectedEnvironment == null) {
-      return null;
-    }
-
-    return $EnvironmentCopyWith<$Res>(_self.selectedEnvironment!, (value) {
-      return _then(_self.copyWith(selectedEnvironment: value));
-    });
-  }
-}
-
-/// @nodoc
-
-class EnvironmentStateError implements EnvironmentState {
-  const EnvironmentStateError(
-      {required this.message,
-      final List<Environment>? environments,
-      this.selectedEnvironment,
-      final Map<String, String>? environmentValues,
-      this.isEditing})
-      : _environments = environments,
-        _environmentValues = environmentValues;
-
-  final String message;
-  final List<Environment>? _environments;
-  List<Environment>? get environments {
-    final value = _environments;
-    if (value == null) return null;
-    if (_environments is EqualUnmodifiableListView) return _environments;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(value);
-  }
-
-  final Environment? selectedEnvironment;
-  final Map<String, String>? _environmentValues;
-  Map<String, String>? get environmentValues {
-    final value = _environmentValues;
-    if (value == null) return null;
-    if (_environmentValues is EqualUnmodifiableMapView)
-      return _environmentValues;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(value);
-  }
-
-  final bool? isEditing;
-
-  /// Create a copy of EnvironmentState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @pragma('vm:prefer-inline')
-  $EnvironmentStateErrorCopyWith<EnvironmentStateError> get copyWith =>
-      _$EnvironmentStateErrorCopyWithImpl<EnvironmentStateError>(
-          this, _$identity);
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is EnvironmentStateError &&
-            (identical(other.message, message) || other.message == message) &&
-            const DeepCollectionEquality()
-                .equals(other._environments, _environments) &&
-            (identical(other.selectedEnvironment, selectedEnvironment) ||
-                other.selectedEnvironment == selectedEnvironment) &&
-            const DeepCollectionEquality()
-                .equals(other._environmentValues, _environmentValues) &&
-            (identical(other.isEditing, isEditing) ||
-                other.isEditing == isEditing));
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      message,
-      const DeepCollectionEquality().hash(_environments),
-      selectedEnvironment,
-      const DeepCollectionEquality().hash(_environmentValues),
-      isEditing);
-
-  @override
-  String toString() {
-    return 'EnvironmentState.error(message: $message, environments: $environments, selectedEnvironment: $selectedEnvironment, environmentValues: $environmentValues, isEditing: $isEditing)';
-  }
-}
-
-/// @nodoc
-abstract mixin class $EnvironmentStateErrorCopyWith<$Res>
-    implements $EnvironmentStateCopyWith<$Res> {
-  factory $EnvironmentStateErrorCopyWith(EnvironmentStateError value,
-          $Res Function(EnvironmentStateError) _then) =
-      _$EnvironmentStateErrorCopyWithImpl;
-  @useResult
-  $Res call(
-      {String message,
-      List<Environment>? environments,
-      Environment? selectedEnvironment,
-      Map<String, String>? environmentValues,
-      bool? isEditing});
-
-  $EnvironmentCopyWith<$Res>? get selectedEnvironment;
-}
-
-/// @nodoc
-class _$EnvironmentStateErrorCopyWithImpl<$Res>
-    implements $EnvironmentStateErrorCopyWith<$Res> {
-  _$EnvironmentStateErrorCopyWithImpl(this._self, this._then);
-
-  final EnvironmentStateError _self;
-  final $Res Function(EnvironmentStateError) _then;
-
-  /// Create a copy of EnvironmentState
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  $Res call({
-    Object? message = null,
-    Object? environments = freezed,
-    Object? selectedEnvironment = freezed,
-    Object? environmentValues = freezed,
-    Object? isEditing = freezed,
-  }) {
-    return _then(EnvironmentStateError(
-      message: null == message
-          ? _self.message
-          : message // ignore: cast_nullable_to_non_nullable
-              as String,
-      environments: freezed == environments
-          ? _self._environments
-          : environments // ignore: cast_nullable_to_non_nullable
-              as List<Environment>?,
-      selectedEnvironment: freezed == selectedEnvironment
-          ? _self.selectedEnvironment
-          : selectedEnvironment // ignore: cast_nullable_to_non_nullable
-              as Environment?,
-      environmentValues: freezed == environmentValues
-          ? _self._environmentValues
-          : environmentValues // ignore: cast_nullable_to_non_nullable
-              as Map<String, String>?,
-      isEditing: freezed == isEditing
-          ? _self.isEditing
-          : isEditing // ignore: cast_nullable_to_non_nullable
-              as bool?,
-    ));
-  }
-
-  /// Create a copy of EnvironmentState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $EnvironmentCopyWith<$Res>? get selectedEnvironment {
-    if (_self.selectedEnvironment == null) {
-      return null;
-    }
-
-    return $EnvironmentCopyWith<$Res>(_self.selectedEnvironment!, (value) {
-      return _then(_self.copyWith(selectedEnvironment: value));
-    });
   }
 }
 

@@ -23,6 +23,7 @@ void showAppModalSheet({
   required BuildContext context,
   required WidgetRef ref,
   required String title,
+  String? subtitle,
   required Widget pageContent,
   bool barrierDismissible = true,
   required Future<bool> Function()?
@@ -47,6 +48,17 @@ void showAppModalSheet({
       return [
         WoltModalSheetPage(
           isTopBarLayerAlwaysVisible: isTopBarLayerAlwaysVisible,
+          pageTitle: subtitle != null
+              ? Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Center(
+                    child: Text(
+                      subtitle,
+                      style: Theme.of(modalSheetContext).textTheme.titleSmall,
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
           // Standardized Top Bar Title
           topBarTitle: Padding(
             padding: const EdgeInsets.all(16.0),
