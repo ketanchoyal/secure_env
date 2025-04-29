@@ -17,7 +17,7 @@ T _$identity<T>(T value) => value;
 mixin _$ProjectState {
   NotifierState get state;
   List<Project> get projects;
-  Project? get selectedProject;
+  String? get selectedProjectId;
   bool get isEditing;
   String? get errorMessage;
 
@@ -36,8 +36,8 @@ mixin _$ProjectState {
             other is ProjectState &&
             (identical(other.state, state) || other.state == state) &&
             const DeepCollectionEquality().equals(other.projects, projects) &&
-            (identical(other.selectedProject, selectedProject) ||
-                other.selectedProject == selectedProject) &&
+            (identical(other.selectedProjectId, selectedProjectId) ||
+                other.selectedProjectId == selectedProjectId) &&
             (identical(other.isEditing, isEditing) ||
                 other.isEditing == isEditing) &&
             (identical(other.errorMessage, errorMessage) ||
@@ -49,13 +49,13 @@ mixin _$ProjectState {
       runtimeType,
       state,
       const DeepCollectionEquality().hash(projects),
-      selectedProject,
+      selectedProjectId,
       isEditing,
       errorMessage);
 
   @override
   String toString() {
-    return 'ProjectState(state: $state, projects: $projects, selectedProject: $selectedProject, isEditing: $isEditing, errorMessage: $errorMessage)';
+    return 'ProjectState(state: $state, projects: $projects, selectedProjectId: $selectedProjectId, isEditing: $isEditing, errorMessage: $errorMessage)';
   }
 }
 
@@ -68,11 +68,9 @@ abstract mixin class $ProjectStateCopyWith<$Res> {
   $Res call(
       {NotifierState state,
       List<Project> projects,
-      Project? selectedProject,
+      String? selectedProjectId,
       bool isEditing,
       String? errorMessage});
-
-  $ProjectCopyWith<$Res>? get selectedProject;
 }
 
 /// @nodoc
@@ -89,7 +87,7 @@ class _$ProjectStateCopyWithImpl<$Res> implements $ProjectStateCopyWith<$Res> {
   $Res call({
     Object? state = null,
     Object? projects = null,
-    Object? selectedProject = freezed,
+    Object? selectedProjectId = freezed,
     Object? isEditing = null,
     Object? errorMessage = freezed,
   }) {
@@ -102,10 +100,10 @@ class _$ProjectStateCopyWithImpl<$Res> implements $ProjectStateCopyWith<$Res> {
           ? _self.projects
           : projects // ignore: cast_nullable_to_non_nullable
               as List<Project>,
-      selectedProject: freezed == selectedProject
-          ? _self.selectedProject
-          : selectedProject // ignore: cast_nullable_to_non_nullable
-              as Project?,
+      selectedProjectId: freezed == selectedProjectId
+          ? _self.selectedProjectId
+          : selectedProjectId // ignore: cast_nullable_to_non_nullable
+              as String?,
       isEditing: null == isEditing
           ? _self.isEditing
           : isEditing // ignore: cast_nullable_to_non_nullable
@@ -116,20 +114,6 @@ class _$ProjectStateCopyWithImpl<$Res> implements $ProjectStateCopyWith<$Res> {
               as String?,
     ));
   }
-
-  /// Create a copy of ProjectState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $ProjectCopyWith<$Res>? get selectedProject {
-    if (_self.selectedProject == null) {
-      return null;
-    }
-
-    return $ProjectCopyWith<$Res>(_self.selectedProject!, (value) {
-      return _then(_self.copyWith(selectedProject: value));
-    });
-  }
 }
 
 /// @nodoc
@@ -138,7 +122,7 @@ class _ProjectState extends ProjectState {
   const _ProjectState(
       {this.state = NotifierState.initial,
       final List<Project> projects = const [],
-      this.selectedProject,
+      this.selectedProjectId,
       this.isEditing = false,
       this.errorMessage})
       : _projects = projects,
@@ -157,7 +141,7 @@ class _ProjectState extends ProjectState {
   }
 
   @override
-  final Project? selectedProject;
+  final String? selectedProjectId;
   @override
   @JsonKey()
   final bool isEditing;
@@ -179,8 +163,8 @@ class _ProjectState extends ProjectState {
             other is _ProjectState &&
             (identical(other.state, state) || other.state == state) &&
             const DeepCollectionEquality().equals(other._projects, _projects) &&
-            (identical(other.selectedProject, selectedProject) ||
-                other.selectedProject == selectedProject) &&
+            (identical(other.selectedProjectId, selectedProjectId) ||
+                other.selectedProjectId == selectedProjectId) &&
             (identical(other.isEditing, isEditing) ||
                 other.isEditing == isEditing) &&
             (identical(other.errorMessage, errorMessage) ||
@@ -192,13 +176,13 @@ class _ProjectState extends ProjectState {
       runtimeType,
       state,
       const DeepCollectionEquality().hash(_projects),
-      selectedProject,
+      selectedProjectId,
       isEditing,
       errorMessage);
 
   @override
   String toString() {
-    return 'ProjectState(state: $state, projects: $projects, selectedProject: $selectedProject, isEditing: $isEditing, errorMessage: $errorMessage)';
+    return 'ProjectState(state: $state, projects: $projects, selectedProjectId: $selectedProjectId, isEditing: $isEditing, errorMessage: $errorMessage)';
   }
 }
 
@@ -213,12 +197,9 @@ abstract mixin class _$ProjectStateCopyWith<$Res>
   $Res call(
       {NotifierState state,
       List<Project> projects,
-      Project? selectedProject,
+      String? selectedProjectId,
       bool isEditing,
       String? errorMessage});
-
-  @override
-  $ProjectCopyWith<$Res>? get selectedProject;
 }
 
 /// @nodoc
@@ -236,7 +217,7 @@ class __$ProjectStateCopyWithImpl<$Res>
   $Res call({
     Object? state = null,
     Object? projects = null,
-    Object? selectedProject = freezed,
+    Object? selectedProjectId = freezed,
     Object? isEditing = null,
     Object? errorMessage = freezed,
   }) {
@@ -249,10 +230,10 @@ class __$ProjectStateCopyWithImpl<$Res>
           ? _self._projects
           : projects // ignore: cast_nullable_to_non_nullable
               as List<Project>,
-      selectedProject: freezed == selectedProject
-          ? _self.selectedProject
-          : selectedProject // ignore: cast_nullable_to_non_nullable
-              as Project?,
+      selectedProjectId: freezed == selectedProjectId
+          ? _self.selectedProjectId
+          : selectedProjectId // ignore: cast_nullable_to_non_nullable
+              as String?,
       isEditing: null == isEditing
           ? _self.isEditing
           : isEditing // ignore: cast_nullable_to_non_nullable
@@ -263,27 +244,12 @@ class __$ProjectStateCopyWithImpl<$Res>
               as String?,
     ));
   }
-
-  /// Create a copy of ProjectState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $ProjectCopyWith<$Res>? get selectedProject {
-    if (_self.selectedProject == null) {
-      return null;
-    }
-
-    return $ProjectCopyWith<$Res>(_self.selectedProject!, (value) {
-      return _then(_self.copyWith(selectedProject: value));
-    });
-  }
 }
 
 /// @nodoc
 mixin _$EnvironmentState {
   NotifierState get state;
   List<Environment> get environments;
-  Map<String, String> get environmentValues;
   String? get errorMessage;
 
   /// Create a copy of EnvironmentState
@@ -302,23 +268,17 @@ mixin _$EnvironmentState {
             (identical(other.state, state) || other.state == state) &&
             const DeepCollectionEquality()
                 .equals(other.environments, environments) &&
-            const DeepCollectionEquality()
-                .equals(other.environmentValues, environmentValues) &&
             (identical(other.errorMessage, errorMessage) ||
                 other.errorMessage == errorMessage));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      state,
-      const DeepCollectionEquality().hash(environments),
-      const DeepCollectionEquality().hash(environmentValues),
-      errorMessage);
+  int get hashCode => Object.hash(runtimeType, state,
+      const DeepCollectionEquality().hash(environments), errorMessage);
 
   @override
   String toString() {
-    return 'EnvironmentState(state: $state, environments: $environments, environmentValues: $environmentValues, errorMessage: $errorMessage)';
+    return 'EnvironmentState(state: $state, environments: $environments, errorMessage: $errorMessage)';
   }
 }
 
@@ -331,7 +291,6 @@ abstract mixin class $EnvironmentStateCopyWith<$Res> {
   $Res call(
       {NotifierState state,
       List<Environment> environments,
-      Map<String, String> environmentValues,
       String? errorMessage});
 }
 
@@ -350,7 +309,6 @@ class _$EnvironmentStateCopyWithImpl<$Res>
   $Res call({
     Object? state = null,
     Object? environments = null,
-    Object? environmentValues = null,
     Object? errorMessage = freezed,
   }) {
     return _then(_self.copyWith(
@@ -362,10 +320,6 @@ class _$EnvironmentStateCopyWithImpl<$Res>
           ? _self.environments
           : environments // ignore: cast_nullable_to_non_nullable
               as List<Environment>,
-      environmentValues: null == environmentValues
-          ? _self.environmentValues
-          : environmentValues // ignore: cast_nullable_to_non_nullable
-              as Map<String, String>,
       errorMessage: freezed == errorMessage
           ? _self.errorMessage
           : errorMessage // ignore: cast_nullable_to_non_nullable
@@ -380,10 +334,8 @@ class _EnvironmentState extends EnvironmentState {
   const _EnvironmentState(
       {this.state = NotifierState.initial,
       final List<Environment> environments = const [],
-      final Map<String, String> environmentValues = const {},
       this.errorMessage})
       : _environments = environments,
-        _environmentValues = environmentValues,
         super._();
 
   @override
@@ -396,16 +348,6 @@ class _EnvironmentState extends EnvironmentState {
     if (_environments is EqualUnmodifiableListView) return _environments;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_environments);
-  }
-
-  final Map<String, String> _environmentValues;
-  @override
-  @JsonKey()
-  Map<String, String> get environmentValues {
-    if (_environmentValues is EqualUnmodifiableMapView)
-      return _environmentValues;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(_environmentValues);
   }
 
   @override
@@ -427,23 +369,17 @@ class _EnvironmentState extends EnvironmentState {
             (identical(other.state, state) || other.state == state) &&
             const DeepCollectionEquality()
                 .equals(other._environments, _environments) &&
-            const DeepCollectionEquality()
-                .equals(other._environmentValues, _environmentValues) &&
             (identical(other.errorMessage, errorMessage) ||
                 other.errorMessage == errorMessage));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      state,
-      const DeepCollectionEquality().hash(_environments),
-      const DeepCollectionEquality().hash(_environmentValues),
-      errorMessage);
+  int get hashCode => Object.hash(runtimeType, state,
+      const DeepCollectionEquality().hash(_environments), errorMessage);
 
   @override
   String toString() {
-    return 'EnvironmentState(state: $state, environments: $environments, environmentValues: $environmentValues, errorMessage: $errorMessage)';
+    return 'EnvironmentState(state: $state, environments: $environments, errorMessage: $errorMessage)';
   }
 }
 
@@ -458,7 +394,6 @@ abstract mixin class _$EnvironmentStateCopyWith<$Res>
   $Res call(
       {NotifierState state,
       List<Environment> environments,
-      Map<String, String> environmentValues,
       String? errorMessage});
 }
 
@@ -477,7 +412,6 @@ class __$EnvironmentStateCopyWithImpl<$Res>
   $Res call({
     Object? state = null,
     Object? environments = null,
-    Object? environmentValues = null,
     Object? errorMessage = freezed,
   }) {
     return _then(_EnvironmentState(
@@ -489,10 +423,6 @@ class __$EnvironmentStateCopyWithImpl<$Res>
           ? _self._environments
           : environments // ignore: cast_nullable_to_non_nullable
               as List<Environment>,
-      environmentValues: null == environmentValues
-          ? _self._environmentValues
-          : environmentValues // ignore: cast_nullable_to_non_nullable
-              as Map<String, String>,
       errorMessage: freezed == errorMessage
           ? _self.errorMessage
           : errorMessage // ignore: cast_nullable_to_non_nullable

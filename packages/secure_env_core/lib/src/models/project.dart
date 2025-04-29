@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'project_status.dart';
+import 'project_config.dart';
 
 part 'project.freezed.dart';
 part 'project.g.dart';
@@ -22,8 +23,8 @@ abstract class Project with _$Project {
     /// List of environment names in this project
     @Default([]) List<String> environments,
 
-    /// Project configuration
-    @Default({}) Map<String, dynamic> config,
+    /// Project settings for auto-sync behavior
+    @Default(ProjectConfig()) ProjectConfig config,
 
     /// Project status (active/archived/markedForDeletion)
     @Default(ProjectStatus.active) ProjectStatus status,
@@ -54,7 +55,7 @@ abstract class Project with _$Project {
       description: description,
       metadata: metadata ?? {},
       environments: [],
-      config: {},
+      config: const ProjectConfig(),
       status: ProjectStatus.active,
       createdAt: now,
       updatedAt: now,

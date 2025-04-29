@@ -15,6 +15,7 @@ abstract class Environment with _$Environment {
     @Default({}) Map<String, bool> sensitiveKeys,
     @Default({}) Map<String, String> metadata,
     @Default(ExportConfig()) ExportConfig exportConfig,
+    @Default({}) Map<String, String> lastFileChecksums, // tracks per-format file checksums for auto-sync
   }) = _Environment;
 
   factory Environment.fromJson(Map<String, dynamic> json) =>

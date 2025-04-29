@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
-import 'package:secure_env_gui/src/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'settings_providers.g.dart';
@@ -17,7 +16,6 @@ class AppSettings {
   final String? lastProjectPath;
   final String? lastEnvironmentName;
   final List<RecentProject> recentProjects;
-  final bool autoSave;
   final Duration autoSaveInterval;
   final String fontFamily;
 
@@ -27,8 +25,7 @@ class AppSettings {
     this.lastProjectPath,
     this.lastEnvironmentName,
     this.recentProjects = const [],
-    this.autoSave = true,
-    this.autoSaveInterval = const Duration(minutes: 5),
+    this.autoSaveInterval = const Duration(milliseconds: 200),
     this.fontFamily = 'ABeeZee',
   });
 
@@ -38,7 +35,6 @@ class AppSettings {
     String? lastProjectPath,
     String? lastEnvironmentName,
     List<RecentProject>? recentProjects,
-    bool? autoSave,
     Duration? autoSaveInterval,
     String? fontFamily,
   }) {
@@ -48,7 +44,6 @@ class AppSettings {
       lastProjectPath: lastProjectPath ?? this.lastProjectPath,
       lastEnvironmentName: lastEnvironmentName ?? this.lastEnvironmentName,
       recentProjects: recentProjects ?? this.recentProjects,
-      autoSave: autoSave ?? this.autoSave,
       autoSaveInterval: autoSaveInterval ?? this.autoSaveInterval,
       fontFamily: fontFamily ?? this.fontFamily,
     );
@@ -61,7 +56,6 @@ class AppSettings {
       'lastProjectPath': lastProjectPath,
       'lastEnvironmentName': lastEnvironmentName,
       'recentProjects': recentProjects.map((p) => p.toJson()).toList(),
-      'autoSave': autoSave,
       'autoSaveInterval': autoSaveInterval.inMinutes,
       'fontFamily': fontFamily,
     };
@@ -80,7 +74,6 @@ class AppSettings {
               ?.map((e) => RecentProject.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      autoSave: json['autoSave'] as bool? ?? true,
       autoSaveInterval: Duration(
         minutes: json['autoSaveInterval'] as int? ?? 5,
       ),
@@ -199,11 +192,6 @@ class SettingsNotifier extends _$SettingsNotifier {
       ..removeWhere((p) => p.name == name);
 
     state = state.copyWith(recentProjects: updatedProjects);
-    _saveSettings();
-  }
-
-  void setAutoSave(bool enabled) {
-    state = state.copyWith(autoSave: enabled);
     _saveSettings();
   }
 

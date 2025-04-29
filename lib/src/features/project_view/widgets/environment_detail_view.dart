@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:secure_env_core/secure_env_core.dart';
@@ -397,15 +398,17 @@ class _DesktopVariableRowState extends State<_DesktopVariableRow> {
                       widget.isSensitive
                           ? (_obscure ? '••••••••••••••••' : widget.value)
                           : widget.value,
-                      style: TextStyle(
-                        color: widget.isSensitive
-                            ? Colors.grey[700]
-                            : Colors.white,
-                        fontSize: 15,
-                        letterSpacing: 1.1,
-                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  //IconButton to copy value with key
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 18),
+                    onPressed: () {
+                      final valueWithKey = '${widget.keyName}=${widget.value}';
+                      Clipboard.setData(ClipboardData(text: valueWithKey));
+                    },
+                    tooltip: 'Copy Value with Key',
                   ),
                   if (widget.isSensitive)
                     IconButton(

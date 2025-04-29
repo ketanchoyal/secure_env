@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
+import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 
 part 'core_providers.g.dart';
@@ -56,9 +57,19 @@ EncryptionService encryptionService(Ref ref) {
   return EncryptionService();
 }
 
-@riverpod
-EnvironmentExportService environmentExportService(
-    Ref ref, ExportConfig exportConfig) {
-  final logger = ref.watch(loggerProvider(EnvironmentExportService));
-  return EnvironmentExportService(exportConfig, logger: logger);
+@Riverpod(dependencies: [environmentService])
+EnvironmentExportService environmentExportService(Ref ref, Environment env) {
+  final logger = ref.read(loggerProvider(EnvironmentExportService));
+  final project = ref.read(environmentsNotifierProvider.notifier).project;
+
+  if (project == null) {
+    throw StateError('No project selected');
+  }
+
+  final environmentService = ref.read(environmentServiceProvider(project));
+  return EnvironmentExportService(
+    env,
+    logger: logger,
+    environmentService: environmentService,
+  );
 }

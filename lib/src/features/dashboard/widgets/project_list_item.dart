@@ -20,9 +20,14 @@ class ProjectListItem extends ConsumerWidget {
 
     showMenu(
       context: context,
+      popUpAnimationStyle: AnimationStyle(
+        curve: Curves.easeInOut,
+        reverseCurve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 300),
+      ),
       position: RelativeRect.fromLTRB(
-        position.dx,
-        position.dy,
+        position.dx + 1,
+        position.dy + 1,
         position.dx + 1,
         position.dy + 1,
       ),

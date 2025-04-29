@@ -33,13 +33,16 @@ void showAppModalSheet({
       isPrimaryActionEnabledProvider, // Optional provider for enabling button
 
   bool isTopBarLayerAlwaysVisible = true,
-  EdgeInsets pagePadding = const EdgeInsets.symmetric(
-    horizontal: 16,
-    vertical: 16,
+  EdgeInsets pagePadding = const EdgeInsets.only(
+    left: 16,
+    right: 16,
+    top: 16,
+    bottom: 100,
   ), // Default padding
 }) {
   WoltModalSheet.show<void>(
     context: context,
+    useRootNavigator: true,
     barrierDismissible: barrierDismissible,
     // Use a Consumer to react to the isPrimaryActionEnabledProvider
     pageListBuilder: (modalSheetContext) {

@@ -70,9 +70,9 @@ class LoggingService implements core.Logger {
 
 /// Provider for the logging service
 @riverpod
-core.Logger logger(Ref ref, [Type? type]) {
+core.Logger logger(Ref ref, [Type? type, String? prefix]) {
   return LoggingService(
-    prefix: type?.toString() ?? 'SecureEnvGUI',
+    prefix: type?.toString() ?? prefix ?? 'SecureEnvGUI',
     verbose: true, // You can make this configurable based on your needs
   );
 }

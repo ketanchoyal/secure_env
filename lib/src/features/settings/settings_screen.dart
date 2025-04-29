@@ -14,7 +14,8 @@ class SettingsScreen extends ConsumerWidget {
     if (brightness == Brightness.light) themeMode = ThemeMode.light;
 
     // Get all Google Fonts dynamically
-    final allGoogleFontFamilies = GoogleFonts.asMap().keys.toList()..sort();
+    final autoSaveInterval =
+        ref.watch(settingsNotifierProvider).autoSaveInterval;
 
     return Scaffold(
       appBar: AppBar(
@@ -138,7 +139,8 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       Builder(
                         builder: (context) {
-                          final selectedFont = ref.watch(settingsNotifierProvider).fontFamily;
+                          final selectedFont =
+                              ref.watch(settingsNotifierProvider).fontFamily;
                           return TextButton(
                             onPressed: () async {
                               final font = await showDialog<String>(
@@ -148,7 +150,9 @@ class SettingsScreen extends ConsumerWidget {
                                 ),
                               );
                               if (font != null && font != selectedFont) {
-                                ref.read(settingsNotifierProvider.notifier).setFontFamily(font);
+                                ref
+                                    .read(settingsNotifierProvider.notifier)
+                                    .setFontFamily(font);
                               }
                             },
                             child: Row(
@@ -162,6 +166,204 @@ class SettingsScreen extends ConsumerWidget {
                             ),
                           );
                         },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Auto-Save Interval',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.timer_outlined, size: 28),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          'Auto-Save Interval',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ),
+                      DropdownButtonHideUnderline(
+                        child: DropdownButton<Duration>(
+                          value: autoSaveInterval,
+                          underline: const SizedBox.shrink(),
+                          isDense: false,
+                          borderRadius: BorderRadius.circular(8),
+                          onChanged: (value) async {
+                            if (value == Duration.zero) {
+                              final result = await showDialog<Duration>(
+                                context: context,
+                                builder: (context) {
+                                  final controller = TextEditingController();
+                                  String unit = 'Minutes';
+                                  return StatefulBuilder(
+                                    builder: (context, setState) {
+                                      return AlertDialog(
+                                        title: const Text(
+                                            'Custom Auto-Save Interval'),
+                                        content: Form(
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Expanded(
+                                                flex: 2,
+                                                child: TextField(
+                                                  controller: controller,
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  textAlign: TextAlign.end,
+                                                  decoration: InputDecoration(
+                                                    labelText: 'Value',
+                                                    border:
+                                                        OutlineInputBorder(),
+                                                    contentPadding:
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                            vertical: 8,
+                                                            horizontal: 12),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                flex: 1,
+                                                child: DropdownButtonFormField<
+                                                    String>(
+                                                  value: unit,
+                                                  decoration: InputDecoration(
+                                                    labelText: 'Unit',
+                                                    border:
+                                                        OutlineInputBorder(),
+                                                    contentPadding:
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                            vertical: 8,
+                                                            horizontal: 12),
+                                                  ),
+                                                  onChanged: (v) =>
+                                                      setState(() => unit = v!),
+                                                  items: const [
+                                                    DropdownMenuItem(
+                                                        value: 'Minutes',
+                                                        child: Text('Min')),
+                                                    DropdownMenuItem(
+                                                        value: 'Milliseconds',
+                                                        child: Text('Ms')),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
+                                              child: const Text('Cancel')),
+                                          TextButton(
+                                              onPressed: () {
+                                                final input = int.tryParse(
+                                                    controller.text);
+                                                if (input != null &&
+                                                    input > 0) {
+                                                  final duration = unit ==
+                                                          'Milliseconds'
+                                                      ? Duration(
+                                                          milliseconds: input)
+                                                      : Duration(
+                                                          minutes: input);
+                                                  Navigator.of(context)
+                                                      .pop(duration);
+                                                } else {
+                                                  Navigator.of(context).pop();
+                                                }
+                                              },
+                                              child: const Text('OK')),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                              if (result != null) {
+                                ref
+                                    .read(settingsNotifierProvider.notifier)
+                                    .setAutoSaveInterval(result);
+                              }
+                            } else if (value != null) {
+                              ref
+                                  .read(settingsNotifierProvider.notifier)
+                                  .setAutoSaveInterval(value);
+                            }
+                          },
+                          items: [
+                            const DropdownMenuItem(
+                              value: Duration(minutes: 1),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 8),
+                                child: Text('1 min'),
+                              ),
+                            ),
+                            const DropdownMenuItem(
+                                value: Duration(minutes: 5),
+                                child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 6, horizontal: 8),
+                                    child: Text('5 min'))),
+                            const DropdownMenuItem(
+                              value: Duration(minutes: 10),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 8),
+                                child: Text(
+                                  '2 min',
+                                ),
+                              ),
+                            ),
+                            const DropdownMenuItem(
+                              value: Duration(minutes: 15),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 8),
+                                child: Text(
+                                  '3 min',
+                                ),
+                              ),
+                            ),
+                            if (autoSaveInterval > const Duration(minutes: 0) &&
+                                ![1, 2, 3].contains(autoSaveInterval.inMinutes))
+                              DropdownMenuItem(
+                                value: autoSaveInterval,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 6, horizontal: 8),
+                                  child: Text(
+                                      '${autoSaveInterval.inMinutes == 0 ? autoSaveInterval.inMilliseconds : autoSaveInterval.inMinutes} ${autoSaveInterval.inMinutes == 0 ? 'Ms' : 'Min'} (custom)'),
+                                ),
+                              ),
+                            const DropdownMenuItem(
+                                value: Duration.zero,
+                                child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 6, horizontal: 8),
+                                    child: Text('Custom...'))),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -235,7 +437,9 @@ class _FontPickerDialogState extends State<_FontPickerDialog> {
     final allFonts = GoogleFonts.asMap().keys.toList()..sort();
     final filteredFonts = _filter.isEmpty
         ? allFonts
-        : allFonts.where((f) => f.toLowerCase().contains(_filter.toLowerCase())).toList();
+        : allFonts
+            .where((f) => f.toLowerCase().contains(_filter.toLowerCase()))
+            .toList();
     return Dialog(
       child: SizedBox(
         width: 400,

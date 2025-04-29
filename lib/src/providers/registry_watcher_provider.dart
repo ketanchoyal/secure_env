@@ -4,7 +4,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
-import 'package:path/path.dart' as path;
 
 part 'registry_watcher_provider.g.dart';
 
@@ -37,8 +36,8 @@ class RegistryWatcher extends _$RegistryWatcher {
       for (final project in projects) {
         try {
           //Check if directory exists
-          final directory =
-              Directory('${project.basePath}${path.separator}.secure_env');
+          final directory = Directory(
+              '${project.basePath}${Platform.pathSeparator}.secure_env');
           if (!await directory.exists()) {
             logger.warn(
               'Found invalid project "${project.name}" at "${project.basePath}". Attempting to clean up...',

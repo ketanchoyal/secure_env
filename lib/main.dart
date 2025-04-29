@@ -56,6 +56,7 @@ class SecureEnvApp extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Container(
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       padding: EdgeInsets.symmetric(vertical: 6),
                       child: Text(
                         'Secure Env',

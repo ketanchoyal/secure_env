@@ -265,9 +265,7 @@ class EnvironmentOperations extends _$EnvironmentOperations {
             'Trying to update an environment that does not exist, something went wrong');
       }
 
-      await ref
-          .read(environmentExportServiceProvider(environment.exportConfig))
-          .export(environment.values);
+      await ref.read(environmentExportServiceProvider(environment)).export();
       logger.info('Environment exported successfully');
       state = EnvironmentOperationState.success(
           'Environment $name exported successfully');

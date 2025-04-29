@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
+import 'package:secure_env_gui/src/providers/env_sync_provider.dart';
 import 'package:secure_env_gui/src/providers/environment_provider.dart';
 import 'package:secure_env_gui/src/providers/project_provider.dart';
 import 'package:secure_env_gui/src/providers/registry_watcher_provider.dart';
@@ -27,7 +28,7 @@ abstract class ProjectState with _$ProjectState {
   const factory ProjectState({
     @Default(NotifierState.initial) NotifierState state,
     @Default([]) List<Project> projects,
-    Project? selectedProject,
+    String? selectedProjectId,
     @Default(false) bool isEditing,
     String? errorMessage,
   }) = _ProjectState;
@@ -37,24 +38,24 @@ abstract class ProjectState with _$ProjectState {
 
   ProjectState loading({
     List<Project>? projects,
-    Project? selectedProject,
+    String? selectedProjectId,
   }) =>
       ProjectState(
         state: NotifierState.loading,
         projects: projects ?? this.projects,
-        selectedProject: selectedProject ?? this.selectedProject,
+        selectedProjectId: selectedProjectId ?? this.selectedProjectId,
         errorMessage: null,
         isEditing: false,
       );
 
   ProjectState loaded({
     required List<Project> projects,
-    Project? selectedProject,
+    String? selectedProjectId,
   }) {
     return ProjectState(
       state: NotifierState.loaded,
       projects: projects,
-      selectedProject: selectedProject ?? this.selectedProject,
+      selectedProjectId: selectedProjectId ?? this.selectedProjectId,
       errorMessage: null,
       isEditing: false,
     );
@@ -63,12 +64,12 @@ abstract class ProjectState with _$ProjectState {
   ProjectState error({
     required String message,
     List<Project>? projects,
-    Project? selectedProject,
+    String? selectedProjectId,
   }) {
     return ProjectState(
       state: NotifierState.error,
       projects: projects ?? this.projects,
-      selectedProject: selectedProject ?? this.selectedProject,
+      selectedProjectId: selectedProjectId ?? this.selectedProjectId,
       errorMessage: message,
       isEditing: false,
     );
@@ -158,7 +159,9 @@ class ProjectsNotifier extends _$ProjectsNotifier {
   }
 
   Project? get selectedProject {
-    return state.selectedProject;
+    return state.selectedProjectId != null
+        ? projectFromId(state.selectedProjectId!)
+        : null;
   }
 
   Logger get logger => ref.read(loggerProvider(ProjectsNotifier));
@@ -189,11 +192,12 @@ class ProjectsNotifier extends _$ProjectsNotifier {
 
   void selectProject(String? projectId) {
     if (projectId == null) {
-      state = state.loaded(projects: state.projects, selectedProject: null);
+      state = state.loaded(projects: state.projects, selectedProjectId: null);
       return;
     }
     final project = projectFromId(projectId);
-    state = state.loaded(projects: state.projects, selectedProject: project);
+    state =
+        state.loaded(projects: state.projects, selectedProjectId: projectId);
 
     if (project != null) {
       ref.read(environmentsNotifierProvider.notifier).loadEnvironments();
@@ -207,8 +211,8 @@ class ProjectsNotifier extends _$ProjectsNotifier {
 /// For managing environments, use [EnvironmentNotifier].
 @Riverpod(keepAlive: true, dependencies: [ProjectsNotifier])
 class EnvironmentsNotifier extends _$EnvironmentsNotifier {
-  String? get projectId =>
-      ref.read(projectsNotifierProvider.notifier).selectedProject?.id;
+  Project? get project =>
+      ref.read(projectsNotifierProvider.notifier).selectedProject;
 
   @override
   EnvironmentState build() {
@@ -218,6 +222,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
       if (next is EnvironmentOperationSuccess) {
         logger.info('Environment operation success: Reloading environments');
         loadEnvironments();
+        ref.read(envSyncProvider);
       }
     });
 
@@ -234,15 +239,11 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
   Logger get logger => ref.read(loggerProvider(EnvironmentsNotifier));
 
   Future<void> loadEnvironments() async {
-    if (projectId == null) {
+    if (project == null) {
       return;
     }
     state = state.loading();
     try {
-      final project = ref
-          .watch(projectsNotifierProvider.notifier)
-          .projectFromId(projectId!);
-
       final environmentService = ref.read(environmentServiceProvider(project!));
       final environments = await environmentService.listEnvironments();
       state = state.loaded(

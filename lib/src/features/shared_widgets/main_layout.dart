@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../routing/app_router.dart';
-import 'package:secure_env_gui/src/features/settings/settings_screen.dart';
 
 // Provider to manage the selected navigation index
 final selectedNavIndexProvider = StateProvider<int>((ref) => 0);
@@ -17,16 +15,17 @@ class MainLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = ref.watch(selectedNavIndexProvider);
+    final goRouter = ref.read(goRouterProvider);
 
     // Function to handle navigation rail item taps
     void onDestinationSelected(int index) {
       ref.read(selectedNavIndexProvider.notifier).state = index;
       switch (index) {
         case 0: // Dashboard
-          context.go(AppRoutes.dashboard);
+          goRouter.go(AppRoutes.dashboard);
           break;
         case 1: // Settings
-          context.go(AppRoutes.settings);
+          goRouter.go(AppRoutes.settings);
           break;
         // Add more cases for other destinations
       }

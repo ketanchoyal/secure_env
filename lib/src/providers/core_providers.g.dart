@@ -233,7 +233,7 @@ final encryptionServiceProvider =
 // ignore: unused_element
 typedef EncryptionServiceRef = AutoDisposeProviderRef<EncryptionService>;
 String _$environmentExportServiceHash() =>
-    r'049eff3232e5b2e87567f3787dba235c33a4c2cb';
+    r'a688fd4118e8dc7d8e42d74e393a62c5027b7b51';
 
 /// See also [environmentExportService].
 @ProviderFor(environmentExportService)
@@ -246,10 +246,10 @@ class EnvironmentExportServiceFamily extends Family<EnvironmentExportService> {
 
   /// See also [environmentExportService].
   EnvironmentExportServiceProvider call(
-    ExportConfig exportConfig,
+    Environment env,
   ) {
     return EnvironmentExportServiceProvider(
-      exportConfig,
+      env,
     );
   }
 
@@ -258,16 +258,22 @@ class EnvironmentExportServiceFamily extends Family<EnvironmentExportService> {
     covariant EnvironmentExportServiceProvider provider,
   ) {
     return call(
-      provider.exportConfig,
+      provider.env,
     );
   }
 
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
+  static final Iterable<ProviderOrFamily> _dependencies = <ProviderOrFamily>[
+    environmentServiceProvider
+  ];
 
   @override
   Iterable<ProviderOrFamily>? get dependencies => _dependencies;
 
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+  static final Iterable<ProviderOrFamily> _allTransitiveDependencies =
+      <ProviderOrFamily>{
+    environmentServiceProvider,
+    ...?environmentServiceProvider.allTransitiveDependencies
+  };
 
   @override
   Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
@@ -282,11 +288,11 @@ class EnvironmentExportServiceProvider
     extends AutoDisposeProvider<EnvironmentExportService> {
   /// See also [environmentExportService].
   EnvironmentExportServiceProvider(
-    ExportConfig exportConfig,
+    Environment env,
   ) : this._internal(
           (ref) => environmentExportService(
             ref as EnvironmentExportServiceRef,
-            exportConfig,
+            env,
           ),
           from: environmentExportServiceProvider,
           name: r'environmentExportServiceProvider',
@@ -297,7 +303,7 @@ class EnvironmentExportServiceProvider
           dependencies: EnvironmentExportServiceFamily._dependencies,
           allTransitiveDependencies:
               EnvironmentExportServiceFamily._allTransitiveDependencies,
-          exportConfig: exportConfig,
+          env: env,
         );
 
   EnvironmentExportServiceProvider._internal(
@@ -307,10 +313,10 @@ class EnvironmentExportServiceProvider
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.exportConfig,
+    required this.env,
   }) : super.internal();
 
-  final ExportConfig exportConfig;
+  final Environment env;
 
   @override
   Override overrideWith(
@@ -326,7 +332,7 @@ class EnvironmentExportServiceProvider
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        exportConfig: exportConfig,
+        env: env,
       ),
     );
   }
@@ -338,14 +344,13 @@ class EnvironmentExportServiceProvider
 
   @override
   bool operator ==(Object other) {
-    return other is EnvironmentExportServiceProvider &&
-        other.exportConfig == exportConfig;
+    return other is EnvironmentExportServiceProvider && other.env == env;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, exportConfig.hashCode);
+    hash = _SystemHash.combine(hash, env.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -355,8 +360,8 @@ class EnvironmentExportServiceProvider
 // ignore: unused_element
 mixin EnvironmentExportServiceRef
     on AutoDisposeProviderRef<EnvironmentExportService> {
-  /// The parameter `exportConfig` of this provider.
-  ExportConfig get exportConfig;
+  /// The parameter `env` of this provider.
+  Environment get env;
 }
 
 class _EnvironmentExportServiceProviderElement
@@ -365,8 +370,7 @@ class _EnvironmentExportServiceProviderElement
   _EnvironmentExportServiceProviderElement(super.provider);
 
   @override
-  ExportConfig get exportConfig =>
-      (origin as EnvironmentExportServiceProvider).exportConfig;
+  Environment get env => (origin as EnvironmentExportServiceProvider).env;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

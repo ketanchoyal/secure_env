@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:secure_env_core/secure_env_core.dart';
+import 'package:secure_env_gui/src/features/project_view/widgets/modals/project_settings_modal.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/create_environment_modal.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/import_environment_modal.dart';
+import 'package:secure_env_gui/src/providers/project_provider.dart';
 
 import 'widgets/environment_detail_view.dart';
 import 'widgets/empty_state.dart';
@@ -59,6 +61,8 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(projectsNotifierProvider.select((state) =>
+        state.projects.where((p) => p.id == widget.projectId).first));
     // Watch the current project and environments
     final project =
         ref.watch(projectsNotifierProvider.notifier).selectedProject;
@@ -139,6 +143,13 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
                   icon: const Icon(FontAwesomeIcons.plus),
                   onPressed: _showNewEnvironmentModal,
                   tooltip: 'New Environment',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  tooltip: 'Project Settings',
+                  onPressed: () {
+                    ProjectSettingsModal.show(context, ref);
+                  },
                 ),
               ],
       ),
