@@ -4,14 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart'; // Import WoltModalSheet
-
-import '../../../routing/app_router.dart'; // Import for GoRouter
 import 'modals/add_edit_variable_modal.dart'; // Import the modal widget
 import 'modals/export_config_modal.dart'; // Import ExportConfigModal
 import 'package:secure_env_gui/src/providers/environment_provider.dart'; // Import environmentOperationsProvider
-import 'package:secure_env_gui/src/features/settings/settings_screen.dart'; // Import SettingsScreen
-
-// TODO: Import VariableListItem widget once created
 
 class EnvironmentDetailView extends ConsumerWidget {
   final Environment environment;

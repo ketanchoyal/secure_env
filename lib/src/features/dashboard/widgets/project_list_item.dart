@@ -174,7 +174,7 @@ class ProjectListItem extends ConsumerWidget {
             _onTap(context, ref);
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            padding: const EdgeInsets.only(left: 10, right: 20),
             child: Row(
               children: [
                 Expanded(
@@ -185,7 +185,7 @@ class ProjectListItem extends ConsumerWidget {
                       ListTile(
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 4.0,
-                          horizontal: 16.0,
+                          horizontal: 2.0,
                         ),
                         title: Text(
                           project.name,
@@ -199,7 +199,10 @@ class ProjectListItem extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        leading: const FaIcon(FontAwesomeIcons.folder),
+                        leading: const FaIcon(
+                          FontAwesomeIcons.solidFolderClosed,
+                          size: 28,
+                        ),
                       ),
                       SizedBox(
                         height: 30,

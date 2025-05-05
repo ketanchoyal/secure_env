@@ -3,7 +3,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
-import 'package:secure_env_gui/src/providers/settings_providers.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 import 'dart:async';
 

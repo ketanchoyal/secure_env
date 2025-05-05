@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:go_router/go_router.dart';
-import 'package:secure_env_gui/src/providers/app_state_providers.dart';
-
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/project_view/project_view_screen.dart';
 import '../features/settings/settings_screen.dart';

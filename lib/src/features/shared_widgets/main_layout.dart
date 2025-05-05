@@ -4,14 +4,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../routing/app_router.dart';
 
-import 'package:secure_env_gui/src/providers/app_state_providers.dart';
-
 // Provider to manage the selected navigation index
 final selectedNavIndexProvider = StateProvider<int>((ref) => 0);
 
 // Define NavigationRail widths
 const double _extendedRailWidth = 200;
-const double _compactRailWidth = 72;
 
 class MainLayout extends ConsumerWidget {
   final Widget child; // The screen content to display
@@ -38,11 +35,6 @@ class MainLayout extends ConsumerWidget {
     }
 
     final isSmallScreen = MediaQuery.of(context).size.width < 800;
-    final double currentRailWidth =
-        isSmallScreen ? _compactRailWidth : _extendedRailWidth;
-
-    final projectState = ref.watch(projectsNotifierProvider);
-    final envState = ref.watch(environmentsNotifierProvider);
 
     return Scaffold(
       body: Row(

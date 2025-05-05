@@ -12,7 +12,7 @@ class ProjectList extends ConsumerWidget {
     final projectState = ref.watch(projectsNotifierProvider);
 
     return switch (projectState.state) {
-      NotifierState.initial || NotifierState.loading => const Center(
+      NotifierState.initial || (NotifierState.loading) => const Center(
           child: CircularProgressIndicator(),
         ),
       NotifierState.loaded => projectState.projects.isEmpty

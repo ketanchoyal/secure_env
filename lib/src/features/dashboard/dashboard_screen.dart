@@ -67,7 +67,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             const Divider(), // Add divider
             const SizedBox(height: 16.0), // Add space after divider
             // Section Title
-            Text('Projects', style: Theme.of(context).textTheme.headlineSmall),
+            Row(
+              children: [
+                const SizedBox(width: 10.0),
+                const FaIcon(
+                  FontAwesomeIcons.folderTree,
+                  size: 25,
+                ),
+                const SizedBox(
+                  width: 10.0,
+                ), // Updated spacing between icon and text
+                Text('Projects',
+                    style: Theme.of(context).textTheme.headlineSmall),
+              ],
+            ),
             const SizedBox(height: 8.0),
             // Use Expanded to make the list fill available space
             const Expanded(
@@ -78,12 +91,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             const Divider(),
             const SizedBox(height: 16.0),
             // --- NEW: Recent Activity Section ---
-            Text(
-              'Recent Activity',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall, // Match Projects title style
+            Row(
+              children: [
+                const SizedBox(width: 10.0),
+                const FaIcon(
+                  FontAwesomeIcons.clockRotateLeft,
+                  size: 25,
+                ),
+                const SizedBox(
+                  width: 10.0,
+                ), // Updated spacing between icon and text
+                Text(
+                  'Recent Activity',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineSmall, // Match Projects title style
+                ),
+              ],
             ),
+
             const SizedBox(height: 8.0),
             // Placeholder for Activity List
             Expanded(
