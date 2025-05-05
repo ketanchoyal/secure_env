@@ -17,6 +17,12 @@ class ProjectListItem extends ConsumerWidget {
 
   void _showContextMenu(BuildContext context, WidgetRef ref, Offset position) {
     final router = ref.read(goRouterProvider);
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    // lift menu up by 16px
+    const lift = 25.0;
+    final pos = position.translate(0, -lift);
+    final dx = pos.dx.clamp(0.0, overlay.size.width);
+    final dy = pos.dy.clamp(0.0, overlay.size.height);
 
     showMenu(
       context: context,
@@ -26,10 +32,10 @@ class ProjectListItem extends ConsumerWidget {
         duration: const Duration(milliseconds: 300),
       ),
       position: RelativeRect.fromLTRB(
-        position.dx + 1,
-        position.dy + 1,
-        position.dx + 1,
-        position.dy + 1,
+        dx,
+        dy,
+        overlay.size.width - dx,
+        overlay.size.height - dy,
       ),
       items: [
         PopupMenuItem(
@@ -39,7 +45,7 @@ class ProjectListItem extends ConsumerWidget {
             title: const Text('Open Project'),
             onTap: () {
               router.pop(); // Close the menu
-              router.go(AppRoutes.projectViewPath(project.name));
+              _onTap(context, ref);
             },
           ),
         ),
@@ -143,37 +149,122 @@ class ProjectListItem extends ConsumerWidget {
     );
   }
 
+  void _onTap(BuildContext context, WidgetRef ref) async {
+    final router = ref.read(goRouterProvider);
+    ref.read(projectsNotifierProvider.notifier).selectProject(project.id);
+    await router.push(AppRoutes.projectViewPath(project.id));
+    ref.read(projectsNotifierProvider.notifier).selectProject(null);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
 
     ref.watch(environmentsNotifierProvider);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        hoverColor: Theme.of(context).hoverColor,
-        onTap: () {
-          ref.read(projectsNotifierProvider.notifier).selectProject(project.id);
-          router.go(AppRoutes.projectViewPath(project.id));
-        },
-        onSecondaryTapDown: (details) =>
-            _showContextMenu(context, ref, details.globalPosition),
-        child: ListTile(
-          title: Text(
-            project.name,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onSecondaryTapDown: (details) =>
+          _showContextMenu(context, ref, details.globalPosition),
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          hoverColor: Theme.of(context).hoverColor,
+          onTap: () {
+            _onTap(context, ref);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 4.0,
+                          horizontal: 16.0,
+                        ),
+                        title: Text(
+                          project.name,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        subtitle: Text(
+                          project.description ?? 'No description',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        leading: const FaIcon(FontAwesomeIcons.folder),
+                      ),
+                      SizedBox(
+                        height: 30,
+                        child: ListView.builder(
+                          itemCount: project.environments.length,
+                          // padding: const EdgeInsets.only(left: 8.0),
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(4.0),
+                                splashFactory: NoSplash.splashFactory,
+                                onTap: () async {
+                                  ref
+                                      .read(projectsNotifierProvider.notifier)
+                                      .selectProject(project.id);
+                                  await router.push(AppRoutes.projectViewPath(
+                                      project.id,
+                                      environmentName:
+                                          project.environments[index]));
+                                  ref
+                                      .read(projectsNotifierProvider.notifier)
+                                      .selectProject(null);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4.0,
+                                    horizontal: 12.0,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? Colors.grey[300]
+                                        : Colors.grey[700],
+                                    borderRadius: BorderRadius.circular(4.0),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      project.environments[index],
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .labelMedium
+                                                ?.color,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                    ],
+                  ),
                 ),
+                const FaIcon(FontAwesomeIcons.chevronRight)
+              ],
+            ),
           ),
-          subtitle: Text(
-            project.description ?? 'No description',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          leading: const FaIcon(FontAwesomeIcons.folder),
-          trailing: const FaIcon(FontAwesomeIcons.chevronRight),
         ),
       ),
     );

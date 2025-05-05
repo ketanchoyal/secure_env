@@ -6,15 +6,16 @@ import 'package:secure_env_gui/src/features/project_view/widgets/modals/project_
 import 'package:secure_env_gui/src/features/shared_widgets/modals/create_environment_modal.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/import_environment_modal.dart';
-import 'package:secure_env_gui/src/providers/project_provider.dart';
-
-import 'widgets/environment_detail_view.dart';
-import 'widgets/empty_state.dart';
+import 'package:secure_env_gui/src/features/project_view/widgets/environment_detail_view.dart';
+import 'package:secure_env_gui/src/features/project_view/widgets/empty_state.dart';
+import 'package:secure_env_gui/src/features/project_view/widgets/project_notification_button.dart';
 
 class ProjectViewScreen extends ConsumerStatefulWidget {
   final String projectId;
+  final String? environmentName;
 
-  const ProjectViewScreen({super.key, required this.projectId});
+  const ProjectViewScreen(
+      {super.key, required this.projectId, this.environmentName});
 
   @override
   ConsumerState<ProjectViewScreen> createState() => _ProjectViewScreenState();
@@ -114,8 +115,16 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
         length: displayEnvironments.length,
         vsync: this,
       );
+      //Select the environment based on the environmentName parameter
+      if (widget.environmentName != null) {
+        final index = displayEnvironments
+            .indexWhere((env) => env.name == widget.environmentName);
+        if (index != -1) {
+          _tabController!.index = index;
+        }
+      }
       // Optionally select last tab if added
-      if (displayEnvironments.length > _environments.length) {
+      else if (displayEnvironments.length > _environments.length) {
         _tabController!.index = displayEnvironments.length - 1;
       } else if (oldIndex < displayEnvironments.length) {
         _tabController!.index = oldIndex;
@@ -135,6 +144,7 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
         actions: environments.isEmpty
             ? null
             : [
+                ProjectNotificationButton(projectId: widget.projectId),
                 IconButton(
                   icon: const Icon(Icons.file_upload),
                   onPressed: () => _showImportEnvironmentModal(context, ref),
@@ -161,34 +171,14 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
           : Column(
               children: [
                 TabBar(
+                  isScrollable: true,
                   controller: _tabController,
                   tabs: displayEnvironments.map((env) {
                     // Add a different style for the Common tab
                     return Tab(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (env.name == 'Common')
-                            Padding(
-                              padding: const EdgeInsets.only(right: 6.0),
-                              child: Icon(
-                                Icons.share,
-                                size: 16,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          Text(
-                            env.name,
-                            style: env.name == 'Common'
-                                ? TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  )
-                                : null,
-                          ),
-                        ],
-                      ),
+                      icon:
+                          env.name == 'Common' ? const Icon(Icons.share) : null,
+                      text: env.name == 'Common' ? null : env.name,
                     );
                   }).toList(),
                 ),
@@ -196,7 +186,6 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
                   child: TabBarView(
                     controller: _tabController,
                     children: displayEnvironments.map((env) {
-                      // Pass all real environments (excluding Common) to the detail view
                       return EnvironmentDetailView(
                         environment: env,
                       );

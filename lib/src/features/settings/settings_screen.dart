@@ -208,8 +208,10 @@ class SettingsScreen extends ConsumerWidget {
                               final result = await showDialog<Duration>(
                                 context: context,
                                 builder: (context) {
-                                  final controller = TextEditingController();
-                                  String unit = 'Minutes';
+                                  final controller = TextEditingController(
+                                      text: autoSaveInterval.inMilliseconds
+                                          .toString());
+                                  String unit = 'Milliseconds';
                                   return StatefulBuilder(
                                     builder: (context, setState) {
                                       return AlertDialog(
@@ -258,8 +260,8 @@ class SettingsScreen extends ConsumerWidget {
                                                       setState(() => unit = v!),
                                                   items: const [
                                                     DropdownMenuItem(
-                                                        value: 'Minutes',
-                                                        child: Text('Min')),
+                                                        value: 'Seconds',
+                                                        child: Text('Sec')),
                                                     DropdownMenuItem(
                                                         value: 'Milliseconds',
                                                         child: Text('Ms')),
@@ -285,7 +287,7 @@ class SettingsScreen extends ConsumerWidget {
                                                       ? Duration(
                                                           milliseconds: input)
                                                       : Duration(
-                                                          minutes: input);
+                                                          seconds: input);
                                                   Navigator.of(context)
                                                       .pop(duration);
                                                 } else {
@@ -320,13 +322,17 @@ class SettingsScreen extends ConsumerWidget {
                               ),
                             ),
                             const DropdownMenuItem(
-                                value: Duration(minutes: 5),
-                                child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: 6, horizontal: 8),
-                                    child: Text('5 min'))),
+                              value: Duration(minutes: 5),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 8),
+                                child: Text(
+                                  '5 min',
+                                ),
+                              ),
+                            ),
                             const DropdownMenuItem(
-                              value: Duration(minutes: 10),
+                              value: Duration(minutes: 2),
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 6, horizontal: 8),
@@ -336,7 +342,7 @@ class SettingsScreen extends ConsumerWidget {
                               ),
                             ),
                             const DropdownMenuItem(
-                              value: Duration(minutes: 15),
+                              value: Duration(minutes: 3),
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 6, horizontal: 8),
@@ -345,23 +351,27 @@ class SettingsScreen extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            if (autoSaveInterval > const Duration(minutes: 0) &&
-                                ![1, 2, 3].contains(autoSaveInterval.inMinutes))
+                            if (![1, 2, 3, 5]
+                                .contains(autoSaveInterval.inMinutes))
                               DropdownMenuItem(
                                 value: autoSaveInterval,
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 6, horizontal: 8),
                                   child: Text(
-                                      '${autoSaveInterval.inMinutes == 0 ? autoSaveInterval.inMilliseconds : autoSaveInterval.inMinutes} ${autoSaveInterval.inMinutes == 0 ? 'Ms' : 'Min'} (custom)'),
+                                      '${autoSaveInterval.inSeconds == 0 ? autoSaveInterval.inMilliseconds : autoSaveInterval.inMinutes} ${autoSaveInterval.inSeconds == 0 ? 'Ms' : 'Sec'} (custom)'),
                                 ),
                               ),
                             const DropdownMenuItem(
-                                value: Duration.zero,
-                                child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: 6, horizontal: 8),
-                                    child: Text('Custom...'))),
+                              value: Duration.zero,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 8),
+                                child: Text(
+                                  'Custom...',
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),

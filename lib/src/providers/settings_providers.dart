@@ -26,7 +26,7 @@ class AppSettings {
     this.lastEnvironmentName,
     this.recentProjects = const [],
     this.autoSaveInterval = const Duration(milliseconds: 200),
-    this.fontFamily = 'ABeeZee',
+    this.fontFamily = 'Anta',
   });
 
   AppSettings copyWith({
@@ -56,7 +56,7 @@ class AppSettings {
       'lastProjectPath': lastProjectPath,
       'lastEnvironmentName': lastEnvironmentName,
       'recentProjects': recentProjects.map((p) => p.toJson()).toList(),
-      'autoSaveInterval': autoSaveInterval.inMinutes,
+      'autoSaveInterval': autoSaveInterval.inMilliseconds,
       'fontFamily': fontFamily,
     };
   }
@@ -75,7 +75,7 @@ class AppSettings {
               .toList() ??
           [],
       autoSaveInterval: Duration(
-        minutes: json['autoSaveInterval'] as int? ?? 5,
+        milliseconds: json['autoSaveInterval'] as int? ?? 200,
       ),
       fontFamily: json['fontFamily'] as String? ?? 'ABeeZee',
     );
@@ -134,7 +134,7 @@ class SettingsNotifier extends _$SettingsNotifier {
         state = settings;
       }
     } catch (e, stack) {
-      logger.error('Failed to load settings: $e');
+      logger.error('Failed to load settings: $e', e, stack);
     }
   }
 
@@ -143,7 +143,7 @@ class SettingsNotifier extends _$SettingsNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_settingsKey, jsonEncode(state.toJson()));
     } catch (e, stack) {
-      logger.error('Failed to save settings: $e');
+      logger.error('Failed to save settings: $e', e, stack);
     }
   }
 

@@ -17,8 +17,8 @@ class AppRoutes {
   static const String projectView = '/project/:projectId'; // Use path parameter
   static const String settings = '/settings';
 
-  static String projectViewPath(String projectId) =>
-      '/project/${Uri.encodeComponent(projectId)}';
+  static String projectViewPath(String projectId, {String? environmentName}) =>
+      '/project/${Uri.encodeComponent(projectId)}${environmentName != null ? '?environmentName=${Uri.encodeComponent(environmentName)}' : ''}';
 }
 
 // Riverpod provider for the GoRouter instance
@@ -55,9 +55,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (context, state) {
                   final projectIdParam = state.pathParameters['projectId']!;
                   final projectId = Uri.decodeComponent(projectIdParam);
+                  final queryParams = state.uri.queryParameters;
+                  final environmentName = queryParams['environmentName'];
                   return NoTransitionPage(
                     child: ProjectViewScreen(
                       projectId: projectId,
+                      environmentName: environmentName,
                     ),
                   );
                 },

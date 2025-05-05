@@ -4,8 +4,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../routing/app_router.dart';
 
+import 'package:secure_env_gui/src/providers/app_state_providers.dart';
+
 // Provider to manage the selected navigation index
 final selectedNavIndexProvider = StateProvider<int>((ref) => 0);
+
+// Define NavigationRail widths
+const double _extendedRailWidth = 200;
+const double _compactRailWidth = 72;
 
 class MainLayout extends ConsumerWidget {
   final Widget child; // The screen content to display
@@ -32,50 +38,62 @@ class MainLayout extends ConsumerWidget {
     }
 
     final isSmallScreen = MediaQuery.of(context).size.width < 800;
+    final double currentRailWidth =
+        isSmallScreen ? _compactRailWidth : _extendedRailWidth;
+
+    final projectState = ref.watch(projectsNotifierProvider);
+    final envState = ref.watch(environmentsNotifierProvider);
 
     return Scaffold(
       body: Row(
         children: [
-          NavigationRail(
-            minExtendedWidth: 200,
-            extended: !isSmallScreen,
-            unselectedLabelTextStyle: Theme.of(context).textTheme.bodySmall,
-            selectedLabelTextStyle:
-                Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).primaryColor,
+          Column(
+            children: [
+              Flexible(
+                child: NavigationRail(
+                  minExtendedWidth: _extendedRailWidth,
+                  extended: !isSmallScreen,
+                  unselectedLabelTextStyle:
+                      Theme.of(context).textTheme.bodySmall,
+                  selectedLabelTextStyle:
+                      Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                  indicatorShape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: onDestinationSelected,
+                  labelType: NavigationRailLabelType.none, // Show labels
+                  groupAlignment: -0.85, // Align items towards the top
+                  destinations: const <NavigationRailDestination>[
+                    NavigationRailDestination(
+                      padding: EdgeInsets.all(2),
+                      icon: FaIcon(
+                        FontAwesomeIcons.tableColumns,
+                        size: 18,
+                      ), // Use FontAwesome
+                      selectedIcon: FaIcon(
+                        FontAwesomeIcons.tableColumns,
+                        size: 20,
+                      ), // Keep consistent
+                      label: Text('Dashboard'),
                     ),
-            indicatorShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            selectedIndex: selectedIndex,
-            onDestinationSelected: onDestinationSelected,
-            labelType: NavigationRailLabelType.none, // Show labels
-            groupAlignment: -0.85, // Align items towards the top
-            destinations: const <NavigationRailDestination>[
-              NavigationRailDestination(
-                padding: EdgeInsets.all(2),
-                icon: FaIcon(
-                  FontAwesomeIcons.tableColumns,
-                  size: 18,
-                ), // Use FontAwesome
-                selectedIcon: FaIcon(
-                  FontAwesomeIcons.tableColumns,
-                  size: 20,
-                ), // Keep consistent
-                label: Text('Dashboard'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(
-                  FontAwesomeIcons.gear,
-                  size: 18,
+                    NavigationRailDestination(
+                      icon: Icon(
+                        FontAwesomeIcons.gear,
+                        size: 18,
+                      ),
+                      selectedIcon: Icon(
+                        FontAwesomeIcons.gear,
+                        size: 20,
+                      ),
+                      label: Text('Settings'),
+                    ),
+                    // Add more destinations here
+                  ],
                 ),
-                selectedIcon: Icon(
-                  FontAwesomeIcons.gear,
-                  size: 20,
-                ),
-                label: Text('Settings'),
               ),
-              // Add more destinations here
             ],
           ),
           const VerticalDivider(thickness: 1, width: 1),

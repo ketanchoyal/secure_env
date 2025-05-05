@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
+import 'package:secure_env_core/src/exceptions/exceptions.dart';
 import '../models/export_config.dart';
 import '../models/environment.dart';
 import '../models/project_config.dart';
@@ -106,6 +107,8 @@ class EnvironmentExportService {
     final projectConfig = _environmentService.project.config;
     final oldChecksums = _environment.lastFileChecksums;
     final newChecksums = Map<String, String>.from(oldChecksums);
+    // Collect any warn-and-skip conflicts
+    final conflicts = <ExportConflictException>[];
 
     // Sync helper for single format
     Future<void> syncFormat({
@@ -129,7 +132,9 @@ class EnvironmentExportService {
       if (!shouldWrite &&
           projectConfig.conflictPolicy == ConflictPolicy.warnAndSkip) {
         _logger.warn('File $filePath exists but content is different');
-        return;
+        throw ExportConflictException(
+          'Last file checksum does not match current file checksum',
+        );
       }
       if (shouldWrite ||
           projectConfig.conflictPolicy == ConflictPolicy.forceOverwrite) {
@@ -140,18 +145,34 @@ class EnvironmentExportService {
       }
     }
 
-    // Perform sync for each enabled format using jobs
+    // Perform sync for each enabled format, collecting conflicts
     for (final job in _createJobs(_environment.values)) {
-      await syncFormat(
-        key: job.key,
-        enabled: true,
-        filePath: job.filePath,
-        content: job.content,
-      );
+      try {
+        await syncFormat(
+          key: job.key,
+          enabled: true,
+          filePath: job.filePath,
+          content: job.content,
+        );
+      } on ExportConflictException catch (e) {
+        conflicts.add(ExportConflictException(
+          'Failed to sync ${job.key} for ${_environment.name}',
+          details: e.message,
+        ));
+      }
     }
 
     // Persist updated checksums
     final newEnv = _environment.copyWith(lastFileChecksums: newChecksums);
     await _environmentService.saveEnvironment(newEnv);
+    // After syncing, rethrow any collected warn-and-skip conflicts
+    if (conflicts.isNotEmpty) {
+      if (conflicts.length == 1) throw conflicts.first;
+      throw ExportConflictExceptionMultiple(
+        conflicts,
+        details:
+            'Multiple conflicts: ${conflicts.map((e) => e.message).join('; ')}',
+      );
+    }
   }
 }

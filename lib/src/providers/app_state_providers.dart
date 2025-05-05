@@ -55,7 +55,7 @@ abstract class ProjectState with _$ProjectState {
     return ProjectState(
       state: NotifierState.loaded,
       projects: projects,
-      selectedProjectId: selectedProjectId ?? this.selectedProjectId,
+      selectedProjectId: selectedProjectId,
       errorMessage: null,
       isEditing: false,
     );
@@ -180,13 +180,16 @@ class ProjectsNotifier extends _$ProjectsNotifier {
       final projectService = ref.read(projectServiceProvider);
       final projects = await projectService.listProjects();
 
-      state = state.loaded(projects: projects);
+      state = state.loaded(
+        projects: projects,
+        selectedProjectId: state.selectedProjectId,
+      );
       logger.info('Projects loaded: ${projects.length}');
     } catch (e, stack) {
       state = state.error(
         message: 'Failed to load projects: $e',
       );
-      logger.error('Failed to load projects: $e');
+      logger.error('Failed to load projects: $e', e, stack);
     }
   }
 
@@ -218,11 +221,11 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
   EnvironmentState build() {
     state = EnvironmentState.initial();
     ref.watch(projectsNotifierProvider.notifier).selectedProject;
-    ref.listen(environmentOperationsProvider, (previous, next) {
+    ref.listen(environmentOperationsProvider, (previous, next) async {
       if (next is EnvironmentOperationSuccess) {
         logger.info('Environment operation success: Reloading environments');
         loadEnvironments();
-        ref.read(envSyncProvider);
+        await ref.read(envSyncProvider.future);
       }
     });
 

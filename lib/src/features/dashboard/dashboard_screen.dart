@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 
 // import '../../routing/app_router.dart'; // Removed unused import
 import '../shared_widgets/modals/import_environment_modal.dart';
 import '../shared_widgets/modals/new_project_modal.dart';
-import '../shared_widgets/modals/wolt_modal_scaffold.dart'; // Import the scaffold helper
 import 'widgets/project_list.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar( ... ) // Removed AppBar as navigation is handled by MainLayout
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

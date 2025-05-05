@@ -17,7 +17,7 @@ void main() {
   );
 
   doWhenWindowReady(() {
-    const initialSize = Size(1000, 800);
+    const initialSize = Size(1200, 800);
     appWindow.minSize = Size(600, 400);
     appWindow.size = initialSize;
     appWindow.title = 'Secure Env';
