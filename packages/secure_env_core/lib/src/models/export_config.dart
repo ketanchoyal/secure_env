@@ -48,4 +48,28 @@ class ExportConfig {
   factory ExportConfig.fromJson(Map<String, dynamic> json) => _$ExportConfigFromJson(json);
 
   Map<String, dynamic> toJson() => _$ExportConfigToJson(this);
+
+  ExportConfig copyWith({
+    bool? exportXcconfig,
+    String? xcconfigPath,
+    String? xcconfigFileName,
+    bool? exportEnv,
+    String? envPath,
+    String? envFileName,
+    bool? exportProperties,
+    String? propertiesPath,
+    String? propertiesFileName,
+  }) {
+    return ExportConfig(
+      exportXcconfig: exportXcconfig ?? this.exportXcconfig,
+      xcconfigPath: xcconfigPath ?? this.xcconfigPath,
+      xcconfigFileName: xcconfigFileName ?? this.xcconfigFileName,
+      exportEnv: exportEnv ?? this.exportEnv,
+      envPath: envPath ?? this.envPath,
+      envFileName: envFileName ?? this.envFileName,
+      exportProperties: exportProperties ?? this.exportProperties,
+      propertiesPath: propertiesPath ?? this.propertiesPath,
+      propertiesFileName: propertiesFileName ?? this.propertiesFileName,
+    );
+  }
 }

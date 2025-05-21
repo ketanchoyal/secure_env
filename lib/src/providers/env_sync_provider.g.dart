@@ -6,7 +6,7 @@ part of 'env_sync_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$envSyncHash() => r'21dee5f6b722d61eb7d9f07e501e1ab34412fc9b';
+String _$envSyncHash() => r'9096afb5d267d1a04638b802f1116cf93cb9b072';
 
 /// See also [envSync].
 @ProviderFor(envSync)

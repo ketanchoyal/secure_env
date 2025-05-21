@@ -28,7 +28,7 @@ final projectsNotifierProvider =
 
 typedef _$ProjectsNotifier = Notifier<ProjectState>;
 String _$environmentsNotifierHash() =>
-    r'ff61fe2804f5f11a0e0951809a5142b1da50758c';
+    r'b5f5e1c6b407b0004c5eeb5126d947409f313ff3';
 
 /// Provider for managing environments state
 ///

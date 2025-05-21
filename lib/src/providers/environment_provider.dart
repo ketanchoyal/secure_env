@@ -1,6 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
+import 'dart:io'; // Added for File
+import 'package:path/path.dart' as path; // Added for path.extension
+
 import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/providers/exception_for_providers.dart';
@@ -284,6 +287,77 @@ class EnvironmentOperations extends _$EnvironmentOperations {
   ) {
     if (name.contains(' ')) {
       throw ExceptionForProviders('Environment name cannot contain spaces');
+    }
+  }
+
+  Future<void> syncEnvironmentFromFile({
+    required String environmentName,
+    required String filePath,
+  }) async {
+    state = EnvironmentOperationState.inProgress('Syncing $environmentName from $filePath...');
+    try {
+      final existingEnvironment =
+          await environmentService.loadEnvironment(name: environmentName);
+      if (existingEnvironment == null) {
+        throw ExceptionForProviders(
+            'Environment "$environmentName" not found for sync.');
+      }
+
+      final file = File(filePath);
+      if (!await file.exists()) {
+        throw ExceptionForProviders('File "$filePath" not found for sync.');
+      }
+
+      Map<String, String> newValues;
+      final fileExtension = path.extension(filePath).toLowerCase();
+
+      switch (fileExtension) {
+        case '.env':
+          newValues = await EnvService().readEnvFile(filePath);
+          break;
+        case '.properties':
+          newValues = await PropertiesService().readPropertiesFile(filePath);
+          break;
+        case '.xcconfig':
+          newValues = await XConfigService().readXConfig(filePath);
+          break;
+        default:
+          throw ExceptionForProviders(
+              'Unsupported file type for sync: $fileExtension. Supported: .env, .properties, .xcconfig');
+      }
+
+      // Basic merge: overwrite existing keys with new values, add new keys.
+      // More sophisticated merge logic could be added here if needed (e.g., only update, don't add).
+      final updatedValues = Map<String, String>.from(existingEnvironment.values)
+        ..addAll(newValues);
+      
+      // Note: This simple sync does not update sensitiveKeys based on the file content.
+      // A more advanced sync might try to infer this or provide options.
+
+      final updatedEnvironment = existingEnvironment.copyWith(
+        values: updatedValues,
+        lastModified: DateTime.now(),
+      );
+
+      await environmentService.saveEnvironment(updatedEnvironment);
+
+      logger.info(
+          'Environment "$environmentName" synced successfully from "$filePath".');
+      state = EnvironmentOperationState.success(
+          'Environment "$environmentName" synced successfully.');
+    } on ExceptionForProviders catch (e) {
+      state = EnvironmentOperationState.error(e.message);
+      logger.error(
+          'Failed to sync environment "$environmentName" from "$filePath": ${e.message}',
+          e.error,
+          e.stackTrace);
+    } catch (e, stackTrace) {
+      state = EnvironmentOperationState.error(
+          'An unexpected error occurred while syncing environment "$environmentName" from "$filePath".');
+      logger.error(
+          'Failed to sync environment "$environmentName" from "$filePath": $e',
+          e,
+          stackTrace);
     }
   }
 }

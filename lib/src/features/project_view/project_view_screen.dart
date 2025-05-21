@@ -6,9 +6,14 @@ import 'package:secure_env_gui/src/features/project_view/widgets/modals/project_
 import 'package:secure_env_gui/src/features/shared_widgets/modals/create_environment_modal.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/import_environment_modal.dart';
+import 'dart:async'; // For StreamSubscription
+
 import 'package:secure_env_gui/src/features/project_view/widgets/environment_detail_view.dart';
 import 'package:secure_env_gui/src/features/project_view/widgets/empty_state.dart';
 import 'package:secure_env_gui/src/features/project_view/widgets/project_notification_button.dart';
+import 'package:secure_env_gui/src/providers/environment_file_watcher_provider.dart'; // Added
+import 'package:secure_env_gui/src/services/logging_service.dart'; // For logger
+import 'package:secure_env_gui/src/providers/core_providers.dart'; // For loggerProvider
 
 class ProjectViewScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -25,11 +30,49 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
     with TickerProviderStateMixin {
   TabController? _tabController;
   List<Environment> _environments = [];
+  StreamSubscription<FileWatchEventInfo>? _fileWatcherSubscription; // Updated type
+  bool _showSyncButton = false;
+  String? _changedFilePath; // To store the path of the changed file
+  String? _changedEnvironmentName; // To store the name of the affected environment
 
   @override
   void initState() {
     super.initState();
-    // Removed ref.listen from initState. Use it in build instead, as per Riverpod docs.
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fileWatcherSubscription?.cancel(); // Cancel previous subscription
+    // Watch the provider to get the stream.
+    final stream = ref.watch(environmentFileWatcherProvider); // Stream type is now Stream<FileWatchEventInfo>
+    _fileWatcherSubscription = stream.listen(
+      (eventInfo) { // eventInfo is FileWatchEventInfo
+        if (mounted) {
+          setState(() {
+            _showSyncButton = true;
+            _changedFilePath = eventInfo.watchedPath; // Store the specific path that was being watched
+            _changedEnvironmentName = eventInfo.environment.name; // Store environment name
+          });
+          ref.read(loggerProvider(_ProjectViewScreenState)).info(
+              'File system event received: ${eventInfo.toString()}. Showing Sync button.');
+        }
+      },
+      onError: (error, stackTrace) {
+        if (mounted) {
+          ref.read(loggerProvider(_ProjectViewScreenState)).error(
+              'Error from environmentFileWatcherProvider stream: $error',
+              error,
+              stackTrace);
+        }
+      },
+      onDone: () {
+        if (mounted) {
+          ref.read(loggerProvider(_ProjectViewScreenState)).info(
+              'Environment file watcher stream closed.');
+        }
+      }
+    );
   }
 
   void _showImportEnvironmentModal(BuildContext context, WidgetRef ref) {
@@ -56,6 +99,7 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
 
   @override
   void dispose() {
+    _fileWatcherSubscription?.cancel();
     _tabController?.dispose();
     super.dispose();
   }
@@ -144,6 +188,39 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
         actions: environments.isEmpty
             ? null
             : [
+                if (_showSyncButton)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: TextButton(
+                      onPressed: () {
+                        if (_changedFilePath != null && _changedEnvironmentName != null) {
+                          ref.read(loggerProvider(_ProjectViewScreenState)).info(
+                            'Sync Changes button pressed for env: $_changedEnvironmentName file: $_changedFilePath');
+                          
+                          // Call the new sync method from EnvironmentOperations
+                          ref.read(environmentOperationsProvider.notifier).syncEnvironmentFromFile(
+                                environmentName: _changedEnvironmentName!,
+                                filePath: _changedFilePath!,
+                              );
+
+                          // Hide button after initiating sync
+                          setState(() {
+                            _showSyncButton = false;
+                            _changedFilePath = null;
+                            _changedEnvironmentName = null;
+                          });
+                        } else {
+                           ref.read(loggerProvider(_ProjectViewScreenState)).warn(
+                            'Sync Changes button pressed, but changed file path or environment name is null.');
+                        }
+                      },
+                      child: const Text('Sync Changes'),
+                      // Style as needed
+                      // style: TextButton.styleFrom(
+                      //   foregroundColor: Theme.of(context).appBarTheme.actionsIconTheme?.color ?? Theme.of(context).colorScheme.onPrimary,
+                      // ),
+                    ),
+                  ),
                 ProjectNotificationButton(projectId: widget.projectId),
                 IconButton(
                   icon: const Icon(Icons.file_upload),
