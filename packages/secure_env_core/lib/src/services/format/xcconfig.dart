@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:secure_env_core/secure_env_core.dart';
 
-import '../../exceptions/exceptions.dart';
-
 class XConfigService {
   /// Reads an xcconfig file and returns a map of key-value pairs
   Future<Map<String, String>> readXConfig(
@@ -56,8 +54,7 @@ class XConfigService {
         for (final match in varMatches) {
           final varName = match.group(1)!;
           if (variables.containsKey(varName)) {
-            value =
-                value.replaceAll('\$(' + varName + ')', variables[varName]!);
+            value = value.replaceAll('\$($varName)', variables[varName]!);
           }
         }
 

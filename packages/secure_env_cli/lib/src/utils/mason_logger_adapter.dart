@@ -1,5 +1,5 @@
 import 'package:mason_logger/mason_logger.dart' as mason;
-import 'package:secure_env_core/src/utils/logger.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 
 /// Adapter to use mason_logger as our Logger
 class MasonLoggerAdapter implements Logger {

@@ -1,6 +1,5 @@
 import 'package:mason_logger/mason_logger.dart';
-import 'package:secure_env_core/src/services/environment_service.dart';
-import 'package:secure_env_core/src/services/format/env.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import '../base_command.dart';
 
 /// Command to import .env files
@@ -45,7 +44,7 @@ class EnvImportCommand extends BaseCommand {
         if (project == null) {
           throw 'No project found in the current directory. Please run "secure_env init" first.';
         }
-        _environmentService = await EnvironmentService.forProject(
+        _environmentService = EnvironmentService.forProject(
             project: project, projectService: projectService, logger: logger);
         final envName = argResults!['name'] as String;
         final description = argResults!['description'] as String?;

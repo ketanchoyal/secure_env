@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 
-// import '../../routing/app_router.dart'; // Removed unused import
 import '../shared_widgets/modals/import_environment_modal.dart';
 import '../shared_widgets/modals/new_project_modal.dart';
 import 'widgets/project_list.dart';

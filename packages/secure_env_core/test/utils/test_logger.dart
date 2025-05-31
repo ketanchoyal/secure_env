@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:secure_env_core/secure_env_core.dart';
 
 /// A logger that captures logs for testing

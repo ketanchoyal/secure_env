@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'logger.dart';
 
 /// A simple default logger implementation

@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' show separator;
 import 'package:secure_env_core/src/exceptions/exceptions.dart';
-import 'package:secure_env_core/src/models/project_config.dart';
 import 'package:secure_env_core/src/utils/logger.dart';
 import 'package:secure_env_core/src/models/models.dart';
 

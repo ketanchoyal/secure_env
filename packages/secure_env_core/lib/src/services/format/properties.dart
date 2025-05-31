@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:secure_env_core/secure_env_core.dart';
-import 'package:secure_env_core/src/exceptions/exceptions.dart';
 
 class PropertiesService {
   /// Converts a map of key-value pairs to .properties format

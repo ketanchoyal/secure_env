@@ -5,8 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/providers/environment_provider.dart';
-import 'package:secure_env_gui/src/providers/project_provider.dart';
-import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
 
 // Placeholder state for the modal - allows access from stickyActionBar

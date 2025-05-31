@@ -1,4 +1,4 @@
-library secure_env_core.services;
+library;
 
 export 'encryption_service.dart';
 export 'environment_export_service.dart';

@@ -4,7 +4,7 @@ import 'package:mason_logger/mason_logger.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
 import 'package:args/command_runner.dart';
-import '../../../../lib/src/cli/commands/import/env_import_command.dart';
+import 'package:secure_env_cli/src/cli/commands/import/env_import_command.dart';
 import '../../../utils/test_logger.dart';
 
 void main() {
@@ -28,7 +28,7 @@ void main() {
     project = await projectService.createProjectFromCurrentDirectory(
       name: 'test_project',
     );
-    environmentService = await EnvironmentService.forProject(
+    environmentService = EnvironmentService.forProject(
       project: project,
       projectService: projectService,
       logger: logger,

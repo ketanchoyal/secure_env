@@ -1,5 +1,11 @@
 {
   "debug.toolBarLocation": "floating",
+  "search.exclude": {
+    "**/.fvm": true
+  },
+  "files.watcherExclude": {
+    "**/.fvm": true
+  },
   "github.copilot.enable": {
     "*": true,
     "plaintext": true,

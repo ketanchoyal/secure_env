@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import FontAwesome
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
-import 'package:secure_env_gui/src/providers/environment_file_watcher_provider.dart';
 import 'package:secure_env_gui/src/providers/project_provider.dart';
 
 import '../../../routing/app_router.dart'; // For goRouterProvider and AppRoutes

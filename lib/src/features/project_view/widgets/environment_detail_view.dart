@@ -36,7 +36,8 @@ class EnvironmentDetailView extends ConsumerWidget {
                 color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(16)),
-                border: Border.all(color: theme.dividerColor.withOpacity(0.10)),
+                border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.10)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -300,7 +301,8 @@ class EnvironmentDetailView extends ConsumerWidget {
                           itemCount: variables.length,
                           separatorBuilder: (context, i) => Divider(
                               height: 1,
-                              color: theme.dividerColor.withOpacity(0.08)),
+                              color:
+                                  theme.dividerColor.withValues(alpha: 0.08)),
                           itemBuilder: (context, i) {
                             final key = variables.keys.elementAt(i);
                             final value = variables[key] ?? '';
@@ -357,7 +359,8 @@ class _DesktopVariableRowState extends State<_DesktopVariableRow> {
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeInOut,
         decoration: BoxDecoration(
-          color: _hover ? theme.colorScheme.primary.withOpacity(0.04) : null,
+          color:
+              _hover ? theme.colorScheme.primary.withValues(alpha: 0.04) : null,
           borderRadius: BorderRadius.circular(8),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

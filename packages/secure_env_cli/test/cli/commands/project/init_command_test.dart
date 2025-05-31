@@ -2,10 +2,9 @@ import 'dart:io';
 
 import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
+import 'package:secure_env_cli/src/cli/commands/init_command.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:test/test.dart';
-
-import '../../../../lib/src/cli/commands/init_command.dart';
 import '../../../utils/test_logger.dart';
 
 void main() {
@@ -102,7 +101,7 @@ void main() {
         registryService: ProjectRegistryService.test(logger: logger),
       );
       projectService.testCurrentDirectoryPath =
-          Directory.systemTemp.createTempSync().path + '/Name With Space';
+          '${Directory.systemTemp.createTempSync().path}/Name With Space';
       runner = CommandRunner<int>('test', 'Test runner')
         ..addCommand(InitCommand(
           logger: logger,

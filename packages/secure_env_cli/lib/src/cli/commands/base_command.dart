@@ -1,7 +1,6 @@
 import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart' hide Logger;
 import 'package:secure_env_core/secure_env_core.dart';
-import 'package:secure_env_core/src/exceptions/exceptions.dart';
 
 /// Base command class for all commands
 abstract class BaseCommand extends Command<int> {

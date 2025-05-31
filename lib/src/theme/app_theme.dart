@@ -1,6 +1,5 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 // Polished iOS-inspired FlexColorScheme theme
 class AppTheme {
@@ -38,11 +37,11 @@ class AppTheme {
         borderSide: BorderSide(color: colorScheme.error, width: 1.5),
       ),
       labelStyle: TextStyle(
-        color: colorScheme.onSurface.withOpacity(0.7),
+        color: colorScheme.onSurface.withValues(alpha: 0.7),
         fontSize: 16,
       ),
       hintStyle: TextStyle(
-        color: colorScheme.onSurface.withOpacity(0.5),
+        color: colorScheme.onSurface.withValues(alpha: 0.5),
         fontSize: 16,
       ),
       errorStyle: TextStyle(
@@ -50,7 +49,7 @@ class AppTheme {
         fontSize: 13,
       ),
       prefixIconColor: colorScheme.primary,
-      suffixIconColor: colorScheme.onSurface.withOpacity(0.7),
+      suffixIconColor: colorScheme.onSurface.withValues(alpha: 0.7),
     );
   }
 

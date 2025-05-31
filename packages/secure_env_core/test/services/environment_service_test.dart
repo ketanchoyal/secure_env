@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:secure_env_core/secure_env_core.dart';
-import 'package:secure_env_core/src/exceptions/file_not_found_exception.dart';
 import 'package:test/test.dart';
 import '../utils/test_logger.dart';
 

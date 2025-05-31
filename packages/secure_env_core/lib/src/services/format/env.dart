@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:secure_env_core/secure_env_core.dart';
-import 'package:secure_env_core/src/exceptions/file_not_found_exception.dart';
 
 /// Service for formatting .env files
 class EnvService {

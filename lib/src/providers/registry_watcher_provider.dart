@@ -20,7 +20,7 @@ class RegistryWatcher extends _$RegistryWatcher {
     return false;
   }
 
-  Logger get logger => ref.read(loggerProvider(RegistryWatcher));
+  Logger get _logger => ref.read(loggerProvider(RegistryWatcher));
 
   void _startWatching() {
     _timer?.cancel();
@@ -39,23 +39,23 @@ class RegistryWatcher extends _$RegistryWatcher {
           final directory = Directory(
               '${project.basePath}${Platform.pathSeparator}.secure_env');
           if (!await directory.exists()) {
-            logger.warn(
+            _logger.warn(
               'Found invalid project "${project.name}" at "${project.basePath}". Attempting to clean up...',
             );
             await registry.unregisterProject(project.id);
-            logger.info(
+            _logger.info(
               'Successfully cleaned up invalid project "${project.name}"',
             );
             state = true;
           }
         } catch (deleteError) {
-          logger.error(
+          _logger.error(
             'Failed to clean up invalid project "${project.name}": $deleteError',
           );
         }
       }
     } catch (e) {
-      logger.error('Error checking registry: $e');
+      _logger.error('Error checking registry: $e');
     }
   }
 

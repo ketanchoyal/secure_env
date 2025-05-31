@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:path/path.dart' as path;
 
-import 'package:secure_env_core/src/services/environment_service.dart';
+import 'package:secure_env_core/secure_env_core.dart';
 import '../base_command.dart';
 
 /// Command to show environment information
@@ -11,12 +11,11 @@ class InfoCommand extends BaseCommand {
     required super.logger,
     required super.projectService,
   }) {
-    argParser
-      ..addOption(
-        'name',
-        abbr: 'n',
-        help: 'Environment name',
-      );
+    argParser.addOption(
+      'name',
+      abbr: 'n',
+      help: 'Environment name',
+    );
   }
 
   late final EnvironmentService _environmentService;
@@ -49,7 +48,7 @@ class InfoCommand extends BaseCommand {
             ..info('Available Environments:')
             ..info('------------------------');
           for (final env in project.environments) {
-            logger.info('  • ${env}');
+            logger.info('  • $env');
           }
           logger.info('');
           logger.info(
@@ -57,7 +56,7 @@ class InfoCommand extends BaseCommand {
           return ExitCode.success.code;
         }
 
-        _environmentService = await EnvironmentService.forProject(
+        _environmentService = EnvironmentService.forProject(
             project: project, projectService: projectService, logger: logger);
 
         final env = await _environmentService.loadEnvironment(
