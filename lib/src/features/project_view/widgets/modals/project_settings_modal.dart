@@ -14,7 +14,7 @@ class ProjectSettingsModal extends ConsumerStatefulWidget {
   /// Shows the project settings modal and handles saving the config.
   static void show(BuildContext context, WidgetRef ref) {
     final modalKey = GlobalKey<ProjectSettingsModalState>();
-    final project = ref.read(projectsNotifierProvider.notifier).selectedProject;
+    final project = ref.read(projectsNotifierProvider).selectedProject;
     if (project == null) return;
     final modalContent = ProjectSettingsModal(
       key: modalKey,

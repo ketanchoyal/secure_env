@@ -12,8 +12,8 @@ import 'package:secure_env_gui/src/features/project_view/widgets/environment_det
 import 'package:secure_env_gui/src/features/project_view/widgets/empty_state.dart';
 import 'package:secure_env_gui/src/features/project_view/widgets/project_notification_button.dart';
 import 'package:secure_env_gui/src/providers/environment_file_watcher_provider.dart'; // Added
+import 'package:secure_env_gui/src/providers/environment_provider.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart'; // For logger
-import 'package:secure_env_gui/src/providers/core_providers.dart'; // For loggerProvider
 
 class ProjectViewScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -30,49 +30,50 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
     with TickerProviderStateMixin {
   TabController? _tabController;
   List<Environment> _environments = [];
-  StreamSubscription<FileWatchEventInfo>? _fileWatcherSubscription; // Updated type
+  StreamSubscription<FileWatchEventInfo>?
+      _fileWatcherSubscription; // Updated type
   bool _showSyncButton = false;
   String? _changedFilePath; // To store the path of the changed file
-  String? _changedEnvironmentName; // To store the name of the affected environment
+  String?
+      _changedEnvironmentName; // To store the name of the affected environment
 
   @override
   void initState() {
     super.initState();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void _setupFileWatcher() {
     _fileWatcherSubscription?.cancel(); // Cancel previous subscription
     // Watch the provider to get the stream.
-    final stream = ref.watch(environmentFileWatcherProvider); // Stream type is now Stream<FileWatchEventInfo>
-    _fileWatcherSubscription = stream.listen(
-      (eventInfo) { // eventInfo is FileWatchEventInfo
-        if (mounted) {
-          setState(() {
-            _showSyncButton = true;
-            _changedFilePath = eventInfo.watchedPath; // Store the specific path that was being watched
-            _changedEnvironmentName = eventInfo.environment.name; // Store environment name
-          });
-          ref.read(loggerProvider(_ProjectViewScreenState)).info(
-              'File system event received: ${eventInfo.toString()}. Showing Sync button.');
-        }
-      },
-      onError: (error, stackTrace) {
-        if (mounted) {
-          ref.read(loggerProvider(_ProjectViewScreenState)).error(
-              'Error from environmentFileWatcherProvider stream: $error',
-              error,
-              stackTrace);
-        }
-      },
-      onDone: () {
-        if (mounted) {
-          ref.read(loggerProvider(_ProjectViewScreenState)).info(
-              'Environment file watcher stream closed.');
-        }
+    final stream = ref.watch(environmentFileWatcherProvider(
+        widget.projectId)); // Stream type is now Stream<FileWatchEventInfo>
+    _fileWatcherSubscription = stream.listen((eventInfo) {
+      // eventInfo is FileWatchEventInfo
+      if (mounted) {
+        setState(() {
+          _showSyncButton = true;
+          _changedFilePath = eventInfo
+              .watchedPath; // Store the specific path that was being watched
+          _changedEnvironmentName =
+              eventInfo.environment.name; // Store environment name
+        });
+        ref.read(loggerProvider(_ProjectViewScreenState)).info(
+            'File system event received: ${eventInfo.toString()}. Showing Sync button.');
       }
-    );
+    }, onError: (error, stackTrace) {
+      if (mounted) {
+        ref.read(loggerProvider(_ProjectViewScreenState)).error(
+            'Error from environmentFileWatcherProvider stream: $error',
+            error,
+            stackTrace);
+      }
+    }, onDone: () {
+      if (mounted) {
+        ref
+            .read(loggerProvider(_ProjectViewScreenState))
+            .info('Environment file watcher stream closed.');
+      }
+    });
   }
 
   void _showImportEnvironmentModal(BuildContext context, WidgetRef ref) {
@@ -109,8 +110,7 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
     ref.watch(projectsNotifierProvider.select((state) =>
         state.projects.where((p) => p.id == widget.projectId).first));
     // Watch the current project and environments
-    final project =
-        ref.watch(projectsNotifierProvider.notifier).selectedProject;
+    final project = ref.watch(projectsNotifierProvider).selectedProject;
 
     final environmentState = ref.watch(environmentsNotifierProvider);
 
@@ -159,6 +159,7 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
         length: displayEnvironments.length,
         vsync: this,
       );
+      _setupFileWatcher();
       //Select the environment based on the environmentName parameter
       if (widget.environmentName != null) {
         final index = displayEnvironments
@@ -193,12 +194,15 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
                     padding: const EdgeInsets.only(right: 8.0),
                     child: TextButton(
                       onPressed: () {
-                        if (_changedFilePath != null && _changedEnvironmentName != null) {
+                        if (_changedFilePath != null &&
+                            _changedEnvironmentName != null) {
                           ref.read(loggerProvider(_ProjectViewScreenState)).info(
-                            'Sync Changes button pressed for env: $_changedEnvironmentName file: $_changedFilePath');
-                          
+                              'Sync Changes button pressed for env: $_changedEnvironmentName file: $_changedFilePath');
+
                           // Call the new sync method from EnvironmentOperations
-                          ref.read(environmentOperationsProvider.notifier).syncEnvironmentFromFile(
+                          ref
+                              .read(environmentOperationsProvider.notifier)
+                              .syncEnvironmentFromFile(
                                 environmentName: _changedEnvironmentName!,
                                 filePath: _changedFilePath!,
                               );
@@ -210,8 +214,8 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
                             _changedEnvironmentName = null;
                           });
                         } else {
-                           ref.read(loggerProvider(_ProjectViewScreenState)).warn(
-                            'Sync Changes button pressed, but changed file path or environment name is null.');
+                          ref.read(loggerProvider(_ProjectViewScreenState)).warn(
+                              'Sync Changes button pressed, but changed file path or environment name is null.');
                         }
                       },
                       child: const Text('Sync Changes'),

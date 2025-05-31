@@ -1,5 +1,4 @@
 {
-  "dart.flutterSdkPath": ".fvm/versions/stable",
   "debug.toolBarLocation": "floating",
   "github.copilot.enable": {
     "*": true,

@@ -60,7 +60,7 @@ EncryptionService encryptionService(Ref ref) {
 @Riverpod(dependencies: [environmentService])
 EnvironmentExportService environmentExportService(Ref ref, Environment env) {
   final logger = ref.read(loggerProvider(EnvironmentExportService));
-  final project = ref.read(environmentsNotifierProvider.notifier).project;
+  final project = ref.read(projectsNotifierProvider).selectedProject;
 
   if (project == null) {
     throw StateError('No project selected');

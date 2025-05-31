@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart'; // For logger
-import 'package:secure_env_gui/src/providers/core_providers.dart'; // For loggerProvider
+// import 'package:secure_env_gui/src/providers/core_providers.dart'; // For loggerProvider
 
 import 'package:async/async.dart'; // Required for StreamGroup
 
@@ -15,7 +16,8 @@ part 'environment_file_watcher_provider.g.dart';
 class FileWatchEventInfo {
   final FileSystemEvent event;
   final Environment environment;
-  final String watchedPath; // The specific path from ExportConfig that triggered this
+  final String
+      watchedPath; // The specific path from ExportConfig that triggered this
 
   FileWatchEventInfo(this.event, this.environment, this.watchedPath);
 
@@ -26,15 +28,17 @@ class FileWatchEventInfo {
 }
 
 @riverpod
-Stream<FileWatchEventInfo> environmentFileWatcher(
-    EnvironmentFileWatcherRef ref) {
-  final logger = ref.watch(loggerProvider(environmentFileWatcher));
+Raw<Stream<FileWatchEventInfo>> environmentFileWatcher(
+    Ref ref, String projectId) {
+  final logger = ref.watch(loggerProvider(null, "environmentFileWatcher"));
 
-  final selectedProject =
-      ref.watch(projectsNotifierProvider.select((state) => state.selectedProject));
+  final projectState = ref.watch(projectsNotifierProvider);
+
+  final selectedProject = projectState.projectFromId(projectId);
 
   if (selectedProject == null) {
-    logger.info('No project selected, returning empty stream for file watcher.');
+    logger
+        .info('No project selected, returning empty stream for file watcher.');
     return Stream.empty();
   }
 
@@ -47,16 +51,6 @@ Stream<FileWatchEventInfo> environmentFileWatcher(
     return Stream.empty();
   }
 
-  // --- Assumption: Using the first environment as the "active" one ---
-  // This is a placeholder. A real application would likely have a more explicit
-  // way to determine the "active" or "selected" environment whose files to watch
-  // (e.g., a dedicated `selectedEnvironmentProvider` or a family parameter).
-  final Environment targetEnvironment = environments.first;
-  logger.info(
-      'Targeting environment "${targetEnvironment.name}" (first in list) for file watching.');
-  // --- End Assumption ---
-
-  final ExportConfig config = targetEnvironment.exportConfig;
   final List<Stream<FileWatchEventInfo>> watchStreams = [];
 
   // Helper function to add a watch stream if path is valid
@@ -66,31 +60,43 @@ Stream<FileWatchEventInfo> environmentFileWatcher(
       final String currentPath = path; // Capture path for use in map
       try {
         logger.info('Adding watcher for $fileType file at path: $currentPath');
-        watchStreams.add(file
-            .watch()
-            .map((fsEvent) => FileWatchEventInfo(fsEvent, envContext, currentPath)));
+        watchStreams.add(file.watch().map(
+            (fsEvent) => FileWatchEventInfo(fsEvent, envContext, currentPath)));
       } catch (e, stackTrace) {
         logger.error(
-            'Error setting up $fileType file watcher for path "$currentPath": $e', e, stackTrace);
+            'Error setting up $fileType file watcher for path "$currentPath": $e',
+            e,
+            stackTrace);
       }
     } else {
-      logger.info('$fileType path is not configured or empty for environment "${envContext.name}", skipping watcher.');
+      logger.info(
+          '$fileType path is not configured or empty for environment "${envContext.name}", skipping watcher.');
     }
   }
 
-  if (config.exportXcconfig) {
-    addWatchStream(config.xcconfigPath, 'Xcodegen', targetEnvironment);
-  }
-  if (config.exportEnv) {
-    addWatchStream(config.envPath, '.env', targetEnvironment);
-  }
-  if (config.exportProperties) {
-    addWatchStream(config.propertiesPath, '.properties', targetEnvironment);
+  void createStreamForEnvironment(Environment env) {
+    logger.info('Targeting environment "${env.name}" for file watching.');
+    final ExportConfig config = env.exportConfig;
+
+    if (config.exportXcconfig) {
+      addWatchStream(config.xcconfigFilePath, 'Xcodegen', env);
+    }
+    if (config.exportEnv) {
+      addWatchStream(config.envFilePath, '.env', env);
+    }
+    if (config.exportProperties) {
+      addWatchStream(config.propertiesFilePath, '.properties', env);
+    }
   }
 
+  // Create watch streams for all environments
+  for (final env in environments) {
+    createStreamForEnvironment(env);
+  }
+  // If no valid paths were found, return an empty stream
   if (watchStreams.isEmpty) {
     logger.info(
-        'No valid export paths configured for watching in environment "${targetEnvironment.name}".');
+        'No valid export paths configured for watching in Project "${selectedProject.name}".');
     return Stream.empty();
   }
 
@@ -99,7 +105,13 @@ Stream<FileWatchEventInfo> environmentFileWatcher(
     streamGroup.add(stream);
   }
 
+  ref.onDispose(() {
+    logger.info(
+        'Disposing file watcher provider for Project "${selectedProject.name}".');
+    streamGroup.close();
+  });
+
   logger.info(
-      'File watcher provider set up to monitor ${watchStreams.length} path(s) for env "${targetEnvironment.name}".');
+      'File watcher provider set up to monitor ${watchStreams.length} path(s) for Project "${selectedProject.name}".');
   return streamGroup.stream;
 }

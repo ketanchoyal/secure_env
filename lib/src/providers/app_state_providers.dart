@@ -33,6 +33,21 @@ abstract class ProjectState with _$ProjectState {
     String? errorMessage,
   }) = _ProjectState;
 
+  Project? projectFromId(String id) {
+    Project? project = projects.firstWhereOrNull((p) => p.id == id);
+    if (project != null && project.status != ProjectStatus.markedForDeletion) {
+      return project;
+    }
+    return null;
+  }
+
+  Project? get selectedProject {
+    if (selectedProjectId == null) {
+      return null;
+    }
+    return projectFromId(selectedProjectId!);
+  }
+
   factory ProjectState.initial() =>
       const ProjectState(state: NotifierState.initial);
 
@@ -158,13 +173,7 @@ class ProjectsNotifier extends _$ProjectsNotifier {
     return state;
   }
 
-  Project? get selectedProject {
-    return state.selectedProjectId != null
-        ? projectFromId(state.selectedProjectId!)
-        : null;
-  }
-
-  Logger get logger => ref.read(loggerProvider(ProjectsNotifier));
+  Logger get _logger => ref.read(loggerProvider(ProjectsNotifier));
 
   Project? projectFromId(String id) {
     Project? project = state.projects.firstWhereOrNull((p) => p.id == id);
@@ -184,12 +193,12 @@ class ProjectsNotifier extends _$ProjectsNotifier {
         projects: projects,
         selectedProjectId: state.selectedProjectId,
       );
-      logger.info('Projects loaded: ${projects.length}');
+      _logger.info('Projects loaded: ${projects.length}');
     } catch (e, stack) {
       state = state.error(
         message: 'Failed to load projects: $e',
       );
-      logger.error('Failed to load projects: $e', e, stack);
+      _logger.error('Failed to load projects: $e', e, stack);
     }
   }
 
@@ -214,16 +223,15 @@ class ProjectsNotifier extends _$ProjectsNotifier {
 /// For managing environments, use [EnvironmentNotifier].
 @Riverpod(keepAlive: true, dependencies: [ProjectsNotifier])
 class EnvironmentsNotifier extends _$EnvironmentsNotifier {
-  Project? get project =>
-      ref.read(projectsNotifierProvider.notifier).selectedProject;
+  Project? get _project => ref.read(projectsNotifierProvider).selectedProject;
 
   @override
   EnvironmentState build() {
     state = EnvironmentState.initial();
-    ref.watch(projectsNotifierProvider.notifier).selectedProject;
+    ref.watch(projectsNotifierProvider.notifier);
     ref.listen(environmentOperationsProvider, (previous, next) async {
       if (next is EnvironmentOperationSuccess) {
-        logger.info('Environment operation success: Reloading environments');
+        _logger.info('Environment operation success: Reloading environments');
         loadEnvironments();
         await ref.read(envSyncProvider.future);
       }
@@ -231,7 +239,7 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
 
     ref.listen(registryWatcherProvider, (previous, next) {
       if (next) {
-        logger.info('Registry watcher triggered: Reloading environments');
+        _logger.info('Registry watcher triggered: Reloading environments');
         loadEnvironments();
       }
     });
@@ -239,25 +247,26 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
     return state;
   }
 
-  Logger get logger => ref.read(loggerProvider(EnvironmentsNotifier));
+  Logger get _logger => ref.read(loggerProvider(EnvironmentsNotifier));
 
   Future<void> loadEnvironments() async {
-    if (project == null) {
+    if (_project == null) {
       return;
     }
     state = state.loading();
     try {
-      final environmentService = ref.read(environmentServiceProvider(project!));
+      final environmentService =
+          ref.read(environmentServiceProvider(_project!));
       final environments = await environmentService.listEnvironments();
       state = state.loaded(
         environments: environments,
       );
-      logger.info('${environments.length} Environments loaded');
+      _logger.info('${environments.length} Environments loaded');
     } catch (e, stack) {
       state = state.error(
         message: 'Failed to load environments: $e',
       );
-      logger.error('Failed to load environments: $e', e, stack);
+      _logger.error('Failed to load environments: $e', e, stack);
     }
   }
 }

@@ -126,17 +126,19 @@ class ProjectOperations extends _$ProjectOperations {
   Future<bool> updateProjectConfig(ProjectConfig config) async {
     state = const ProjectOperationState.inProgress();
     try {
-      final project = ref.read(projectsNotifierProvider.notifier).selectedProject;
+      final project = ref.read(projectsNotifierProvider).selectedProject;
       if (project == null) {
         state = const ProjectOperationState.error('No project selected');
         return false;
       }
       await _updateProject(project.copyWith(config: config));
       logger.info('Project settings updated successfully');
-      state = const ProjectOperationState.success('Project settings updated successfully');
+      state = const ProjectOperationState.success(
+          'Project settings updated successfully');
       return true;
     } catch (e, stack) {
-      state = const ProjectOperationState.error('Failed to save project settings');
+      state =
+          const ProjectOperationState.error('Failed to save project settings');
       logger.error('Failed to save project settings: $e', e, stack);
       return false;
     }

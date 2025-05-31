@@ -88,7 +88,7 @@ class AppTheme {
   ).copyWith(
     inputDecorationTheme: _getIOSInputDecorationTheme(
         FlexThemeData.light(scheme: _scheme).colorScheme),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 0.5,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(_defaultRadius),
@@ -137,7 +137,7 @@ class AppTheme {
       ).copyWith(
         inputDecorationTheme: _getIOSInputDecorationTheme(
             FlexThemeData.dark(scheme: _scheme).colorScheme),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 0.5,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(_defaultRadius),

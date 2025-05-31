@@ -1,5 +1,8 @@
 /// Model representing configuration for exporting environment files.
+library;
+
 import 'package:json_annotation/json_annotation.dart';
+import 'package:path/path.dart' as path;
 
 part 'export_config.g.dart';
 
@@ -45,7 +48,8 @@ class ExportConfig {
     this.propertiesFileName = '',
   });
 
-  factory ExportConfig.fromJson(Map<String, dynamic> json) => _$ExportConfigFromJson(json);
+  factory ExportConfig.fromJson(Map<String, dynamic> json) =>
+      _$ExportConfigFromJson(json);
 
   Map<String, dynamic> toJson() => _$ExportConfigToJson(this);
 
@@ -72,4 +76,17 @@ class ExportConfig {
       propertiesFileName: propertiesFileName ?? this.propertiesFileName,
     );
   }
+}
+
+extension ExportConfigExtension on ExportConfig {
+  String? get xcconfigFilePath => exportXcconfig
+      ? path.join(xcconfigPath, '$xcconfigFileName.xcconfig')
+      : null;
+
+  String? get envFilePath =>
+      exportEnv ? path.join(envPath, '$envFileName.env') : null;
+
+  String? get propertiesFilePath => exportProperties
+      ? path.join(propertiesPath, '$propertiesFileName.properties')
+      : null;
 }

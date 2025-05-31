@@ -30,7 +30,7 @@ Future<void> envSync(Ref ref) async {
 
 /// Performs the actual environment sync, respecting autoSync setting
 Future<void> _performSync(Ref ref, Logger logger) async {
-  final project = ref.read(environmentsNotifierProvider.notifier).project;
+  final project = ref.read(projectsNotifierProvider).selectedProject;
   if (project == null) {
     logger.info('No project selected');
     return;

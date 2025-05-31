@@ -7,7 +7,7 @@ part of 'environment_provider.dart';
 // **************************************************************************
 
 String _$environmentOperationsHash() =>
-    r'98fabccccedbca1d32c264e3b1f2aafb96b86a18';
+    r'f4ecf98b126f5c7a288f85317208645fcb4242c3';
 
 /// See also [EnvironmentOperations].
 @ProviderFor(EnvironmentOperations)

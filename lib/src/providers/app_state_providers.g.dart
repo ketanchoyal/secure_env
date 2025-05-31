@@ -6,7 +6,7 @@ part of 'app_state_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$projectsNotifierHash() => r'4e31c0cbb77018659f50a8ab1121af0460e47f66';
+String _$projectsNotifierHash() => r'7a657b10540ba3f826087a40364aa8bde08c5cbf';
 
 /// Provider for managing projects state
 ///
@@ -28,7 +28,7 @@ final projectsNotifierProvider =
 
 typedef _$ProjectsNotifier = Notifier<ProjectState>;
 String _$environmentsNotifierHash() =>
-    r'b5f5e1c6b407b0004c5eeb5126d947409f313ff3';
+    r'73da521d9ac501044a0cacc32eaeba3d3c8f0005';
 
 /// Provider for managing environments state
 ///

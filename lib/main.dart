@@ -78,7 +78,7 @@ class SecureEnvApp extends ConsumerWidget {
         ),
       ),
       theme: AppTheme.lightTheme.copyWith(
-        tabBarTheme: const TabBarTheme(
+        tabBarTheme: const TabBarThemeData(
           indicatorAnimation: TabIndicatorAnimation.elastic,
           indicatorColor: Colors.black,
         ),
@@ -91,7 +91,7 @@ class SecureEnvApp extends ConsumerWidget {
         // iconTheme: const IconThemeData(),
       ),
       darkTheme: AppTheme.darkTheme.copyWith(
-        tabBarTheme: const TabBarTheme(
+        tabBarTheme: const TabBarThemeData(
           indicatorAnimation: TabIndicatorAnimation.elastic,
           indicatorColor: Colors.white,
         ),
