@@ -9,29 +9,29 @@ part 'core_providers.g.dart';
 /// Provider for the RegistryService
 @riverpod
 ProjectRegistryService registryService(Ref ref) {
-  final logger = ref.watch(loggerProvider(ProjectRegistryService));
+  final logger = ref.read(loggerProvider(ProjectRegistryService));
   return ProjectRegistryService(logger: logger);
 }
 
 /// Provider for the ProjectService
 @riverpod
 ProjectService projectService(Ref ref) {
-  final logger = ref.watch(loggerProvider(ProjectService));
-  final registryService = ref.watch(registryServiceProvider);
+  final logger = ref.read(loggerProvider(ProjectService));
+  final registryService = ref.read(registryServiceProvider);
   return ProjectService(logger: logger, registryService: registryService);
 }
 
 /// Provider for the EnvironmentService
 @riverpod
 EnvironmentService environmentService(Ref ref, Project project) {
-  final logger = ref.watch(loggerProvider(EnvironmentService));
+  final logger = ref.read(loggerProvider(EnvironmentService));
 
-  final projectService = ref.watch(projectServiceProvider);
+  final projectService = ref.read(projectServiceProvider);
   return EnvironmentService.forProject(
     project: project,
     projectService: projectService,
     logger: logger,
-    encryptionService: ref.watch(encryptionServiceProvider),
+    encryptionService: ref.read(encryptionServiceProvider),
   );
 }
 

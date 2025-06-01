@@ -115,34 +115,47 @@ class RecentProject {
 @riverpod
 class SettingsNotifier extends _$SettingsNotifier {
   static const _settingsKey = 'app_settings';
+  late final SharedPreferencesAsync _prefs;
 
   @override
   AppSettings build() {
-    _loadSettings();
+    // Initialize SharedPreferences asynchronously
+    _initialize();
     return const AppSettings();
   }
 
-  Logger get logger => ref.read(loggerProvider(SettingsNotifier));
+  Future<void> _initialize() async {
+    try {
+      _prefs = SharedPreferencesAsync();
+      await _loadSettings();
+    } catch (e, stack) {
+      _logger.error('Failed to initialize settings: $e', e, stack);
+      // State will remain as default AppSettings if loading fails
+    }
+  }
+
+  Logger get _logger => ref.read(loggerProvider(SettingsNotifier));
 
   Future<void> _loadSettings() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final jsonStr = prefs.getString(_settingsKey);
+      final jsonStr = await _prefs.getString(_settingsKey);
       if (jsonStr != null) {
-        final settings = AppSettings.fromJson(jsonDecode(jsonStr));
+        final settings =
+            AppSettings.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
         state = settings;
       }
     } catch (e, stack) {
-      logger.error('Failed to load settings: $e', e, stack);
+      _logger.error('Failed to load settings: $e', e, stack);
+      rethrow;
     }
   }
 
   Future<void> _saveSettings() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_settingsKey, jsonEncode(state.toJson()));
+      await _prefs.setString(_settingsKey, jsonEncode(state.toJson()));
     } catch (e, stack) {
-      logger.error('Failed to save settings: $e', e, stack);
+      _logger.error('Failed to save settings: $e', e, stack);
+      rethrow;
     }
   }
 

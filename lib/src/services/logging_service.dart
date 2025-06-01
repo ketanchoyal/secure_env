@@ -78,7 +78,7 @@ core.Logger logger(Ref ref, [Type? type, String? prefix]) {
 }
 
 /// Provider for the Logger interface implementation
-// @riverpod
+// @Riverpod(dependencies: [])
 // core.Logger logger(Ref ref) {
 //   return ref.watch(loggingServiceProvider);
 // }

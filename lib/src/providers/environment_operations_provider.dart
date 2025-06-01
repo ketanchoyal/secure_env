@@ -7,7 +7,6 @@ import 'package:path/path.dart' as path; // Added for path.extension
 import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/providers/exception_for_providers.dart';
-import 'package:secure_env_gui/src/routing/app_snackbar.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 
 part 'environment_operations_provider.freezed.dart';
@@ -29,29 +28,6 @@ sealed class EnvironmentOperationState with _$EnvironmentOperationState {
 class EnvironmentOperations extends _$EnvironmentOperations {
   @override
   EnvironmentOperationState build() {
-    listenSelf((previous, next) {
-      if (next is EnvironmentOperationSuccess) {
-        ref.read(snackbarProvider).showSnackbar(
-              message: next.message,
-              duration: const Duration(seconds: 2),
-              action: null,
-            );
-      }
-      if (next is EnvironmentOperationError) {
-        ref.read(snackbarProvider).showSnackbar(
-              message: next.message,
-              duration: const Duration(seconds: 2),
-              action: null,
-            );
-      }
-      if (next is EnvironmentOperationInProgress && next.message != null) {
-        ref.read(snackbarProvider).showSnackbar(
-              message: next.message!,
-              duration: const Duration(seconds: 2),
-              action: null,
-            );
-      }
-    });
     return const EnvironmentOperationState.idle();
   }
 

@@ -34,7 +34,7 @@ class ProjectSettingsModal extends ConsumerStatefulWidget {
         );
         return await ref
             .read(projectOperationsProvider.notifier)
-            .updateProjectConfig(newConfig);
+            .updateProjectConfig(newConfig, project.id);
       },
       primaryActionText: 'Save',
     );

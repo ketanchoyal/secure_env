@@ -1,7 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
-import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/routing/app_snackbar.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
@@ -25,29 +24,6 @@ sealed class ProjectOperationState with _$ProjectOperationState {
 class ProjectOperations extends _$ProjectOperations {
   @override
   ProjectOperationState build() {
-    listenSelf((previous, next) {
-      if (next is ProjectOperationSuccess) {
-        ref.read(snackbarProvider).showSnackbar(
-              message: next.message,
-              duration: const Duration(seconds: 2),
-              action: null,
-            );
-      }
-      if (next is ProjectOperationError) {
-        ref.read(snackbarProvider).showSnackbar(
-              message: next.message,
-              duration: const Duration(seconds: 2),
-              action: null,
-            );
-      }
-      if (next is ProjectOperationInProgress && next.message != null) {
-        ref.read(snackbarProvider).showSnackbar(
-              message: next.message!,
-              duration: const Duration(seconds: 2),
-              action: null,
-            );
-      }
-    });
     return const ProjectOperationState.idle();
   }
 
@@ -125,10 +101,11 @@ class ProjectOperations extends _$ProjectOperations {
     _logger.info('Project updated successfully');
   }
 
-  Future<bool> updateProjectConfig(ProjectConfig config) async {
+  Future<bool> updateProjectConfig(
+      ProjectConfig config, String projectId) async {
     state = const ProjectOperationState.inProgress();
     try {
-      final project = ref.read(projectsNotifierProvider).selectedProject;
+      final project = await _projectService.getProjectById(projectId);
       if (project == null) {
         state = const ProjectOperationState.error('No project selected');
         return false;
@@ -143,6 +120,18 @@ class ProjectOperations extends _$ProjectOperations {
           const ProjectOperationState.error('Failed to save project settings');
       _logger.error('Failed to save project settings: $e', e, stack);
       return false;
+    }
+  }
+
+  /// we are not changing the state here because this will cause circular dependency
+  Future<List<Project>> getProjects() async {
+    try {
+      final projects = await _projectService.listProjects();
+
+      return projects;
+    } catch (e, stack) {
+      _logger.error('Failed to load projects: $e', e, stack);
+      return [];
     }
   }
 }

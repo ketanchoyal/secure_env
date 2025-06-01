@@ -6,6 +6,7 @@ import 'package:secure_env_gui/src/providers/env_sync_provider.dart';
 import 'package:secure_env_gui/src/providers/environment_operations_provider.dart';
 import 'package:secure_env_gui/src/providers/project_operations_provider.dart';
 import 'package:secure_env_gui/src/providers/registry_watcher_provider.dart';
+import 'package:secure_env_gui/src/routing/app_snackbar.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 import 'package:secure_env_gui/src/utils/extensions/iterable.dart';
 
@@ -161,15 +162,27 @@ class ProjectsNotifier extends _$ProjectsNotifier {
     ref.listen(projectOperationsProvider, (previous, next) {
       if (next is ProjectOperationSuccess) {
         loadProjects();
+        ref.read(snackbarProvider).showSnackbar(
+              message: next.message,
+              duration: const Duration(seconds: 2),
+              action: null,
+            );
+      }
+      if (next is ProjectOperationError) {
+        ref.read(snackbarProvider).showSnackbar(
+              message: next.message,
+              duration: const Duration(seconds: 2),
+              action: null,
+            );
+      }
+      if (next is ProjectOperationInProgress && next.message != null) {
+        ref.read(snackbarProvider).showSnackbar(
+              message: next.message!,
+              duration: const Duration(seconds: 2),
+              action: null,
+            );
       }
     });
-
-    // This Causes circular dependency
-    // ref.listen(environmentOperationsProvider, (previous, next) {
-    //   if (next is EnvironmentOperationSuccess) {
-    //     loadProjects();
-    //   }
-    // });
 
     ref.listen(registryWatcherProvider, (previous, next) {
       if (next) {
@@ -194,8 +207,8 @@ class ProjectsNotifier extends _$ProjectsNotifier {
   Future<void> loadProjects() async {
     state = state.loading();
     try {
-      final projectService = ref.read(projectServiceProvider);
-      final projects = await projectService.listProjects();
+      final projects =
+          await ref.read(projectOperationsProvider.notifier).getProjects();
 
       state = state.loaded(
         projects: projects,
@@ -246,8 +259,28 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
     ref.listen(environmentOperationsProvider, (previous, next) async {
       if (next is EnvironmentOperationSuccess) {
         _logger.info('Environment operation success: Reloading environments');
+        ref.read(snackbarProvider).showSnackbar(
+              message: next.message,
+              duration: const Duration(seconds: 2),
+              action: null,
+            );
         loadEnvironments();
         await ref.read(envSyncProvider.future);
+      }
+
+      if (next is EnvironmentOperationError) {
+        ref.read(snackbarProvider).showSnackbar(
+              message: next.message,
+              duration: const Duration(seconds: 2),
+              action: null,
+            );
+      }
+      if (next is EnvironmentOperationInProgress && next.message != null) {
+        ref.read(snackbarProvider).showSnackbar(
+              message: next.message!,
+              duration: const Duration(seconds: 2),
+              action: null,
+            );
       }
     });
 

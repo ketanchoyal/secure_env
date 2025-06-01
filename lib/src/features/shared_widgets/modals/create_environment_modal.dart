@@ -159,34 +159,37 @@ class _CreateEnvironmentModalState
           ),
           const SizedBox(height: 16),
           // Template Picker
-          DropdownButtonFormField<Environment>(
-            value: _selectedTemplate,
+          DropdownButtonFormField<String>(
+            value: _selectedTemplate?.name,
             decoration: const InputDecoration(
               labelText: 'Template (optional)',
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.copy_all),
             ),
             items: [
-              DropdownMenuItem<Environment>(
+              DropdownMenuItem<String>(
                 value: null,
                 child: Text('None'),
               ),
-              ...environments.map((env) => DropdownMenuItem(
-                    value: env,
-                    child: Text(env.name),
-                  )),
+              ...environments.toSet().map((env) {
+                return DropdownMenuItem(
+                  value: env.name,
+                  child: Text(env.name),
+                );
+              }),
             ],
             onChanged: (env) {
               setState(() {
-                _selectedTemplate = env;
+                _selectedTemplate =
+                    environments.firstWhere((e) => e.name == env);
                 // Optionally prefill key/values from template
                 if (env != null) {
                   _keyValuePairs.clear();
-                  env.values.forEach((k, v) {
+                  _selectedTemplate!.values.forEach((k, v) {
                     _keyValuePairs.add(_KeyValuePair(
                       keyController: TextEditingController(text: k),
                       valueController: TextEditingController(text: v),
-                      isSensitive: env.sensitiveKeys[k] ?? false,
+                      isSensitive: _selectedTemplate!.sensitiveKeys[k] ?? false,
                     ));
                   });
                 }

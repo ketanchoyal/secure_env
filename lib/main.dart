@@ -32,13 +32,12 @@ class SecureEnvApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the provider to get the GoRouter instance
-    final router = ref.watch(goRouterProvider);
+    final router = ref.read(goRouterProvider);
+    final scaffoldMessengerKey = ref.read(scaffoldMessengerKeyProvider);
     ref.watch(registryWatcherProvider);
+    ref.watch(snackbarProvider); // Initialize snackbar provider
 
     // Get the global ScaffoldMessengerKey from the provider
-    final scaffoldMessengerKey = ref.watch(scaffoldMessengerKeyProvider);
-
-    ref.watch(snackbarProvider); // Initialize snackbar provider
 
     final appSettings = ref.watch(settingsNotifierProvider);
 

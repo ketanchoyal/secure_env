@@ -49,6 +49,7 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
   void _setupFileWatcher() {
     _fileWatcherSubscription?.cancel(); // Cancel previous subscription
     // Watch the provider to get the stream.
+    ref.invalidate(environmentFileWatcherProvider(widget.projectId));
     final stream = ref.watch(environmentFileWatcherProvider(
         widget.projectId)); // Stream type is now Stream<FileWatchEventInfo>
     _fileWatcherSubscription = stream.listen((eventInfo) {
