@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
-import 'package:secure_env_gui/src/providers/project_provider.dart';
+import 'package:secure_env_gui/src/providers/project_operations_provider.dart';
 
 /// Modal widget for configuring project-level settings.
 class ProjectSettingsModal extends ConsumerStatefulWidget {

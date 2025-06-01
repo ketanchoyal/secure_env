@@ -3,8 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/providers/env_sync_provider.dart';
-import 'package:secure_env_gui/src/providers/environment_provider.dart';
-import 'package:secure_env_gui/src/providers/project_provider.dart';
+import 'package:secure_env_gui/src/providers/environment_operations_provider.dart';
+import 'package:secure_env_gui/src/providers/project_operations_provider.dart';
 import 'package:secure_env_gui/src/providers/registry_watcher_provider.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 import 'package:secure_env_gui/src/utils/extensions/iterable.dart';
@@ -120,10 +120,12 @@ abstract class EnvironmentState with _$EnvironmentState {
 
   EnvironmentState loading({
     List<Environment>? environments,
+    bool envChanged = false,
   }) =>
       EnvironmentState(
         state: NotifierState.loading,
-        environments: environments ?? this.environments,
+        environments:
+            envChanged ? environments ?? [] : environments ?? this.environments,
         errorMessage: null,
       );
 
@@ -161,6 +163,13 @@ class ProjectsNotifier extends _$ProjectsNotifier {
         loadProjects();
       }
     });
+
+    // This Causes circular dependency
+    // ref.listen(environmentOperationsProvider, (previous, next) {
+    //   if (next is EnvironmentOperationSuccess) {
+    //     loadProjects();
+    //   }
+    // });
 
     ref.listen(registryWatcherProvider, (previous, next) {
       if (next) {
@@ -201,7 +210,12 @@ class ProjectsNotifier extends _$ProjectsNotifier {
     }
   }
 
+  Project? _lastSelectedProject;
+
   void selectProject(String? projectId) {
+    if (state.selectedProject != null) {
+      _lastSelectedProject = state.selectedProject;
+    }
     if (projectId == null) {
       state = state.loaded(projects: state.projects, selectedProjectId: null);
       return;
@@ -211,7 +225,9 @@ class ProjectsNotifier extends _$ProjectsNotifier {
         state.loaded(projects: state.projects, selectedProjectId: projectId);
 
     if (project != null) {
-      ref.read(environmentsNotifierProvider.notifier).loadEnvironments();
+      ref
+          .read(environmentsNotifierProvider.notifier)
+          .loadEnvironments(_lastSelectedProject != project);
     }
   }
 }
@@ -227,7 +243,6 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
   @override
   EnvironmentState build() {
     state = EnvironmentState.initial();
-    ref.watch(projectsNotifierProvider.notifier);
     ref.listen(environmentOperationsProvider, (previous, next) async {
       if (next is EnvironmentOperationSuccess) {
         _logger.info('Environment operation success: Reloading environments');
@@ -248,15 +263,19 @@ class EnvironmentsNotifier extends _$EnvironmentsNotifier {
 
   Logger get _logger => ref.read(loggerProvider(EnvironmentsNotifier));
 
-  Future<void> loadEnvironments() async {
+  Future<void> loadEnvironments([bool envChanged = false]) async {
     if (_project == null) {
       return;
     }
-    state = state.loading();
+    state = state.loading(envChanged: envChanged);
+
     try {
       final environmentService =
           ref.read(environmentServiceProvider(_project!));
       final environments = await environmentService.listEnvironments();
+      if (envChanged) {
+        await Future.delayed(const Duration(milliseconds: 400));
+      }
       state = state.loaded(
         environments: environments,
       );

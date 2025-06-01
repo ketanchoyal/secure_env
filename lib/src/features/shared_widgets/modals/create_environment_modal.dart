@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
-import 'package:secure_env_gui/src/providers/environment_provider.dart';
+import 'package:secure_env_gui/src/providers/environment_operations_provider.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
 
 class CreateEnvironmentModal extends ConsumerStatefulWidget {
@@ -121,7 +121,7 @@ class _CreateEnvironmentModalState
 
   @override
   Widget build(BuildContext context) {
-    final environmentState = ref.watch(environmentsNotifierProvider);
+    final environmentState = ref.read(environmentsNotifierProvider);
     final environments = environmentState.environments;
 
     return Form(
@@ -140,12 +140,19 @@ class _CreateEnvironmentModalState
               prefixIcon: Icon(Icons.label),
             ),
             validator: (value) {
+              // Name cannot have space
+
               if (value == null || value.trim().isEmpty) {
                 return 'Environment name cannot be empty';
               }
               if (value.contains(RegExp(r'[/\\]'))) {
                 return 'Name cannot contain slashes';
               }
+
+              if (value.contains(' ')) {
+                return 'Environment name cannot have spaces';
+              }
+
               return null;
             },
             autovalidateMode: AutovalidateMode.onUserInteraction,

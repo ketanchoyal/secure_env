@@ -40,6 +40,8 @@ class SecureEnvApp extends ConsumerWidget {
 
     ref.watch(snackbarProvider); // Initialize snackbar provider
 
+    final appSettings = ref.watch(settingsNotifierProvider);
+
     return MaterialApp.router(
       title: 'Secure Env',
       builder: (context, child) => Material(
@@ -83,11 +85,9 @@ class SecureEnvApp extends ConsumerWidget {
           indicatorColor: Colors.black,
         ),
         textTheme: GoogleFonts.getTextTheme(
-            ref.watch(settingsNotifierProvider).fontFamily,
-            ThemeData.light().textTheme),
+            appSettings.fontFamily, ThemeData.light().textTheme),
         primaryTextTheme: GoogleFonts.getTextTheme(
-            ref.watch(settingsNotifierProvider).fontFamily,
-            ThemeData.light().primaryTextTheme),
+            appSettings.fontFamily, ThemeData.light().primaryTextTheme),
         // iconTheme: const IconThemeData(),
       ),
       darkTheme: AppTheme.darkTheme.copyWith(
@@ -96,14 +96,12 @@ class SecureEnvApp extends ConsumerWidget {
           indicatorColor: Colors.white,
         ),
         textTheme: GoogleFonts.getTextTheme(
-            ref.watch(settingsNotifierProvider).fontFamily,
-            ThemeData.dark().textTheme),
+            appSettings.fontFamily, ThemeData.dark().textTheme),
         primaryTextTheme: GoogleFonts.getTextTheme(
-            ref.watch(settingsNotifierProvider).fontFamily,
-            ThemeData.dark().primaryTextTheme),
+            appSettings.fontFamily, ThemeData.dark().primaryTextTheme),
         // iconTheme: const IconThemeData(),
       ),
-      themeMode: ref.watch(settingsNotifierProvider).themeMode,
+      themeMode: appSettings.themeMode,
       routerConfig: router,
       scaffoldMessengerKey: scaffoldMessengerKey,
     );

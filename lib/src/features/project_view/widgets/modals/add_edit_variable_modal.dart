@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
-import 'package:secure_env_gui/src/providers/environment_provider.dart';
+import 'package:secure_env_gui/src/providers/environment_operations_provider.dart';
 
 class AddEditVariableModal extends ConsumerStatefulWidget {
   final String? initialKey;
@@ -76,9 +76,12 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
   late TextEditingController _valueController;
   late bool _isSensitive;
 
+  late final EnvironmentOperations environmentOperations;
+
   @override
   void initState() {
     super.initState();
+    environmentOperations = ref.read(environmentOperationsProvider.notifier);
     _keyController = TextEditingController(text: widget.initialKey);
     _valueController = TextEditingController(text: widget.initialValue);
     _isSensitive = widget.initialIsSensitive;
@@ -99,12 +102,10 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
 
     // If this is the Common environment, update all real environments
     if (widget.environment.name == 'Common') {
-      await ref
-          .read(environmentOperationsProvider.notifier)
-          .addVariableToAllEnvironment(
-            key: newKey,
-            value: newValue,
-          );
+      await environmentOperations.addVariableToAllEnvironment(
+        key: newKey,
+        value: newValue,
+      );
     } else {
       // Single environment update (default)
       final env = widget.environment;
@@ -112,11 +113,11 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
       final updatedSensitive = Map<String, bool>.from(env.sensitiveKeys);
       updatedValues[newKey] = newValue;
       updatedSensitive[newKey] = isSensitive;
-      await ref.read(environmentOperationsProvider.notifier).addVariable(
-            name: env.name,
-            key: newKey,
-            value: newValue,
-          );
+      await environmentOperations.addVariable(
+        name: env.name,
+        key: newKey,
+        value: newValue,
+      );
     }
   }
 
@@ -124,12 +125,10 @@ class AddEditVariableModalState extends ConsumerState<AddEditVariableModal> {
   Future<void> deleteVariable() async {
     final env = widget.environment;
     final key = _keyController.text.trim();
-    await ref
-        .read(environmentOperationsProvider.notifier)
-        .removeEnvironmentValue(
-          envName: env.name,
-          key: key,
-        );
+    await environmentOperations.removeEnvironmentValue(
+      envName: env.name,
+      key: key,
+    );
   }
 
   // Public getter for the form key to allow validation from outside

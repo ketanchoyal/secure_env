@@ -6,7 +6,7 @@ import 'package:secure_env_core/secure_env_core.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart'; // Import WoltModalSheet
 import 'modals/add_edit_variable_modal.dart'; // Import the modal widget
 import 'modals/export_config_modal.dart'; // Import ExportConfigModal
-import 'package:secure_env_gui/src/providers/environment_provider.dart'; // Import environmentOperationsProvider
+import 'package:secure_env_gui/src/providers/environment_operations_provider.dart'; // Import environmentOperationsProvider
 
 class EnvironmentDetailView extends ConsumerWidget {
   final Environment environment;
@@ -22,6 +22,8 @@ class EnvironmentDetailView extends ConsumerWidget {
     final sensitiveKeys = environment.sensitiveKeys;
     final theme = Theme.of(context);
     final isCommon = environment.name == 'Common';
+    final environmentOperations =
+        ref.read(environmentOperationsProvider.notifier);
 
     return Center(
       child: ConstrainedBox(
@@ -163,12 +165,10 @@ class EnvironmentDetailView extends ConsumerWidget {
                                           );
                                           return;
                                         }
-                                        await ref
-                                            .read(environmentOperationsProvider
-                                                .notifier)
+                                        await environmentOperations
                                             .exportEnvironment(
-                                              name: environment.name,
-                                            );
+                                          name: environment.name,
+                                        );
                                       },
                                     ),
                                     // const SizedBox(height: 8),
@@ -238,12 +238,10 @@ class EnvironmentDetailView extends ConsumerWidget {
                                       );
                                       return;
                                     }
-                                    await ref
-                                        .read(environmentOperationsProvider
-                                            .notifier)
+                                    await environmentOperations
                                         .exportEnvironment(
-                                          name: environment.name,
-                                        );
+                                      name: environment.name,
+                                    );
                                   },
                                 ),
                                 const SizedBox(width: 12),
@@ -308,11 +306,11 @@ class EnvironmentDetailView extends ConsumerWidget {
                             final value = variables[key] ?? '';
                             final isSensitive = sensitiveKeys[key] ?? false;
                             return _DesktopVariableRow(
-                                env: environment,
-                                keyName: key,
-                                value: value,
-                                isSensitive: isSensitive,
-                                ref: ref);
+                              env: environment,
+                              keyName: key,
+                              value: value,
+                              isSensitive: isSensitive,
+                            );
                           },
                         ),
                 ),
@@ -326,26 +324,25 @@ class EnvironmentDetailView extends ConsumerWidget {
 }
 
 // Modern desktop-style variable row
-class _DesktopVariableRow extends StatefulWidget {
+class _DesktopVariableRow extends ConsumerStatefulWidget {
   final Environment env;
   final String keyName;
   final String value;
   final bool isSensitive;
-  final WidgetRef ref;
 
   const _DesktopVariableRow({
     required this.env,
     required this.keyName,
     required this.value,
     required this.isSensitive,
-    required this.ref,
   });
 
   @override
-  State<_DesktopVariableRow> createState() => _DesktopVariableRowState();
+  ConsumerState<_DesktopVariableRow> createState() =>
+      _DesktopVariableRowState();
 }
 
-class _DesktopVariableRowState extends State<_DesktopVariableRow> {
+class _DesktopVariableRowState extends ConsumerState<_DesktopVariableRow> {
   bool _obscure = true;
   bool _hover = false;
 
@@ -526,7 +523,7 @@ class _DesktopVariableRowState extends State<_DesktopVariableRow> {
                   ),
                 );
                 if (confirmed == true) {
-                  await widget.ref
+                  await ref
                       .read(environmentOperationsProvider.notifier)
                       .removeEnvironmentValue(
                         envName: widget.env.name,

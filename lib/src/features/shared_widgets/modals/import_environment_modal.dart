@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import for i
 import 'package:file_picker/file_picker.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
-import 'package:secure_env_gui/src/providers/environment_provider.dart';
+import 'package:secure_env_gui/src/providers/environment_operations_provider.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
 
 // Placeholder state for the modal - allows access from stickyActionBar
@@ -83,8 +83,7 @@ class _ImportEnvironmentModalState
     _currentStateMap[widget] = this;
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       if (widget.selectedProject != null) {
-        ref.read(_dropdownSelectedProject.notifier).state =
-            widget.selectedProject;
+        selectProject(widget.selectedProject);
       }
     });
   }
@@ -129,6 +128,7 @@ class _ImportEnvironmentModalState
 
   // Handles validation and calls the core import logic
   Future<bool> _triggerImport() async {
+    final project = ref.read(_dropdownSelectedProject);
     if (!_formKey.currentState!.validate()) {
       setState(() {
         _errorMessage = null;
@@ -136,7 +136,7 @@ class _ImportEnvironmentModalState
       return false;
     }
 
-    if (ref.read(_dropdownSelectedProject) == null) {
+    if (project == null) {
       setState(() {
         _errorMessage = 'Please select a target project';
       });
@@ -154,7 +154,7 @@ class _ImportEnvironmentModalState
 
     try {
       await ref.read(environmentOperationsProvider.notifier).importEnvironment(
-            projectId: ref.read(_dropdownSelectedProject)!.id,
+            projectId: project.id,
             filePath: _selectedFilePath!,
             name: _envNameController.text.trim(),
             description: _descriptionController.text.trim().isNotEmpty

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/features/project_view/widgets/modals/project_settings_modal.dart';
+import 'package:secure_env_gui/src/features/shared_widgets/loading_widget.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/create_environment_modal.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/import_environment_modal.dart';
@@ -12,7 +13,7 @@ import 'package:secure_env_gui/src/features/project_view/widgets/environment_det
 import 'package:secure_env_gui/src/features/project_view/widgets/empty_state.dart';
 import 'package:secure_env_gui/src/features/project_view/widgets/project_notification_button.dart';
 import 'package:secure_env_gui/src/providers/environment_file_watcher_provider.dart'; // Added
-import 'package:secure_env_gui/src/providers/environment_provider.dart';
+import 'package:secure_env_gui/src/providers/environment_operations_provider.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart'; // For logger
 
 class ProjectViewScreen extends ConsumerStatefulWidget {
@@ -37,9 +38,12 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
   String?
       _changedEnvironmentName; // To store the name of the affected environment
 
+  late final ProjectsNotifier projectNotifier;
+
   @override
   void initState() {
     super.initState();
+    projectNotifier = ref.read(projectsNotifierProvider.notifier);
   }
 
   void _setupFileWatcher() {
@@ -77,18 +81,14 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
   }
 
   void _showImportEnvironmentModal(BuildContext context, WidgetRef ref) {
-    final project = ref
-        .watch(projectsNotifierProvider.notifier)
-        .projectFromId(widget.projectId);
+    final project = projectNotifier.projectFromId(widget.projectId);
     if (project != null) {
       ImportEnvironmentModal.show(context, ref, selectedProject: project);
     }
   }
 
   void _showNewEnvironmentModal() {
-    final project = ref
-        .watch(projectsNotifierProvider.notifier)
-        .projectFromId(widget.projectId);
+    final project = projectNotifier.projectFromId(widget.projectId);
     if (project != null) {
       CreateEnvironmentModal.show(
         context,
@@ -107,12 +107,19 @@ class _ProjectViewScreenState extends ConsumerState<ProjectViewScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(projectsNotifierProvider.select((state) =>
-        state.projects.where((p) => p.id == widget.projectId).first));
     // Watch the current project and environments
     final project = ref.watch(projectsNotifierProvider).selectedProject;
 
     final environmentState = ref.watch(environmentsNotifierProvider);
+
+    if (environmentState.state == NotifierState.loading) {
+      return const Center(
+        child: SizedBox(
+          width: 200,
+          child: AnimatedProgressIndicator(),
+        ),
+      );
+    }
 
     final List<Environment> environments = environmentState.environments;
 

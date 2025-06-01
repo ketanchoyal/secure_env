@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'project_provider.dart';
+part of 'project_operations_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$projectOperationsHash() => r'877eff5cc794c74dc612424a13afe64faea328ae';
+String _$projectOperationsHash() => r'4b1f71d98b8347c892dc3772458f050b4c826343';
 
 /// See also [ProjectOperations].
 @ProviderFor(ProjectOperations)

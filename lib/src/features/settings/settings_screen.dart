@@ -13,9 +13,11 @@ class SettingsScreen extends ConsumerWidget {
     if (brightness == Brightness.dark) themeMode = ThemeMode.dark;
     if (brightness == Brightness.light) themeMode = ThemeMode.light;
 
-    // Get all Google Fonts dynamically
-    final autoSaveInterval =
-        ref.watch(settingsNotifierProvider).autoSaveInterval;
+    final settings = ref.watch(settingsNotifierProvider);
+    final autoSaveInterval = settings.autoSaveInterval;
+    final selectedFont = settings.fontFamily;
+
+    final settingNotifier = ref.read(settingsNotifierProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
@@ -59,9 +61,7 @@ class SettingsScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                           onChanged: (mode) {
                             if (mode != null) {
-                              ref
-                                  .read(settingsNotifierProvider.notifier)
-                                  .toggleDarkMode(mode);
+                              settingNotifier.toggleDarkMode(mode);
                             }
                           },
                           items: const [
@@ -139,8 +139,6 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       Builder(
                         builder: (context) {
-                          final selectedFont =
-                              ref.watch(settingsNotifierProvider).fontFamily;
                           return TextButton(
                             onPressed: () async {
                               final font = await showDialog<String>(
@@ -150,9 +148,7 @@ class SettingsScreen extends ConsumerWidget {
                                 ),
                               );
                               if (font != null && font != selectedFont) {
-                                ref
-                                    .read(settingsNotifierProvider.notifier)
-                                    .setFontFamily(font);
+                                settingNotifier.setFontFamily(font);
                               }
                             },
                             child: Row(
@@ -302,14 +298,10 @@ class SettingsScreen extends ConsumerWidget {
                                 },
                               );
                               if (result != null) {
-                                ref
-                                    .read(settingsNotifierProvider.notifier)
-                                    .setAutoSaveInterval(result);
+                                settingNotifier.setAutoSaveInterval(result);
                               }
                             } else if (value != null) {
-                              ref
-                                  .read(settingsNotifierProvider.notifier)
-                                  .setAutoSaveInterval(value);
+                              settingNotifier.setAutoSaveInterval(value);
                             }
                           },
                           items: [

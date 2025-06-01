@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:secure_env_gui/src/providers/project_provider.dart';
+import 'package:secure_env_gui/src/providers/project_operations_provider.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
 
 class NewProjectModal extends ConsumerStatefulWidget {

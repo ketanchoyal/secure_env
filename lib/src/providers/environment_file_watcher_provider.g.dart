@@ -7,7 +7,7 @@ part of 'environment_file_watcher_provider.dart';
 // **************************************************************************
 
 String _$environmentFileWatcherHash() =>
-    r'e4d06da8134edd52a0af262f0386ccd8eb76f512';
+    r'4868a282430438c24214ef6fee888af3a9d5a57d';
 
 /// Copied from Dart SDK
 class _SystemHash {

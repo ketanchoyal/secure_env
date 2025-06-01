@@ -10,8 +10,8 @@ import 'package:secure_env_gui/src/providers/exception_for_providers.dart';
 import 'package:secure_env_gui/src/routing/app_snackbar.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 
-part 'environment_provider.freezed.dart';
-part 'environment_provider.g.dart';
+part 'environment_operations_provider.freezed.dart';
+part 'environment_operations_provider.g.dart';
 
 /// Union type for environment operation states
 @freezed

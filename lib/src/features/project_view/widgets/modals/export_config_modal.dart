@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:secure_env_gui/src/features/shared_widgets/modals/wolt_modal_scaffold.dart';
-import 'package:secure_env_gui/src/providers/environment_provider.dart';
+import 'package:secure_env_gui/src/providers/environment_operations_provider.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;

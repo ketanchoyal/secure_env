@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import FontAwesome
+import 'package:go_router/go_router.dart';
 import 'package:secure_env_core/secure_env_core.dart';
 import 'package:secure_env_gui/src/providers/app_state_providers.dart';
-import 'package:secure_env_gui/src/providers/project_provider.dart';
+import 'package:secure_env_gui/src/providers/project_operations_provider.dart';
 
 import '../../../routing/app_router.dart'; // For goRouterProvider and AppRoutes
 
@@ -15,8 +16,8 @@ class ProjectListItem extends ConsumerWidget {
     super.key,
   });
 
-  void _showContextMenu(BuildContext context, WidgetRef ref, Offset position) {
-    final router = ref.read(goRouterProvider);
+  void _showContextMenu(
+      BuildContext context, WidgetRef ref, Offset position, GoRouter router) {
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     // lift menu up by 16px
     const lift = 25.0;
@@ -45,7 +46,7 @@ class ProjectListItem extends ConsumerWidget {
             title: const Text('Open Project'),
             onTap: () {
               router.pop(); // Close the menu
-              _onTap(context, ref);
+              _onTap(context, ref, router);
             },
           ),
         ),
@@ -56,7 +57,7 @@ class ProjectListItem extends ConsumerWidget {
             title: const Text('Rename Project'),
             onTap: () {
               router.pop();
-              _showRenameDialog(context, ref);
+              _showRenameDialog(context, ref, router);
             },
           ),
         ),
@@ -70,7 +71,7 @@ class ProjectListItem extends ConsumerWidget {
             ),
             onTap: () {
               router.pop();
-              _showDeleteDialog(context, ref);
+              _showDeleteDialog(context, ref, router);
             },
           ),
         ),
@@ -78,9 +79,9 @@ class ProjectListItem extends ConsumerWidget {
     );
   }
 
-  Future<void> _showRenameDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showRenameDialog(
+      BuildContext context, WidgetRef ref, GoRouter router) async {
     final controller = TextEditingController(text: project.name);
-    final router = ref.read(goRouterProvider);
 
     return showDialog(
       context: context,
@@ -119,8 +120,8 @@ class ProjectListItem extends ConsumerWidget {
     );
   }
 
-  Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref) async {
-    final router = ref.read(goRouterProvider);
+  Future<void> _showDeleteDialog(
+      BuildContext context, WidgetRef ref, GoRouter router) async {
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -149,11 +150,15 @@ class ProjectListItem extends ConsumerWidget {
     );
   }
 
-  void _onTap(BuildContext context, WidgetRef ref) async {
-    final router = ref.read(goRouterProvider);
-    ref.read(projectsNotifierProvider.notifier).selectProject(project.id);
-    await router.push(AppRoutes.projectViewPath(project.id));
-    ref.read(projectsNotifierProvider.notifier).selectProject(null);
+  void _onTap(BuildContext context, WidgetRef ref, GoRouter router,
+      [String? environmentName]) async {
+    final projectNotifier = ref.read(projectsNotifierProvider.notifier);
+    projectNotifier.selectProject(project.id);
+    await router.push(AppRoutes.projectViewPath(
+      project.id,
+      environmentName: environmentName,
+    ));
+    projectNotifier.selectProject(null);
   }
 
   @override
@@ -164,14 +169,14 @@ class ProjectListItem extends ConsumerWidget {
 
     return GestureDetector(
       onSecondaryTapDown: (details) =>
-          _showContextMenu(context, ref, details.globalPosition),
+          _showContextMenu(context, ref, details.globalPosition, router),
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           hoverColor: Theme.of(context).hoverColor,
           onTap: () {
-            _onTap(context, ref);
+            _onTap(context, ref, router);
           },
           child: Padding(
             padding: const EdgeInsets.only(left: 10, right: 20),
@@ -217,16 +222,12 @@ class ProjectListItem extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(4.0),
                                 splashFactory: NoSplash.splashFactory,
                                 onTap: () async {
-                                  ref
-                                      .read(projectsNotifierProvider.notifier)
-                                      .selectProject(project.id);
-                                  await router.push(AppRoutes.projectViewPath(
-                                      project.id,
-                                      environmentName:
-                                          project.environments[index]));
-                                  ref
-                                      .read(projectsNotifierProvider.notifier)
-                                      .selectProject(null);
+                                  _onTap(
+                                    context,
+                                    ref,
+                                    router,
+                                    project.environments[index],
+                                  );
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(

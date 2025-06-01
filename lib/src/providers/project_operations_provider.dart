@@ -6,8 +6,8 @@ import 'package:secure_env_gui/src/providers/core_providers.dart';
 import 'package:secure_env_gui/src/routing/app_snackbar.dart';
 import 'package:secure_env_gui/src/services/logging_service.dart';
 
-part 'project_provider.freezed.dart';
-part 'project_provider.g.dart';
+part 'project_operations_provider.freezed.dart';
+part 'project_operations_provider.g.dart';
 
 /// Union type for project operation states
 @freezed
@@ -53,7 +53,9 @@ class ProjectOperations extends _$ProjectOperations {
 
   // List<Project> get projects => ref.read(projectsNotifierProvider).projects;
 
-  Logger get logger => ref.read(loggerProvider(ProjectOperations));
+  Logger get _logger => ref.read(loggerProvider(ProjectOperations));
+
+  ProjectService get _projectService => ref.read(projectServiceProvider);
 
   Future<void> createProject({
     required String name,
@@ -63,34 +65,34 @@ class ProjectOperations extends _$ProjectOperations {
   }) async {
     state = const ProjectOperationState.inProgress();
     try {
-      await ref.read(projectServiceProvider).createProject(
-            name: name,
-            path: path,
-            description: description,
-            metadata: metadata,
-          );
+      await _projectService.createProject(
+        name: name,
+        path: path,
+        description: description,
+        metadata: metadata,
+      );
 
-      logger.info('Project created successfully');
+      _logger.info('Project created successfully');
       state =
           ProjectOperationState.success("Project $name created successfully");
     } catch (e, stack) {
       state = ProjectOperationState.error(
         'Failed to create project',
       );
-      logger.error('Failed to create project: $e', e, stack);
+      _logger.error('Failed to create project: $e', e, stack);
     }
   }
 
   Future<void> deleteProject(String path) async {
     state = const ProjectOperationState.inProgress();
     try {
-      await ref.read(projectServiceProvider).deleteProject(path);
-      logger.info('Project deleted successfully');
+      await _projectService.deleteProject(path);
+      _logger.info('Project deleted successfully');
       state =
           const ProjectOperationState.success('Project deleted successfully');
     } catch (e, stack) {
       state = ProjectOperationState.error('Failed to delete project');
-      logger.error('Failed to delete project: $e', e, stack);
+      _logger.error('Failed to delete project: $e', e, stack);
     }
   }
 
@@ -100,7 +102,7 @@ class ProjectOperations extends _$ProjectOperations {
   ) async {
     state = const ProjectOperationState.inProgress();
     try {
-      final project = await ref.read(projectServiceProvider).getProjectById(id);
+      final project = await _projectService.getProjectById(id);
       if (project == null) {
         throw ValidationException('Project with id "$id" not found');
       }
@@ -108,19 +110,19 @@ class ProjectOperations extends _$ProjectOperations {
       await _updateProject(
         project.copyWith(name: newName),
       );
-      logger.info('Project renamed successfully');
+      _logger.info('Project renamed successfully');
       state = const ProjectOperationState.success(
         'Project renamed successfully',
       );
     } catch (e, stack) {
       state = ProjectOperationState.error('Failed to rename project');
-      logger.error('Failed to rename project: $e', e, stack);
+      _logger.error('Failed to rename project: $e', e, stack);
     }
   }
 
   Future<void> _updateProject(Project project) async {
-    await ref.read(projectServiceProvider).updateProject(project);
-    logger.info('Project updated successfully');
+    await _projectService.updateProject(project);
+    _logger.info('Project updated successfully');
   }
 
   Future<bool> updateProjectConfig(ProjectConfig config) async {
@@ -132,14 +134,14 @@ class ProjectOperations extends _$ProjectOperations {
         return false;
       }
       await _updateProject(project.copyWith(config: config));
-      logger.info('Project settings updated successfully');
+      _logger.info('Project settings updated successfully');
       state = const ProjectOperationState.success(
           'Project settings updated successfully');
       return true;
     } catch (e, stack) {
       state =
           const ProjectOperationState.error('Failed to save project settings');
-      logger.error('Failed to save project settings: $e', e, stack);
+      _logger.error('Failed to save project settings: $e', e, stack);
       return false;
     }
   }
